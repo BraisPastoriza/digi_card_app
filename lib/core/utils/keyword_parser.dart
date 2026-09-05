@@ -8,9 +8,13 @@ abstract final class KeywordParser {
   /// fullwidth `＜＞`, ASCII `<>`, and the mathematical `⟨⟩` / `〈〉` pairs.
   static final _bracketed = RegExp(r'[＜<〈⟨]([^＞>〉⟩\n]{1,40})[＞>〉⟩]');
 
-  /// Trailing numeric modifiers that vary per card but not per keyword:
+  /// Trailing modifiers that vary per card but not per keyword:
   /// `De-Digivolve 2`, `Security Attack +1`, `DigiXros -2`, `Link +1`.
-  static final _trailingModifier = RegExp(r'\s*[+\-]?\d+\s*$');
+  ///
+  /// The sign can appear without a number (`Security A. +`), and the number
+  /// without a sign (`Digi-Burst 2`), so both parts are optional — but at
+  /// least one must be present for there to be anything to strip.
+  static final _trailingModifier = RegExp(r'\s*(?:[+\-]\d*|\d+)\s*$');
 
   /// Parenthetical qualifiers such as `Overflow (-4)` or `Recovery +1 (Deck)`.
   static final _qualifier = RegExp(r'\s*[(（≪][^)）≫]*[)）≫]');
@@ -19,9 +23,13 @@ abstract final class KeywordParser {
   static const _notKeywords = {'rule', 'draw', 'draw 1', 'draw 2', 'draw 3'};
 
   /// Abbreviations the printed text uses interchangeably with the full name.
+  /// Card text shortens the same keyword several ways across sets, and each
+  /// spelling would otherwise become its own filter option.
   static const _aliases = {
     'Security A.': 'Security Attack',
     'Security Atk.': 'Security Attack',
+    'S Attack': 'Security Attack',
+    'S. Attack': 'Security Attack',
   };
 
   /// Reduces a printed term to the keyword it names, or `null` if the term is

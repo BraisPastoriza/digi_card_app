@@ -98,8 +98,12 @@ Future<List<ParsedCard>> parseBulkFile(String path) =>
     Isolate.run(() => _parseBulkFileSync(path));
 
 List<ParsedCard> _parseBulkFileSync(String path) {
-  final raw = File(path).readAsStringSync();
-  final documents = jsonDecode(raw);
+  // Decode UTF-8 straight into objects instead of going through a String:
+  // the dump is ~25 MB, and the intermediate string would add ~50 MB of peak
+  // memory on top of the object graph for no benefit.
+  final documents = const Utf8Decoder()
+      .fuse(const JsonDecoder())
+      .convert(File(path).readAsBytesSync());
   if (documents is! List) return const [];
 
   final cards = <ParsedCard>[];
@@ -172,7 +176,7 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
     digivolutionRequirements: jsonEncode(requirements),
     faqs: jsonEncode(_asMapList(attributes['faqs'])),
     limitations: jsonEncode(limitations.map((l) => l.toJson()).toList()),
-    rarity: attributes['rarity'] as String?,
+    rarity: _parseRarity(attributes['rarity'] as String?),
     supplementalStars: supplemental is Map<String, dynamic>
         ? supplemental['stars'] as int?
         : null,
@@ -231,6 +235,18 @@ List<String> _parseColors(Object? raw) {
       })
       .whereType<String>()
       .toList();
+}
+
+/// Keeps only values that look like a printed rarity code (`C`, `U`, `R`,
+/// `SR`, `SEC`, `UR`, `P`).
+///
+/// A stray token card in the English data carries Japanese text in this field,
+/// which would otherwise show up as its own option in the rarity filter.
+String? _parseRarity(String? raw) {
+  if (raw == null) return null;
+  final rarity = raw.trim();
+  if (rarity.isEmpty) return null;
+  return RegExp(r'^[A-Za-z]{1,4}$').hasMatch(rarity) ? rarity : null;
 }
 
 /// Splits the API's slash-separated `type` field into individual traits.

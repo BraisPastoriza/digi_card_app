@@ -20,9 +20,29 @@ void main() {
       expect(KeywordParser.normalize('Recovery +1 ≪Deck≫'), 'Recovery');
     });
 
-    test('folds the abbreviated form into the printed keyword', () {
-      expect(KeywordParser.normalize('Security A. +1'), 'Security Attack');
-      expect(KeywordParser.normalize('Security Attack -1'), 'Security Attack');
+    test('folds every printed spelling of a keyword into one', () {
+      // Card text spells this keyword eleven different ways across sets;
+      // each one that survives becomes a duplicate filter chip.
+      const variants = [
+        'Security Attack',
+        'Security Attack +1',
+        'Security Attack -2',
+        'Security A.',
+        'Security A. +1',
+        'Security A.+1',
+        'Security A. -1',
+        // The sign can appear with no number after it.
+        'Security A. +',
+        'Security A. -',
+        'S Attack -1',
+      ];
+      for (final variant in variants) {
+        expect(
+          KeywordParser.normalize(variant),
+          'Security Attack',
+          reason: 'normalizing "$variant"',
+        );
+      }
     });
 
     test('rejects structural markers that are not keywords', () {

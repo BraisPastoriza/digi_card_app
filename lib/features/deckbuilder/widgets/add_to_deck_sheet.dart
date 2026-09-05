@@ -105,20 +105,18 @@ class _AddToDeckSheet extends ConsumerWidget {
 
     final dao = ref.read(deckDaoProvider);
     final deckId = await dao.createDeck(name: name);
-    final deck = await ref.read(deckProvider(deckId).future);
-    final revisionId = deck?.activeRevision?.id;
+    // Read the revision from the database rather than a provider: nothing is
+    // listening to the new deck yet, so an auto-disposing provider would be
+    // torn down before it resolved.
+    final revisionId = await dao.activeRevisionIdOf(deckId);
     if (revisionId != null) {
-      await dao.adjustQuantity(
-        revisionId: revisionId,
-        card: card,
-        delta: 1,
-      );
+      await dao.adjustQuantity(revisionId: revisionId, card: card, delta: 1);
     }
     if (context.mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added ${card.name} to $name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Added ${card.name} to $name')));
     }
   }
 }

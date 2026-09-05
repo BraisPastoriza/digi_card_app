@@ -16,8 +16,8 @@ final releaseProvider = FutureProvider.family<CardRelease?, String>(
 );
 
 /// Cards printed in one expansion.
-final releaseCardsProvider =
-    FutureProvider.family<List<DigimonCard>, ReleaseCardsRequest>(
+final releaseCardsProvider = FutureProvider.autoDispose
+    .family<List<DigimonCard>, ReleaseCardsRequest>(
       (ref, request) => ref
           .watch(cardDaoProvider)
           .cardsInRelease(
@@ -27,7 +27,10 @@ final releaseCardsProvider =
     );
 
 class ReleaseCardsRequest {
-  const ReleaseCardsRequest(this.releaseId, {this.includeAlternateArts = false});
+  const ReleaseCardsRequest(
+    this.releaseId, {
+    this.includeAlternateArts = false,
+  });
 
   final String releaseId;
   final bool includeAlternateArts;
@@ -43,12 +46,12 @@ class ReleaseCardsRequest {
 }
 
 /// Every printing of one card number, base art first.
-final cardPrintingsProvider =
-    FutureProvider.family<List<DigimonCard>, String>(
+final cardPrintingsProvider = FutureProvider.autoDispose
+    .family<List<DigimonCard>, String>(
       (ref, number) => ref.watch(cardDaoProvider).printingsOfNumber(number),
     );
 
-final cardProvider = FutureProvider.family<DigimonCard?, String>(
+final cardProvider = FutureProvider.autoDispose.family<DigimonCard?, String>(
   (ref, id) => ref.watch(cardDaoProvider).cardById(id),
 );
 

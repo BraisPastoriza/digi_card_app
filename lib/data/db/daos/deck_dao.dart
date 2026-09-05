@@ -80,6 +80,23 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     });
   }
 
+  /// The revision a deck is currently being edited on, for callers that need
+  /// it right after creating the deck and have nothing to listen to yet.
+  Future<int?> activeRevisionIdOf(int deckId) async {
+    final deck = await (select(
+      decks,
+    )..where((d) => d.id.equals(deckId))).getSingleOrNull();
+    if (deck?.activeRevisionId != null) return deck!.activeRevisionId;
+
+    final fallback =
+        await (select(deckRevisions)
+              ..where((r) => r.deckId.equals(deckId))
+              ..orderBy([(r) => OrderingTerm.asc(r.createdAt)])
+              ..limit(1))
+            .getSingleOrNull();
+    return fallback?.id;
+  }
+
   Future<void> updateDeck(
     int deckId, {
     String? name,
@@ -257,19 +274,21 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     required int delta,
   }) async {
     return transaction(() async {
-      final existing = await (select(deckEntries)..where(
-            (e) =>
-                e.revisionId.equals(revisionId) &
-                e.cardNumber.equals(card.number),
-          ))
-          .getSingleOrNull();
+      final existing =
+          await (select(deckEntries)..where(
+                (e) =>
+                    e.revisionId.equals(revisionId) &
+                    e.cardNumber.equals(card.number),
+              ))
+              .getSingleOrNull();
       final current = existing?.quantity ?? 0;
       final next = (current + delta).clamp(0, card.copyLimit);
       await setQuantity(
         revisionId: revisionId,
         cardNumber: card.number,
         quantity: next,
-        printingId: existing?.printingId ?? (card.isBasePrinting ? null : card.id),
+        printingId:
+            existing?.printingId ?? (card.isBasePrinting ? null : card.id),
       );
       return next;
     });
@@ -328,15 +347,17 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     final rows = await query.get();
     final grouped = <int, List<DeckRevision>>{};
     for (final row in rows) {
-      grouped.putIfAbsent(row.deckId, () => []).add(
-        DeckRevision(
-          id: row.id,
-          deckId: row.deckId,
-          name: row.name,
-          createdAt: row.createdAt,
-          updatedAt: row.updatedAt,
-        ),
-      );
+      grouped
+          .putIfAbsent(row.deckId, () => [])
+          .add(
+            DeckRevision(
+              id: row.id,
+              deckId: row.deckId,
+              name: row.name,
+              createdAt: row.createdAt,
+              updatedAt: row.updatedAt,
+            ),
+          );
     }
     return grouped;
   }
@@ -361,8 +382,7 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
 
     final byPrintingId = <String, CardRow>{};
     if (printingIds.isNotEmpty) {
-      final printingQuery = select(cards)
-        ..where((c) => c.id.isIn(printingIds));
+      final printingQuery = select(cards)..where((c) => c.id.isIn(printingIds));
       for (final row in await printingQuery.get()) {
         byPrintingId[row.id] = row;
       }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,10 +23,7 @@ abstract final class FilterBounds {
 
 /// Opens the filter sheet and returns the filter the user applied, or null if
 /// they dismissed it.
-Future<CardFilter?> showFilterSheet(
-  BuildContext context,
-  CardFilter current,
-) {
+Future<CardFilter?> showFilterSheet(BuildContext context, CardFilter current) {
   return showModalBottomSheet<CardFilter>(
     context: context,
     isScrollControlled: true,
@@ -48,8 +47,25 @@ class FilterSheet extends ConsumerStatefulWidget {
 class _FilterSheetState extends ConsumerState<FilterSheet> {
   late CardFilter _draft = widget.initial;
 
-  void _edit(CardFilter Function(CardFilter) change) =>
-      setState(() => _draft = change(_draft));
+  /// The filter the live result count is running against. It lags [_draft] by
+  /// a short debounce so dragging a slider does not fire a count query on
+  /// every frame.
+  late CardFilter _previewFilter = widget.initial;
+  Timer? _previewDebounce;
+
+  @override
+  void dispose() {
+    _previewDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _edit(CardFilter Function(CardFilter) change) {
+    setState(() => _draft = change(_draft));
+    _previewDebounce?.cancel();
+    _previewDebounce = Timer(const Duration(milliseconds: 220), () {
+      if (mounted) setState(() => _previewFilter = _draft);
+    });
+  }
 
   /// Adds or removes [value] from a set-valued facet.
   Set<T> _toggled<T>(Set<T> values, T value) {
@@ -113,8 +129,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                         color: color,
                         selected: _draft.colors.contains(color),
                         onTap: () => _edit(
-                          (f) =>
-                              f.copyWith(colors: _toggled(f.colors, color)),
+                          (f) => f.copyWith(colors: _toggled(f.colors, color)),
                         ),
                       ),
                   ],
@@ -185,9 +200,8 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 options: ref.watch(attributeOptionsProvider),
                 selected: _draft.attributes,
                 onToggle: (attribute) => _edit(
-                  (f) => f.copyWith(
-                    attributes: _toggled(f.attributes, attribute),
-                  ),
+                  (f) =>
+                      f.copyWith(attributes: _toggled(f.attributes, attribute)),
                 ),
               ),
               _AsyncChipSection(
@@ -203,9 +217,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 title: 'Trait',
                 selected: _draft.traits,
                 onOpen: () async {
-                  final options = await ref.read(
-                    traitOptionsProvider.future,
-                  );
+                  final options = await ref.read(traitOptionsProvider.future);
                   if (!context.mounted) return;
                   final picked = await showMultiSelect(
                     context,
@@ -276,7 +288,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
           ),
         ),
         _ApplyBar(
-          filter: _draft,
+          filter: _previewFilter,
           onApply: () => Navigator.of(context).pop(_draft),
         ),
       ],
@@ -318,14 +330,12 @@ class _ApplyBar extends ConsumerWidget {
           width: double.infinity,
           child: FilledButton(
             onPressed: onApply,
-            child: Text(
-              switch (count) {
-                AsyncData(:final value) when value == 1 => 'Show 1 card',
-                AsyncData(:final value) => 'Show $value cards',
-                AsyncError() => 'Show results',
-                _ => 'Show results',
-              },
-            ),
+            child: Text(switch (count) {
+              AsyncData(:final value) when value == 1 => 'Show 1 card',
+              AsyncData(:final value) => 'Show $value cards',
+              AsyncError() => 'Show results',
+              _ => 'Show results',
+            }),
           ),
         ),
       ),
@@ -335,9 +345,13 @@ class _ApplyBar extends ConsumerWidget {
 
 /// Counts matches for a filter that has not been applied yet, so the apply
 /// button can say how many cards the user is about to see.
-final filterPreviewCountProvider = FutureProvider.family<int, CardFilter>(
-  (ref, filter) => ref.watch(cardDaoProvider).count(filter),
-);
+///
+/// Auto-disposing matters here: dragging a slider produces a new filter, and
+/// therefore a new provider, on every frame.
+final filterPreviewCountProvider = FutureProvider.autoDispose
+    .family<int, CardFilter>(
+      (ref, filter) => ref.watch(cardDaoProvider).count(filter),
+    );
 
 class _Section extends StatelessWidget {
   const _Section({required this.title, required this.child, this.trailing});
@@ -459,7 +473,9 @@ class _ColorChip extends StatelessWidget {
         duration: const Duration(milliseconds: 120),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? swatch.withValues(alpha: 0.18) : AppSurfaces.surfaceHigh,
+          color: selected
+              ? swatch.withValues(alpha: 0.18)
+              : AppSurfaces.surfaceHigh,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: selected ? swatch : AppSurfaces.outline,
