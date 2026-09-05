@@ -232,6 +232,10 @@ class _ColorBar extends StatelessWidget {
         width: 84,
         height: 6,
         child: Row(
+          // Stretch, not the default centre alignment: a childless ColoredBox
+          // takes the smallest height a loose constraint allows, which is
+          // zero, and the bar disappears.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final color in ordered)
               Expanded(

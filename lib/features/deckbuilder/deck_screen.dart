@@ -23,9 +23,8 @@ class DeckScreen extends ConsumerWidget {
     final deck = ref.watch(deckProvider(deckId));
 
     return deck.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: EmptyState(
@@ -51,91 +50,111 @@ class DeckScreen extends ConsumerWidget {
   }
 }
 
-class _DeckView extends ConsumerWidget {
+class _DeckView extends ConsumerStatefulWidget {
   const _DeckView({required this.deck});
 
   final Deck deck;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DeckView> createState() => _DeckViewState();
+}
+
+class _DeckViewState extends ConsumerState<_DeckView>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 3, vsync: this)
+    ..addListener(() {
+      // Rebuild so the add-cards button can hide on the tabs it does not
+      // belong to, where it otherwise floats over the charts.
+      if (!_tabs.indexIsChanging) setState(() {});
+    });
+
+  Deck get deck => widget.deck;
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final revision = deck.activeRevision;
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            onPressed: () => context.go('/decks'),
-            icon: const Icon(Icons.arrow_back),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(deck.name, overflow: TextOverflow.ellipsis),
-              if (revision != null)
-                Text(
-                  'Editing ${revision.name}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: scheme.onSurfaceVariant,
-                  ),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.go('/decks'),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(deck.name, overflow: TextOverflow.ellipsis),
+            if (revision != null)
+              Text(
+                'Editing ${revision.name}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: scheme.onSurfaceVariant,
                 ),
+              ),
+          ],
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (action) => _handle(context, action),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'rename', child: Text('Rename deck')),
+              if (revision != null)
+                PopupMenuItem(
+                  value: 'clear',
+                  child: Text('Clear ${revision.name}'),
+                ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(
+                  'Delete deck',
+                  style: TextStyle(color: scheme.error),
+                ),
+              ),
             ],
           ),
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (action) => _handle(context, ref, action),
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'rename', child: Text('Rename deck')),
-                if (revision != null)
-                  PopupMenuItem(
-                    value: 'clear',
-                    child: Text('Clear ${revision.name}'),
-                  ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text(
-                    'Delete deck',
-                    style: TextStyle(color: scheme.error),
-                  ),
+        ],
+        bottom: TabBar(
+          controller: _tabs,
+          tabs: [
+            const Tab(text: 'Cards'),
+            Tab(text: 'Revisions (${deck.revisions.length})'),
+            const Tab(text: 'Stats'),
+          ],
+        ),
+      ),
+      floatingActionButton: revision == null || _tabs.index != 0
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _openPicker(context, revision.id),
+              icon: const Icon(Icons.add),
+              label: const Text('Add cards'),
+            ),
+      body: revision == null
+          ? const EmptyState(
+              icon: Icons.history_toggle_off,
+              title: 'This deck has no revisions',
+              message: 'Create one to start adding cards.',
+            )
+          : TabBarView(
+              controller: _tabs,
+              children: [
+                DeckCardsTab(
+                  revisionId: revision.id,
+                  onAddCards: () => _openPicker(context, revision.id),
                 ),
+                DeckRevisionsTab(deck: deck),
+                DeckStatsTab(revisionId: revision.id),
               ],
             ),
-          ],
-          bottom: TabBar(
-            tabs: [
-              const Tab(text: 'Cards'),
-              Tab(text: 'Revisions (${deck.revisions.length})'),
-              const Tab(text: 'Stats'),
-            ],
-          ),
-        ),
-        floatingActionButton: revision == null
-            ? null
-            : FloatingActionButton.extended(
-                onPressed: () => _openPicker(context, revision.id),
-                icon: const Icon(Icons.add),
-                label: const Text('Add cards'),
-              ),
-        body: revision == null
-            ? const EmptyState(
-                icon: Icons.history_toggle_off,
-                title: 'This deck has no revisions',
-                message: 'Create one to start adding cards.',
-              )
-            : TabBarView(
-                children: [
-                  DeckCardsTab(
-                    revisionId: revision.id,
-                    onAddCards: () => _openPicker(context, revision.id),
-                  ),
-                  DeckRevisionsTab(deck: deck),
-                  DeckStatsTab(revisionId: revision.id),
-                ],
-              ),
-      ),
     );
   }
 
@@ -143,11 +162,7 @@ class _DeckView extends ConsumerWidget {
     context.push('/decks/${deck.id}/add/$revisionId');
   }
 
-  Future<void> _handle(
-    BuildContext context,
-    WidgetRef ref,
-    String action,
-  ) async {
+  Future<void> _handle(BuildContext context, String action) async {
     final dao = ref.read(deckDaoProvider);
     switch (action) {
       case 'rename':
@@ -164,7 +179,8 @@ class _DeckView extends ConsumerWidget {
         final confirmed = await _confirm(
           context,
           title: 'Clear ${deck.activeRevision!.name}?',
-          message: 'Removes every card from this revision. Other revisions '
+          message:
+              'Removes every card from this revision. Other revisions '
               'keep their cards.',
           confirmLabel: 'Clear',
         );
@@ -174,7 +190,8 @@ class _DeckView extends ConsumerWidget {
         final confirmed = await _confirm(
           context,
           title: 'Delete ${deck.name}?',
-          message: 'The deck and all ${deck.revisions.length} of its '
+          message:
+              'The deck and all ${deck.revisions.length} of its '
               'revisions are removed. This cannot be undone.',
           confirmLabel: 'Delete',
         );
