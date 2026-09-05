@@ -47,6 +47,7 @@ class ParsedCard {
     this.errata,
     this.dualFace,
     this.dualCategory,
+    this.ruleCopyLimit,
   });
 
   final String id;
@@ -88,6 +89,9 @@ class ParsedCard {
   final String? errata;
   final String? dualFace;
   final String? dualCategory;
+
+  /// Copies the card's own rule text allows, when it raises the usual cap.
+  final int? ruleCopyLimit;
 
   /// True for ACE cards. Derived from the printed name, which is the only
   /// place the API records it.
@@ -152,6 +156,15 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
     attributes['limitations'],
   ).map(CardLimitation.fromJson).toList();
 
+  // A few cards carry a ⟨Rule⟩ line raising the four-copy cap, which is what
+  // makes decks built almost entirely out of one card legal.
+  final ruleCopyLimit = CopyLimit.fromRuleText([
+    effect,
+    inheritedEffect,
+    securityEffect,
+    dualEffect,
+  ]);
+
   final playCost = attributes['play-cost'] as int?;
   final useCost = attributes['use-cost'] as int?;
 
@@ -176,7 +189,11 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
     ]),
     releaseIds: _parseReleaseIds(data['relationships']),
     numberSort: buildNumberSort(number, parallelId),
-    copyLimit: CardLimitation.copyLimitIn(limitations),
+    copyLimit: CopyLimit.resolve(
+      limitations: limitations,
+      ruleLimit: ruleCopyLimit,
+    ),
+    ruleCopyLimit: ruleCopyLimit,
     digivolutionRequirements: jsonEncode(requirements),
     faqs: jsonEncode(_asMapList(attributes['faqs'])),
     limitations: jsonEncode(limitations.map((l) => l.toJson()).toList()),

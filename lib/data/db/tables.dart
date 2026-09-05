@@ -99,8 +99,12 @@ class Cards extends Table {
   TextColumn get errata => text().nullable()();
   TextColumn get limitations => text().withDefault(const Constant('[]'))();
 
-  /// Copies allowed by the restriction list, precomputed for deck validation.
+  /// Copies a deck may contain, precomputed for deck validation from the
+  /// restriction list and the card's own rule text.
   IntColumn get copyLimit => integer().withDefault(const Constant(4))();
+
+  /// Copies the card's own ⟨Rule⟩ text allows, when it raises the usual cap.
+  IntColumn get ruleCopyLimit => integer().nullable()();
 
   TextColumn get imageUrl => text()();
   TextColumn get releaseIds => text().withDefault(const Constant(''))();

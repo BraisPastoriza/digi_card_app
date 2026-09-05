@@ -284,6 +284,7 @@ class CardSyncService {
               errata: Value(card.errata),
               limitations: Value(card.limitations),
               copyLimit: Value(card.copyLimit),
+              ruleCopyLimit: Value(card.ruleCopyLimit),
               imageUrl: card.imageUrl,
               releaseIds: Value(encodeList(links[card.id] ?? const {})),
               isPrimary: Value(card.isPrimary),

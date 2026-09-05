@@ -161,6 +161,45 @@ class CardLimitation {
       activeIn(limitations)?.effectiveAllowance ?? 4;
 }
 
+/// The copies a deck may contain of one card number.
+///
+/// Three things can decide it, in this order:
+///  * the official restriction list, which overrides everything;
+///  * the card's own ⟨Rule⟩ text — a handful of cards say "you can include up
+///    to 50 copies", which is how decks of nothing but that card are legal;
+///  * otherwise the standard four.
+abstract final class CopyLimit {
+  static const standard = 4;
+
+  /// Matches the printed rule, e.g. "⟨Rule⟩ You can include up to 50 copies of
+  /// cards with this card's card number in your deck." The apostrophe varies
+  /// between straight and typographic across sets.
+  static final _rule = RegExp(
+    r'include up to (\d+) copies of cards with this card.s card number',
+    caseSensitive: false,
+  );
+
+  /// The limit a card's own text grants, or null when it says nothing.
+  static int? fromRuleText(Iterable<String?> texts) {
+    for (final text in texts) {
+      if (text == null || text.isEmpty) continue;
+      final match = _rule.firstMatch(text);
+      if (match != null) return int.tryParse(match.group(1)!);
+    }
+    return null;
+  }
+
+  /// Resolves the three sources against each other.
+  static int resolve({
+    required List<CardLimitation> limitations,
+    int? ruleLimit,
+  }) {
+    final restriction = CardLimitation.activeIn(limitations);
+    if (restriction != null) return restriction.effectiveAllowance;
+    return ruleLimit ?? standard;
+  }
+}
+
 /// The second face of a dual card — the BT-25 cards that are a Digimon on one
 /// side and an Option on the other. Both faces share a single physical card
 /// and therefore a single image.
@@ -261,6 +300,7 @@ class DigimonCard {
     this.alternateArtIds = const [],
     this.dualFace,
     this.isAce = false,
+    this.ruleCopyLimit,
   });
 
   /// Card id as used by the API path, e.g. `ST1-07` or `ST1-07_P1`.
@@ -319,6 +359,10 @@ class DigimonCard {
   /// True for ACE cards, which can be played early for an Overflow cost.
   final bool isAce;
 
+  /// Copies the card's own ⟨Rule⟩ text allows, if it grants more than the
+  /// standard four. Null for the vast majority of cards.
+  final int? ruleCopyLimit;
+
   bool get isBasePrinting => parallelId == 0;
 
   bool get isDual => dualFace != null;
@@ -329,9 +373,13 @@ class DigimonCard {
   /// The most recent limitation that still applies, or `null` if unrestricted.
   CardLimitation? get activeLimitation => CardLimitation.activeIn(limitations);
 
-  /// Copies of this card a deck may contain: 4 unless the restriction list
-  /// says otherwise.
-  int get copyLimit => CardLimitation.copyLimitIn(limitations);
+  /// Copies of this card a deck may contain.
+  int get copyLimit =>
+      CopyLimit.resolve(limitations: limitations, ruleLimit: ruleCopyLimit);
+
+  /// True when the card's own text raises the usual four-copy cap.
+  bool get hasRaisedCopyLimit =>
+      ruleCopyLimit != null && ruleCopyLimit! > CopyLimit.standard;
 
   String get traitsLabel => traits.join(' / ');
 }

@@ -22,11 +22,20 @@ Future<void> main(List<String> args) async {
   final cards = await parseBulkFile(args.first);
   stopwatch.stop();
 
-  print('Parsed ${cards.length} printings in ${stopwatch.elapsedMilliseconds}ms');
+  print(
+    'Parsed ${cards.length} printings in ${stopwatch.elapsedMilliseconds}ms',
+  );
   print('Primary printings: ${cards.where((c) => c.isPrimary).length}');
   print('Distinct numbers:  ${cards.map((c) => c.number).toSet().length}');
   print('Dual cards:        ${cards.where((c) => c.dualFace != null).length}');
   print('Restricted:        ${cards.where((c) => c.copyLimit < 4).length}');
+  final raised = cards.where((c) => c.copyLimit > 4).toList();
+  print('Raised copy limit: ${raised.length}');
+  for (final card in {for (final c in raised) c.number: c}.values) {
+    print(
+      '  ${card.number.padRight(12)} ${card.name} — up to ${card.copyLimit}',
+    );
+  }
 
   final missingImages = cards.where((c) => c.imageUrl.isEmpty).length;
   final missingNames = cards.where((c) => c.name.isEmpty).length;

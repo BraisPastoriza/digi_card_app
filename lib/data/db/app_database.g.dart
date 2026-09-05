@@ -1083,6 +1083,17 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(4),
   );
+  static const VerificationMeta _ruleCopyLimitMeta = const VerificationMeta(
+    'ruleCopyLimit',
+  );
+  @override
+  late final GeneratedColumn<int> ruleCopyLimit = GeneratedColumn<int>(
+    'rule_copy_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _imageUrlMeta = const VerificationMeta(
     'imageUrl',
   );
@@ -1168,6 +1179,7 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
     errata,
     limitations,
     copyLimit,
+    ruleCopyLimit,
     imageUrl,
     releaseIds,
     isPrimary,
@@ -1409,6 +1421,15 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
         copyLimit.isAcceptableOrUnknown(data['copy_limit']!, _copyLimitMeta),
       );
     }
+    if (data.containsKey('rule_copy_limit')) {
+      context.handle(
+        _ruleCopyLimitMeta,
+        ruleCopyLimit.isAcceptableOrUnknown(
+          data['rule_copy_limit']!,
+          _ruleCopyLimitMeta,
+        ),
+      );
+    }
     if (data.containsKey('image_url')) {
       context.handle(
         _imageUrlMeta,
@@ -1576,6 +1597,10 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
         DriftSqlType.int,
         data['${effectivePrefix}copy_limit'],
       )!,
+      ruleCopyLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rule_copy_limit'],
+      ),
       imageUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}image_url'],
@@ -1651,8 +1676,12 @@ class CardRow extends DataClass implements Insertable<CardRow> {
   final String? errata;
   final String limitations;
 
-  /// Copies allowed by the restriction list, precomputed for deck validation.
+  /// Copies a deck may contain, precomputed for deck validation from the
+  /// restriction list and the card's own rule text.
   final int copyLimit;
+
+  /// Copies the card's own ⟨Rule⟩ text allows, when it raises the usual cap.
+  final int? ruleCopyLimit;
   final String imageUrl;
   final String releaseIds;
 
@@ -1699,6 +1728,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     this.errata,
     required this.limitations,
     required this.copyLimit,
+    this.ruleCopyLimit,
     required this.imageUrl,
     required this.releaseIds,
     required this.isPrimary,
@@ -1780,6 +1810,9 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     }
     map['limitations'] = Variable<String>(limitations);
     map['copy_limit'] = Variable<int>(copyLimit);
+    if (!nullToAbsent || ruleCopyLimit != null) {
+      map['rule_copy_limit'] = Variable<int>(ruleCopyLimit);
+    }
     map['image_url'] = Variable<String>(imageUrl);
     map['release_ids'] = Variable<String>(releaseIds);
     map['is_primary'] = Variable<bool>(isPrimary);
@@ -1854,6 +1887,9 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           : Value(errata),
       limitations: Value(limitations),
       copyLimit: Value(copyLimit),
+      ruleCopyLimit: ruleCopyLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ruleCopyLimit),
       imageUrl: Value(imageUrl),
       releaseIds: Value(releaseIds),
       isPrimary: Value(isPrimary),
@@ -1902,6 +1938,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
       errata: serializer.fromJson<String?>(json['errata']),
       limitations: serializer.fromJson<String>(json['limitations']),
       copyLimit: serializer.fromJson<int>(json['copyLimit']),
+      ruleCopyLimit: serializer.fromJson<int?>(json['ruleCopyLimit']),
       imageUrl: serializer.fromJson<String>(json['imageUrl']),
       releaseIds: serializer.fromJson<String>(json['releaseIds']),
       isPrimary: serializer.fromJson<bool>(json['isPrimary']),
@@ -1947,6 +1984,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
       'errata': serializer.toJson<String?>(errata),
       'limitations': serializer.toJson<String>(limitations),
       'copyLimit': serializer.toJson<int>(copyLimit),
+      'ruleCopyLimit': serializer.toJson<int?>(ruleCopyLimit),
       'imageUrl': serializer.toJson<String>(imageUrl),
       'releaseIds': serializer.toJson<String>(releaseIds),
       'isPrimary': serializer.toJson<bool>(isPrimary),
@@ -1988,6 +2026,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     Value<String?> errata = const Value.absent(),
     String? limitations,
     int? copyLimit,
+    Value<int?> ruleCopyLimit = const Value.absent(),
     String? imageUrl,
     String? releaseIds,
     bool? isPrimary,
@@ -2037,6 +2076,9 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     errata: errata.present ? errata.value : this.errata,
     limitations: limitations ?? this.limitations,
     copyLimit: copyLimit ?? this.copyLimit,
+    ruleCopyLimit: ruleCopyLimit.present
+        ? ruleCopyLimit.value
+        : this.ruleCopyLimit,
     imageUrl: imageUrl ?? this.imageUrl,
     releaseIds: releaseIds ?? this.releaseIds,
     isPrimary: isPrimary ?? this.isPrimary,
@@ -2097,6 +2139,9 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           ? data.limitations.value
           : this.limitations,
       copyLimit: data.copyLimit.present ? data.copyLimit.value : this.copyLimit,
+      ruleCopyLimit: data.ruleCopyLimit.present
+          ? data.ruleCopyLimit.value
+          : this.ruleCopyLimit,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       releaseIds: data.releaseIds.present
           ? data.releaseIds.value
@@ -2144,6 +2189,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           ..write('errata: $errata, ')
           ..write('limitations: $limitations, ')
           ..write('copyLimit: $copyLimit, ')
+          ..write('ruleCopyLimit: $ruleCopyLimit, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('releaseIds: $releaseIds, ')
           ..write('isPrimary: $isPrimary, ')
@@ -2187,6 +2233,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     errata,
     limitations,
     copyLimit,
+    ruleCopyLimit,
     imageUrl,
     releaseIds,
     isPrimary,
@@ -2229,6 +2276,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           other.errata == this.errata &&
           other.limitations == this.limitations &&
           other.copyLimit == this.copyLimit &&
+          other.ruleCopyLimit == this.ruleCopyLimit &&
           other.imageUrl == this.imageUrl &&
           other.releaseIds == this.releaseIds &&
           other.isPrimary == this.isPrimary &&
@@ -2269,6 +2317,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
   final Value<String?> errata;
   final Value<String> limitations;
   final Value<int> copyLimit;
+  final Value<int?> ruleCopyLimit;
   final Value<String> imageUrl;
   final Value<String> releaseIds;
   final Value<bool> isPrimary;
@@ -2308,6 +2357,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     this.errata = const Value.absent(),
     this.limitations = const Value.absent(),
     this.copyLimit = const Value.absent(),
+    this.ruleCopyLimit = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.releaseIds = const Value.absent(),
     this.isPrimary = const Value.absent(),
@@ -2348,6 +2398,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     this.errata = const Value.absent(),
     this.limitations = const Value.absent(),
     this.copyLimit = const Value.absent(),
+    this.ruleCopyLimit = const Value.absent(),
     required String imageUrl,
     this.releaseIds = const Value.absent(),
     this.isPrimary = const Value.absent(),
@@ -2392,6 +2443,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     Expression<String>? errata,
     Expression<String>? limitations,
     Expression<int>? copyLimit,
+    Expression<int>? ruleCopyLimit,
     Expression<String>? imageUrl,
     Expression<String>? releaseIds,
     Expression<bool>? isPrimary,
@@ -2433,6 +2485,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
       if (errata != null) 'errata': errata,
       if (limitations != null) 'limitations': limitations,
       if (copyLimit != null) 'copy_limit': copyLimit,
+      if (ruleCopyLimit != null) 'rule_copy_limit': ruleCopyLimit,
       if (imageUrl != null) 'image_url': imageUrl,
       if (releaseIds != null) 'release_ids': releaseIds,
       if (isPrimary != null) 'is_primary': isPrimary,
@@ -2475,6 +2528,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     Value<String?>? errata,
     Value<String>? limitations,
     Value<int>? copyLimit,
+    Value<int?>? ruleCopyLimit,
     Value<String>? imageUrl,
     Value<String>? releaseIds,
     Value<bool>? isPrimary,
@@ -2516,6 +2570,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
       errata: errata ?? this.errata,
       limitations: limitations ?? this.limitations,
       copyLimit: copyLimit ?? this.copyLimit,
+      ruleCopyLimit: ruleCopyLimit ?? this.ruleCopyLimit,
       imageUrl: imageUrl ?? this.imageUrl,
       releaseIds: releaseIds ?? this.releaseIds,
       isPrimary: isPrimary ?? this.isPrimary,
@@ -2628,6 +2683,9 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     if (copyLimit.present) {
       map['copy_limit'] = Variable<int>(copyLimit.value);
     }
+    if (ruleCopyLimit.present) {
+      map['rule_copy_limit'] = Variable<int>(ruleCopyLimit.value);
+    }
     if (imageUrl.present) {
       map['image_url'] = Variable<String>(imageUrl.value);
     }
@@ -2682,6 +2740,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
           ..write('errata: $errata, ')
           ..write('limitations: $limitations, ')
           ..write('copyLimit: $copyLimit, ')
+          ..write('ruleCopyLimit: $ruleCopyLimit, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('releaseIds: $releaseIds, ')
           ..write('isPrimary: $isPrimary, ')
@@ -5314,6 +5373,7 @@ typedef $$CardsTableCreateCompanionBuilder =
       Value<String?> errata,
       Value<String> limitations,
       Value<int> copyLimit,
+      Value<int?> ruleCopyLimit,
       required String imageUrl,
       Value<String> releaseIds,
       Value<bool> isPrimary,
@@ -5355,6 +5415,7 @@ typedef $$CardsTableUpdateCompanionBuilder =
       Value<String?> errata,
       Value<String> limitations,
       Value<int> copyLimit,
+      Value<int?> ruleCopyLimit,
       Value<String> imageUrl,
       Value<String> releaseIds,
       Value<bool> isPrimary,
@@ -5593,6 +5654,11 @@ class $$CardsTableFilterComposer extends Composer<_$AppDatabase, $CardsTable> {
 
   ColumnFilters<int> get copyLimit => $composableBuilder(
     column: $table.copyLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ruleCopyLimit => $composableBuilder(
+    column: $table.ruleCopyLimit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5866,6 +5932,11 @@ class $$CardsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get ruleCopyLimit => $composableBuilder(
+    column: $table.ruleCopyLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get imageUrl => $composableBuilder(
     column: $table.imageUrl,
     builder: (column) => ColumnOrderings(column),
@@ -6014,6 +6085,11 @@ class $$CardsTableAnnotationComposer
 
   GeneratedColumn<int> get copyLimit =>
       $composableBuilder(column: $table.copyLimit, builder: (column) => column);
+
+  GeneratedColumn<int> get ruleCopyLimit => $composableBuilder(
+    column: $table.ruleCopyLimit,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get imageUrl =>
       $composableBuilder(column: $table.imageUrl, builder: (column) => column);
@@ -6172,6 +6248,7 @@ class $$CardsTableTableManager
                 Value<String?> errata = const Value.absent(),
                 Value<String> limitations = const Value.absent(),
                 Value<int> copyLimit = const Value.absent(),
+                Value<int?> ruleCopyLimit = const Value.absent(),
                 Value<String> imageUrl = const Value.absent(),
                 Value<String> releaseIds = const Value.absent(),
                 Value<bool> isPrimary = const Value.absent(),
@@ -6211,6 +6288,7 @@ class $$CardsTableTableManager
                 errata: errata,
                 limitations: limitations,
                 copyLimit: copyLimit,
+                ruleCopyLimit: ruleCopyLimit,
                 imageUrl: imageUrl,
                 releaseIds: releaseIds,
                 isPrimary: isPrimary,
@@ -6252,6 +6330,7 @@ class $$CardsTableTableManager
                 Value<String?> errata = const Value.absent(),
                 Value<String> limitations = const Value.absent(),
                 Value<int> copyLimit = const Value.absent(),
+                Value<int?> ruleCopyLimit = const Value.absent(),
                 required String imageUrl,
                 Value<String> releaseIds = const Value.absent(),
                 Value<bool> isPrimary = const Value.absent(),
@@ -6291,6 +6370,7 @@ class $$CardsTableTableManager
                 errata: errata,
                 limitations: limitations,
                 copyLimit: copyLimit,
+                ruleCopyLimit: ruleCopyLimit,
                 imageUrl: imageUrl,
                 releaseIds: releaseIds,
                 isPrimary: isPrimary,

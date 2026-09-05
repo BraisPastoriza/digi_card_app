@@ -143,6 +143,9 @@ class _CardDetailViewState extends State<_CardDetailView> {
               if (limitation != null) ...[
                 const SizedBox(height: 14),
                 _LimitationBanner(limitation: limitation),
+              ] else if (card.hasRaisedCopyLimit) ...[
+                const SizedBox(height: 14),
+                _CopyLimitBanner(limit: card.copyLimit),
               ],
               const SizedBox(height: 20),
               _StatGrid(card: card),
@@ -356,6 +359,51 @@ class _LimitationBanner extends StatelessWidget {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown for the handful of cards whose own rule text lets a deck run more
+/// than four copies — the reason a deck can be fifty of the same card.
+class _CopyLimitBanner extends StatelessWidget {
+  const _CopyLimitBanner({required this.limit});
+
+  final int limit;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: DigimonColors.green.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: DigimonColors.green.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.library_add_check_outlined,
+              size: 16,
+              color: DigimonColors.green,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'A deck may run up to $limit copies of this card.',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -53,6 +53,7 @@ extension CardRowMapper on CardRow {
           ? null
           : CardFace.fromJson(jsonDecode(dualFace!) as Map<String, dynamic>),
       isAce: isAce,
+      ruleCopyLimit: ruleCopyLimit,
     );
   }
 }
