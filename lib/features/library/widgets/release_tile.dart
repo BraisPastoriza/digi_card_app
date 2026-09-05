@@ -11,8 +11,11 @@ const releaseArtRatio = 3 / 2;
 /// A release as a piece of box art.
 ///
 /// The artwork is the point: a player recognises DUAL REVOLUTION by its pack
-/// long before they read "BT-25". The set code rides along in the corner for
-/// the cases where two products share a look.
+/// long before they read "BT-25". The name and set code ride along in a scrim
+/// over the bottom of the art, both because that is where they stay out of the
+/// way and because keeping the tile a single fixed ratio means the grid can
+/// size it from its width alone — labels stacked underneath overflow as soon
+/// as the column width changes.
 class ReleaseTile extends StatelessWidget {
   const ReleaseTile({super.key, required this.release, required this.onTap});
 
@@ -21,81 +24,93 @@ class ReleaseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final code = release.setCode;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AspectRatio(
-            aspectRatio: releaseArtRatio,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppSurfaces.surfaceHigh,
-                      border: Border.all(color: AppSurfaces.outline),
-                      borderRadius: BorderRadius.circular(12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppSurfaces.surfaceHigh,
+            border: Border.all(color: AppSurfaces.outline),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (release.thumbnailUrl != null)
+                CachedNetworkImage(
+                  imageUrl: release.thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  fadeInDuration: const Duration(milliseconds: 150),
+                  errorWidget: (context, _, _) =>
+                      _ArtFallback(label: code ?? release.displayName),
+                )
+              else
+                _ArtFallback(label: code ?? release.displayName),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(9, 20, 9, 8),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Color(0xF2000000)],
                     ),
                   ),
-                  if (release.thumbnailUrl != null)
-                    CachedNetworkImage(
-                      imageUrl: release.thumbnailUrl!,
-                      fit: BoxFit.cover,
-                      fadeInDuration: const Duration(milliseconds: 150),
-                      errorWidget: (context, _, _) =>
-                          _ArtFallback(label: code ?? release.displayName),
-                    )
-                  else
-                    _ArtFallback(label: code ?? release.displayName),
-                  if (code != null)
-                    Positioned(
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(8, 14, 8, 6),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0xCC000000)],
-                          ),
-                        ),
-                        child: Text(
-                          code,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
-                            color: Colors.white,
-                          ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        release.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(blurRadius: 4, color: Colors.black87),
+                          ],
                         ),
                       ),
-                    ),
-                ],
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (code != null) ...[
+                            Text(
+                              code,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                                color: Color(0xFFFFB273),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            '${release.cardCount}',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            release.displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            '${release.cardCount} cards',
-            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -119,7 +134,7 @@ class _ArtFallback extends StatelessWidget {
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 30),
           child: Text(
             label,
             textAlign: TextAlign.center,

@@ -86,10 +86,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
                               maxCrossAxisExtent: 240,
-                              mainAxisSpacing: 16,
+                              mainAxisSpacing: 12,
                               crossAxisSpacing: 12,
-                              // The art plus the two lines of label under it.
-                              mainAxisExtent: 148,
+                              // The tile is entirely artwork, so its height
+                              // follows its width and cannot overflow when the
+                              // column count changes.
+                              childAspectRatio: releaseArtRatio,
                             ),
                         delegate: SliverChildBuilderDelegate((context, index) {
                           final release = section.releases[index];

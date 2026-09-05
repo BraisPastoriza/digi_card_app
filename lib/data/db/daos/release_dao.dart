@@ -15,7 +15,12 @@ class ReleaseSection {
   final ReleaseGroup group;
   final List<CardRelease> releases;
 
-  int get cardCount => releases.fold(0, (sum, r) => sum + r.cardCount);
+  /// Cards in the group, skipping the synthetic promo aggregate so its
+  /// contents are not counted a second time on top of the products they came
+  /// from.
+  int get cardCount => releases
+      .where((r) => r.id != allPromosReleaseId)
+      .fold(0, (sum, r) => sum + r.cardCount);
 }
 
 @DriftAccessor(tables: [Releases])
