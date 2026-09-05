@@ -95,6 +95,15 @@ lib/
 State is Riverpod; storage is SQLite through drift, with an FTS5 index over
 card text; navigation is go_router.
 
+The database holds two kinds of thing, and they are treated differently. Card
+data is a cache of the published card list: a schema change throws it away and
+re-syncs rather than migrating column by column. Decks are the only data the
+user authored, so they survive every upgrade — which works because a deck
+references cards by printed number, not by row.
+
+Adding a column to a card table therefore only needs `schemaVersion` bumped;
+adding one to a deck table needs a real migration step.
+
 ## Roadmap
 
 Phase 1 (this) covers the library and the deck builder with revisions.

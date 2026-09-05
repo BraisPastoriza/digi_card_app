@@ -36,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -45,10 +45,37 @@ class AppDatabase extends _$AppDatabase {
       await _createSearchIndex();
       await _createIndexes();
     },
+    // Everything on the card side is a cache of the published card list, so an
+    // upgrade throws it away and re-syncs rather than migrating column by
+    // column. Decks are the only data the user authored, and they survive:
+    // they reference cards by printed number, not by row.
+    onUpgrade: (m, from, to) async {
+      await resetCardData(m);
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Drops and recreates the card tables, leaving decks untouched. The next
+  /// launch finds no cards and runs a sync.
+  Future<void> resetCardData(Migrator m) async {
+    final cardTables = <TableInfo<Table, dynamic>>[
+      cardReleaseLinks,
+      cardTraits,
+      cardKeywords,
+      cards,
+      releases,
+      syncState,
+    ];
+    for (final table in cardTables) {
+      await m.deleteTable(table.actualTableName);
+      await m.createTable(table);
+    }
+    await customStatement('DROP TABLE IF EXISTS $cardSearchTable');
+    await _createSearchIndex();
+    await _createIndexes();
+  }
 
   /// Rebuilds the FTS index from scratch. Called after a card sync, which
   /// replaces the whole dataset anyway.
