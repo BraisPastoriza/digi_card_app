@@ -88,15 +88,16 @@ abstract final class AppTheme {
         selectedColor: scheme.primaryContainer,
         side: const BorderSide(color: AppSurfaces.outline),
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppSurfaces.surfaceHigh,
         hintStyle: TextStyle(color: scheme.onSurfaceVariant),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppSurfaces.outline),

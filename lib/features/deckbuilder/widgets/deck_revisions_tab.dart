@@ -167,10 +167,7 @@ class _RevisionCard extends ConsumerWidget {
             if (deck.revisions.length > 1)
               PopupMenuItem(
                 value: 'delete',
-                child: Text(
-                  'Delete',
-                  style: TextStyle(color: scheme.error),
-                ),
+                child: Text('Delete', style: TextStyle(color: scheme.error)),
               ),
           ],
         ),

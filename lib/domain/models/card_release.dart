@@ -8,6 +8,7 @@ class CardRelease {
     required this.group,
     required this.cardCount,
     required this.sortIndex,
+    this.printingCount = 0,
     this.genre,
     this.date,
     this.imageUrl,
@@ -23,7 +24,13 @@ class CardRelease {
   final String name;
 
   final ReleaseGroup group;
+
+  /// Distinct cards, counting a card once however many alternate arts of it
+  /// the release contains.
   final int cardCount;
+
+  /// Every printing, alternate arts included.
+  final int printingCount;
 
   /// Position in the API's own release ordering, which is chronological and
   /// the order players expect to browse in.
@@ -57,12 +64,20 @@ class CardRelease {
   }
 }
 
+/// Id of the synthetic release that gathers every promotional card.
+///
+/// Promos are spread across half a dozen products by where they were handed
+/// out, which is exactly the thing a player looking one up does not know. This
+/// release is assembled at sync time so that lookup has somewhere to happen.
+const allPromosReleaseId = 'all-promos';
+
 /// Sorts releases into the buckets the library lists them under.
 ///
 /// The API's own `genre` field lumps BT, EX and AD together as "Booster Pack",
 /// so the grouping comes from the release slug instead.
 ReleaseGroup classifyRelease(String id) {
   final slug = id.toLowerCase();
+  if (slug == allPromosReleaseId) return ReleaseGroup.promo;
   if (slug.startsWith('bt')) return ReleaseGroup.booster;
   if (slug.startsWith('ex')) return ReleaseGroup.ex;
   if (slug.startsWith('st-') || slug.startsWith('st')) {

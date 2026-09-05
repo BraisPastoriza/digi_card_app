@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/digimon_colors.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/deck.dart';
+import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
 import 'widgets/deck_name_dialog.dart';
@@ -53,8 +54,7 @@ class DecksScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                 itemCount: decks.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) =>
-                    _DeckCard(deck: decks[index]),
+                itemBuilder: (context, index) => _DeckCard(deck: decks[index]),
               ),
       ),
     );
@@ -93,73 +93,89 @@ class _DeckCard extends ConsumerWidget {
         onTap: () => context.go('/decks/${deck.id}'),
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppSurfaces.outline),
           ),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      deck.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  if (composition != null)
-                    _LegalityChip(composition: composition),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 13,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    revision == null
-                        ? 'No revisions'
-                        : deck.revisions.length == 1
-                        ? revision.name
-                        : '${revision.name} · ${deck.revisions.length} revisions',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              if (composition != null) ...[
-                const SizedBox(height: 12),
-                Row(
+              // The deck's biggest Digimon, so a shelf of decks is told apart
+              // by its art rather than by reading names.
+              _DeckArt(entry: composition?.signatureCard),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Count(
-                      label: 'Main',
-                      value: '${composition.mainDeckCount}',
-                      total: DeckRules.mainDeckSize,
-                      current: composition.mainDeckCount,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            deck.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        if (composition != null)
+                          _LegalityChip(composition: composition),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    _Count(
-                      label: 'Eggs',
-                      value: '${composition.eggDeckCount}',
-                      total: DeckRules.maxEggDeckSize,
-                      current: composition.eggDeckCount,
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.history,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            revision == null
+                                ? 'No revisions'
+                                : deck.revisions.length == 1
+                                ? revision.name
+                                : '${revision.name} · ${deck.revisions.length} revisions',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const Spacer(),
-                    _ColorBar(spread: composition.colorSpread),
+                    if (composition != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _Count(
+                            label: 'Main',
+                            value: '${composition.mainDeckCount}',
+                            total: DeckRules.mainDeckSize,
+                            current: composition.mainDeckCount,
+                          ),
+                          const SizedBox(width: 14),
+                          _Count(
+                            label: 'Eggs',
+                            value: '${composition.eggDeckCount}',
+                            total: DeckRules.maxEggDeckSize,
+                            current: composition.eggDeckCount,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      _ColorBar(spread: composition.colorSpread),
+                    ],
                   ],
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -212,6 +228,43 @@ class _Count extends StatelessWidget {
   }
 }
 
+/// The deck's signature card, or a placeholder while it has none.
+class _DeckArt extends StatelessWidget {
+  const _DeckArt({required this.entry});
+
+  final DeckEntry? entry;
+
+  static const _width = 62.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final entry = this.entry;
+    return SizedBox(
+      width: _width,
+      height: _width / cardAspectRatio,
+      child: entry == null
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppSurfaces.surfaceHigh,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppSurfaces.outline),
+              ),
+              child: Icon(
+                Icons.add_card,
+                size: 20,
+                color: scheme.onSurfaceVariant,
+              ),
+            )
+          : CardThumbnail(
+              card: entry.card,
+              borderRadius: 8,
+              showColorEdge: false,
+            ),
+    );
+  }
+}
+
 /// Proportional bar of the deck's colours, which is how players recognise a
 /// deck at a glance.
 class _ColorBar extends StatelessWidget {
@@ -229,7 +282,7 @@ class _ColorBar extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(3),
       child: SizedBox(
-        width: 84,
+        width: double.infinity,
         height: 6,
         child: Row(
           // Stretch, not the default centre alignment: a childless ColoredBox

@@ -42,8 +42,9 @@ class ReleaseDao extends DatabaseAccessor<AppDatabase> with _$ReleaseDaoMixin {
   }
 
   Future<CardRelease?> releaseById(String id) async {
-    final row = await (select(releases)..where((r) => r.id.equals(id)))
-        .getSingleOrNull();
+    final row = await (select(
+      releases,
+    )..where((r) => r.id.equals(id))).getSingleOrNull();
     return row?.toCardRelease();
   }
 

@@ -10,12 +10,13 @@ import '../../domain/models/deck.dart';
 import '../../domain/models/digimon_card.dart';
 import '../../shared/widgets/common.dart';
 import '../library/library_providers.dart';
-import '../library/widgets/card_grid.dart';
+import '../../shared/widgets/card_thumbnail.dart';
 import '../library/widgets/filter_sheet.dart';
+import 'widgets/deck_card_tile.dart';
 import 'deck_providers.dart';
 
-/// Card search wired to a deck revision: tap adds a copy, long-press removes
-/// one, and the running deck counts stay visible while browsing.
+/// Card search wired to a deck revision: tapping a card adds a copy and opens
+/// its stepper, and the running deck counts stay visible while browsing.
 ///
 /// It shares the library's filter state deliberately — a player who has just
 /// narrowed the library to "red Lv.4" expects the same view when they come to
@@ -39,6 +40,9 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   Timer? _debounce;
+
+  /// Card number whose stepper is open, if any.
+  String? _openCard;
 
   @override
   void initState() {
@@ -68,6 +72,21 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
     if (position.pixels >= position.maxScrollExtent - 600) {
       ref.read(cardSearchProvider.notifier).loadMore();
     }
+  }
+
+  /// A card with no copies yet is added by the tap that opens its stepper —
+  /// the common case is "add one", and making that two taps would be tedious
+  /// across fifty cards.
+  void _onCardTap(DigimonCard card) {
+    final quantity =
+        ref.read(revisionQuantitiesProvider(widget.revisionId))[card.number] ??
+        0;
+    if (_openCard == card.number) {
+      setState(() => _openCard = null);
+      return;
+    }
+    setState(() => _openCard = card.number);
+    if (quantity == 0) _adjust(card, 1);
   }
 
   Future<void> _adjust(DigimonCard card, int delta) async {
@@ -103,9 +122,7 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
   Widget build(BuildContext context) {
     final filter = ref.watch(cardFilterProvider);
     final results = ref.watch(cardSearchProvider);
-    final quantities = ref.watch(
-      revisionQuantitiesProvider(widget.revisionId),
-    );
+    final quantities = ref.watch(revisionQuantitiesProvider(widget.revisionId));
     final composition = ref
         .watch(compositionProvider(widget.revisionId))
         .valueOrNull;
@@ -179,17 +196,43 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                               child: const Text('Clear filters'),
                             ),
                     )
-                  : CustomScrollView(
-                      controller: _scrollController,
-                      slivers: [
-                        SliverCardGrid(
-                          cards: state.cards,
-                          quantityOf: (card) => quantities[card.number] ?? 0,
-                          onCardTap: (card) => _adjust(card, 1),
-                          onCardLongPress: (card) => _adjust(card, -1),
-                        ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                      ],
+                  : GestureDetector(
+                      // Tapping the background closes an open stepper.
+                      onTap: () => setState(() => _openCard = null),
+                      behavior: HitTestBehavior.translucent,
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(14, 6, 14, 12),
+                            sliver: SliverGrid(
+                              gridDelegate:
+                                  const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 150,
+                                    mainAxisSpacing: 14,
+                                    crossAxisSpacing: 12,
+                                    childAspectRatio: cardAspectRatio,
+                                  ),
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                final card = state.cards[index];
+                                return DeckCardTile(
+                                  card: card,
+                                  quantity: quantities[card.number] ?? 0,
+                                  expanded: _openCard == card.number,
+                                  onTap: () => _onCardTap(card),
+                                  onAdjust: (delta) => _adjust(card, delta),
+                                  onInfo: () =>
+                                      context.push('/card/${card.number}'),
+                                );
+                              }, childCount: state.cards.length),
+                            ),
+                          ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                        ],
+                      ),
                     ),
             ),
           ),
@@ -233,7 +276,7 @@ class _DeckCounter extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            'Long-press to remove',
+            'Tap a card to set copies',
             style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
           ),
         ],

@@ -41,45 +41,43 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
               release?.displayName ?? 'Expansion',
               overflow: TextOverflow.ellipsis,
             ),
-            actions: [
-              IconButton(
-                tooltip: _includeAlternateArts
-                    ? 'Hide alternate arts'
-                    : 'Show alternate arts',
-                onPressed: () => setState(
-                  () => _includeAlternateArts = !_includeAlternateArts,
-                ),
-                icon: Icon(
-                  _includeAlternateArts
-                      ? Icons.filter_none
-                      : Icons.filter_none_outlined,
-                  color: _includeAlternateArts ? scheme.primary : null,
-                ),
-              ),
-            ],
           ),
           if (release != null)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 0, 12, 8),
                 child: Row(
                   children: [
                     if (release.setCode != null) ...[
                       MetaBadge(release.setCode!, color: scheme.primary),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      [
-                        cards.valueOrNull == null
-                            ? '${release.cardCount} cards'
-                            : '${cards.valueOrNull!.length} cards',
-                        if (release.date != null) release.date!,
-                      ].join(' · '),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: scheme.onSurfaceVariant,
+                    Expanded(
+                      child: Text(
+                        [
+                          '${cards.valueOrNull?.length ?? release.cardCount} cards',
+                          if (release.date != null) release.date!,
+                        ].join(' · '),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
+                    // Some products are made almost entirely of alternate
+                    // arts, so say how many are hidden rather than tucking the
+                    // toggle behind an icon.
+                    if (release.printingCount > release.cardCount)
+                      FilterChip(
+                        label: Text(
+                          'Alt arts +${release.printingCount - release.cardCount}',
+                        ),
+                        labelStyle: const TextStyle(fontSize: 12),
+                        visualDensity: VisualDensity.compact,
+                        selected: _includeAlternateArts,
+                        onSelected: (value) =>
+                            setState(() => _includeAlternateArts = value),
+                      ),
                   ],
                 ),
               ),
@@ -116,8 +114,7 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
                 : [
                     SliverCardGrid(
                       cards: cards,
-                      onCardTap: (card) =>
-                          context.push('/card/${card.number}'),
+                      onCardTap: (card) => context.push('/card/${card.number}'),
                     ),
                   ],
           ),

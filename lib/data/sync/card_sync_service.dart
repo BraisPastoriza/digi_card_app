@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../api/heroi_api.dart';
 import '../db/app_database.dart';
@@ -168,25 +170,50 @@ class CardSyncService {
     List<ReleaseDetail> details,
     List<String> orderedIds,
   ) async {
+    final byId = {for (final card in cards) card.id: card};
+
     // A card belongs to a release if either side of the API says so: the
     // card's own relationships miss a handful of cards, and a release's card
     // list misses the ones filed only under a promo bucket.
-    final links = <String, Set<String>>{};
+    final releaseToCards = <String, Set<String>>{};
     for (final card in cards) {
-      links.putIfAbsent(card.id, () => <String>{}).addAll(card.releaseIds);
+      for (final releaseId in card.releaseIds) {
+        releaseToCards.putIfAbsent(releaseId, () => <String>{}).add(card.id);
+      }
     }
-    final knownCardIds = {for (final card in cards) card.id};
     for (final detail in details) {
       for (final cardId in detail.cardIds) {
-        if (!knownCardIds.contains(cardId)) continue;
-        links.putIfAbsent(cardId, () => <String>{}).add(detail.id);
+        if (!byId.containsKey(cardId)) continue;
+        releaseToCards.putIfAbsent(detail.id, () => <String>{}).add(cardId);
       }
     }
 
-    final cardCountByRelease = <String, int>{};
-    for (final entry in links.entries) {
-      for (final releaseId in entry.value) {
-        cardCountByRelease[releaseId] = (cardCountByRelease[releaseId] ?? 0) + 1;
+    _addAllPromosRelease(releaseToCards, details);
+
+    // One printing per card number, chosen among the printings that release
+    // actually contains. Choosing globally instead would leave promo and
+    // accessory products empty, because their cards are alternate arts of
+    // base printings that belong to other sets.
+    final primaryInRelease = <String, Set<String>>{};
+    for (final entry in releaseToCards.entries) {
+      final lowestByNumber = <String, ParsedCard>{};
+      for (final cardId in entry.value) {
+        final card = byId[cardId];
+        if (card == null) continue;
+        final current = lowestByNumber[card.number];
+        if (current == null || card.parallelId < current.parallelId) {
+          lowestByNumber[card.number] = card;
+        }
+      }
+      primaryInRelease[entry.key] = {
+        for (final card in lowestByNumber.values) card.id,
+      };
+    }
+
+    final links = <String, Set<String>>{};
+    for (final entry in releaseToCards.entries) {
+      for (final cardId in entry.value) {
+        links.putIfAbsent(cardId, () => <String>{}).add(entry.key);
       }
     }
 
@@ -199,7 +226,7 @@ class CardSyncService {
 
       await _db.batch((batch) {
         batch.insertAll(_db.releases, [
-          for (final detail in details)
+          for (final detail in _withAllPromos(details))
             ReleasesCompanion.insert(
               id: detail.id,
               name: detail.name,
@@ -210,8 +237,15 @@ class CardSyncService {
               thumbnailUrl: Value(detail.thumbnailUrl),
               productUri: Value(detail.productUri),
               cardlistUri: Value(detail.cardlistUri),
-              cardCount: Value(cardCountByRelease[detail.id] ?? 0),
-              sortIndex: Value(orderedIds.indexOf(detail.id)),
+              cardCount: Value(primaryInRelease[detail.id]?.length ?? 0),
+              printingCount: Value(releaseToCards[detail.id]?.length ?? 0),
+              // The aggregate promo release is not part of the API's own
+              // ordering; float it to the top of its group.
+              sortIndex: Value(
+                detail.id == allPromosReleaseId
+                    ? orderedIds.length + 1
+                    : orderedIds.indexOf(detail.id),
+              ),
             ),
         ]);
 
@@ -253,6 +287,7 @@ class CardSyncService {
               imageUrl: card.imageUrl,
               releaseIds: Value(encodeList(links[card.id] ?? const {})),
               isPrimary: Value(card.isPrimary),
+              isAce: Value(card.isAce),
               numberSort: Value(card.numberSort),
             ),
         ]);
@@ -270,15 +305,54 @@ class CardSyncService {
         ]);
 
         batch.insertAll(_db.cardReleaseLinks, [
-          for (final entry in links.entries)
-            for (final releaseId in entry.value)
+          for (final entry in releaseToCards.entries)
+            for (final cardId in entry.value)
               CardReleaseLinksCompanion.insert(
-                cardId: entry.key,
-                releaseId: releaseId,
+                cardId: cardId,
+                releaseId: entry.key,
+                isPrimaryInRelease: Value(
+                  primaryInRelease[entry.key]?.contains(cardId) ?? true,
+                ),
               ),
         ]);
       });
     });
+  }
+
+  /// Files every promotional card under one aggregate release, so a player who
+  /// only has the card in hand can find it without knowing which event or
+  /// product it came from.
+  void _addAllPromosRelease(
+    Map<String, Set<String>> releaseToCards,
+    List<ReleaseDetail> details,
+  ) {
+    final promoCards = <String>{};
+    for (final entry in releaseToCards.entries) {
+      if (classifyRelease(entry.key) != ReleaseGroup.promo) continue;
+      promoCards.addAll(entry.value);
+    }
+    if (promoCards.isNotEmpty) {
+      releaseToCards[allPromosReleaseId] = promoCards;
+    }
+  }
+
+  /// The API's releases plus the synthetic promo aggregate, which borrows its
+  /// artwork from the plain promotion-card product.
+  List<ReleaseDetail> _withAllPromos(List<ReleaseDetail> details) {
+    final donor = details.firstWhereOrNull(
+      (detail) => detail.id == 'p' && detail.thumbnailUrl != null,
+    );
+    return [
+      ...details,
+      ReleaseDetail(
+        id: allPromosReleaseId,
+        name: 'All Promos',
+        cardIds: const [],
+        genre: 'Promotion Card',
+        imageUrl: donor?.imageUrl,
+        thumbnailUrl: donor?.thumbnailUrl,
+      ),
+    ];
   }
 
   static String _megabytes(int bytes) =>

@@ -39,8 +39,9 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
   }
 
   Future<DigimonCard?> cardById(String id) async {
-    final row = await (select(cards)..where((c) => c.id.equals(id)))
-        .getSingleOrNull();
+    final row = await (select(
+      cards,
+    )..where((c) => c.id.equals(id))).getSingleOrNull();
     if (row == null) return null;
     final siblings = await _printingIdsOfNumber(row.number);
     return row.toDigimonCard(
@@ -78,22 +79,26 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     return {for (final row in rows) row.number: row.toDigimonCard()};
   }
 
-  /// Primary printings belonging to a release, in card-number order.
+  /// Cards belonging to a release, in card-number order.
+  ///
+  /// Collapsing alternate arts uses the per-release flag rather than the
+  /// card's global primary printing: promo and accessory products are made
+  /// almost entirely of alternate arts whose base printing belongs to some
+  /// other set, so a global collapse leaves them empty.
   Future<List<DigimonCard>> cardsInRelease(
     String releaseId, {
     bool includeAlternateArts = false,
   }) async {
+    final link = selectOnly(cardReleaseLinks)
+      ..addColumns([cardReleaseLinks.cardId])
+      ..where(
+        includeAlternateArts
+            ? cardReleaseLinks.releaseId.equals(releaseId)
+            : cardReleaseLinks.releaseId.equals(releaseId) &
+                  cardReleaseLinks.isPrimaryInRelease.equals(true),
+      );
     final query = select(cards)
-      ..where((c) {
-        final inRelease = c.id.isInQuery(
-          selectOnly(cardReleaseLinks)
-            ..addColumns([cardReleaseLinks.cardId])
-            ..where(cardReleaseLinks.releaseId.equals(releaseId)),
-        );
-        return includeAlternateArts
-            ? inRelease
-            : inRelease & c.isPrimary.equals(true);
-      })
+      ..where((c) => c.id.isInQuery(link))
       ..orderBy([(c) => OrderingTerm.asc(c.numberSort)]);
     final rows = await query.get();
     return rows.map((row) => row.toDigimonCard()).toList();
@@ -169,22 +174,29 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
 
     if (filter.colors.isNotEmpty) {
       final clauses = filter.colors
-          .map((color) => cards.colors.like('%$listDelimiter${color.apiValue}$listDelimiter%'))
+          .map(
+            (color) => cards.colors.like(
+              '%$listDelimiter${color.apiValue}$listDelimiter%',
+            ),
+          )
           .toList();
-      predicate = predicate & switch (filter.colorMatchMode) {
-        ColorMatchMode.any => clauses.reduce((a, b) => a | b),
-        ColorMatchMode.all => clauses.reduce((a, b) => a & b),
-        ColorMatchMode.exact =>
-          clauses.reduce((a, b) => a & b) &
-              cards.colorCount.equals(filter.colors.length),
-      };
+      predicate =
+          predicate &
+          switch (filter.colorMatchMode) {
+            ColorMatchMode.any => clauses.reduce((a, b) => a | b),
+            ColorMatchMode.all => clauses.reduce((a, b) => a & b),
+            ColorMatchMode.exact =>
+              clauses.reduce((a, b) => a & b) &
+                  cards.colorCount.equals(filter.colors.length),
+          };
     }
 
     if (filter.categories.isNotEmpty) {
       // A dual card is both a Digimon and an Option, so it should surface
       // under either category.
       final values = filter.categories.map((c) => c.apiValue).toList();
-      predicate = predicate &
+      predicate =
+          predicate &
           (cards.category.isIn(values) | cards.dualCategory.isIn(values));
     }
 
@@ -205,7 +217,8 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     }
 
     if (filter.traits.isNotEmpty) {
-      predicate = predicate &
+      predicate =
+          predicate &
           cards.id.isInQuery(
             selectOnly(cardTraits)
               ..addColumns([cardTraits.cardId])
@@ -214,7 +227,8 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     }
 
     if (filter.keywords.isNotEmpty) {
-      predicate = predicate &
+      predicate =
+          predicate &
           cards.id.isInQuery(
             selectOnly(cardKeywords)
               ..addColumns([cardKeywords.cardId])
@@ -223,7 +237,8 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     }
 
     if (filter.releaseIds.isNotEmpty) {
-      predicate = predicate &
+      predicate =
+          predicate &
           cards.id.isInQuery(
             selectOnly(cardReleaseLinks)
               ..addColumns([cardReleaseLinks.cardId])
@@ -239,16 +254,23 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     final digivolve = filter.digivolveCost;
     if (digivolve.min != null) {
       predicate =
-          predicate & cards.digivolveCostMax.isBiggerOrEqualValue(digivolve.min!);
+          predicate &
+          cards.digivolveCostMax.isBiggerOrEqualValue(digivolve.min!);
     }
     if (digivolve.max != null) {
       predicate =
-          predicate & cards.digivolveCostMin.isSmallerOrEqualValue(digivolve.max!);
+          predicate &
+          cards.digivolveCostMin.isSmallerOrEqualValue(digivolve.max!);
     }
 
     if (filter.restrictedOnly) {
       predicate = predicate & cards.copyLimit.isSmallerThanValue(4);
     }
+
+    // ACE and dual narrow the result rather than widening it: "Digimon + ACE"
+    // means ACE Digimon, not Digimon plus every ACE card.
+    if (filter.aceOnly) predicate = predicate & cards.isAce.equals(true);
+    if (filter.dualOnly) predicate = predicate & cards.dualFace.isNotNull();
 
     return predicate;
   }

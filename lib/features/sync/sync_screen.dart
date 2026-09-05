@@ -242,7 +242,11 @@ class _AppMark extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Icon(Icons.style_rounded, size: 34, color: Color(0xFF261200)),
+      child: const Icon(
+        Icons.style_rounded,
+        size: 34,
+        color: Color(0xFF261200),
+      ),
     );
   }
 }

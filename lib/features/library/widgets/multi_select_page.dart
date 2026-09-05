@@ -27,11 +27,8 @@ Future<Set<String>?> showMultiSelect(
   return Navigator.of(context).push<Set<String>>(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (context) => _MultiSelectPage(
-        title: title,
-        options: options,
-        initial: selected,
-      ),
+      builder: (context) =>
+          _MultiSelectPage(title: title, options: options, initial: selected),
     ),
   );
 }

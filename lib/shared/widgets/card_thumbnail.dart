@@ -18,6 +18,7 @@ class CardThumbnail extends StatelessWidget {
     required this.card,
     this.borderRadius = 10,
     this.showColorEdge = true,
+    this.fit = BoxFit.cover,
   });
 
   final DigimonCard card;
@@ -26,6 +27,11 @@ class CardThumbnail extends StatelessWidget {
   /// Draws a thin bar of the card's colours along the bottom edge, which keeps
   /// the colour readable when the art itself is dark.
   final bool showColorEdge;
+
+  /// `cover` in grids, where every tile is already the card's aspect ratio.
+  /// Anywhere the box is a different shape this must be `contain`, or the
+  /// card's own borders and its number get cropped away.
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +43,11 @@ class CardThumbnail extends StatelessWidget {
         children: [
           CachedNetworkImage(
             imageUrl: card.imageUrl,
-            fit: BoxFit.cover,
+            fit: fit,
             fadeInDuration: const Duration(milliseconds: 150),
             placeholder: (context, _) => _Placeholder(card: card),
-            errorWidget: (context, _, _) => _Placeholder(card: card, failed: true),
+            errorWidget: (context, _, _) =>
+                _Placeholder(card: card, failed: true),
           ),
           if (showColorEdge)
             Positioned(

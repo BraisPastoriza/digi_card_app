@@ -60,7 +60,10 @@ class MetaBadge extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final foreground = color ?? scheme.onSurfaceVariant;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: icon == null ? 7 : 6, vertical: 3),
+      padding: EdgeInsets.symmetric(
+        horizontal: icon == null ? 7 : 6,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: background ?? AppSurfaces.surfaceHigh,
         borderRadius: BorderRadius.circular(6),
@@ -132,7 +135,11 @@ class EmptyState extends StatelessWidget {
               Text(
                 message!,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant, height: 1.4),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: scheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
               ),
             ],
             if (action != null) ...[const SizedBox(height: 20), action!],
@@ -182,7 +189,10 @@ class SectionHeader extends StatelessWidget {
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
               ],
             ),

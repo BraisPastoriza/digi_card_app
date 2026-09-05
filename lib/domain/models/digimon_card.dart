@@ -198,7 +198,9 @@ class CardFace {
           ? rawColors
                 .map(
                   (c) => CardColor.tryParse(
-                    c is Map<String, dynamic> ? c['color'] as String? : c as String?,
+                    c is Map<String, dynamic>
+                        ? c['color'] as String?
+                        : c as String?,
                   ),
                 )
                 .whereType<CardColor>()
@@ -258,6 +260,7 @@ class DigimonCard {
     this.releaseIds = const [],
     this.alternateArtIds = const [],
     this.dualFace,
+    this.isAce = false,
   });
 
   /// Card id as used by the API path, e.g. `ST1-07` or `ST1-07_P1`.
@@ -312,6 +315,9 @@ class DigimonCard {
 
   /// The Option face of a dual card, if this card has one.
   final CardFace? dualFace;
+
+  /// True for ACE cards, which can be played early for an Overflow cost.
+  final bool isAce;
 
   bool get isBasePrinting => parallelId == 0;
 

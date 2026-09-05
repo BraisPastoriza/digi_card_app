@@ -115,6 +115,22 @@ class DeckComposition {
   int get mainDeckCount => mainDeck.fold(0, (sum, e) => sum + e.quantity);
   int get eggDeckCount => eggDeck.fold(0, (sum, e) => sum + e.quantity);
 
+  /// The card that stands for the deck in a list.
+  ///
+  /// The deck's biggest Digimon is the one a player names it after, so this
+  /// picks the highest level, breaking ties on DP and then cost.
+  DeckEntry? get signatureCard {
+    if (mainDeck.isEmpty) return eggDeck.firstOrNull;
+    return mainDeck.reduce((best, entry) {
+      final byLevel = (entry.card.level ?? 0).compareTo(best.card.level ?? 0);
+      if (byLevel != 0) return byLevel > 0 ? entry : best;
+      final byDp = (entry.card.dp ?? 0).compareTo(best.card.dp ?? 0);
+      if (byDp != 0) return byDp > 0 ? entry : best;
+      final byCost = (entry.card.cost ?? 0).compareTo(best.card.cost ?? 0);
+      return byCost > 0 ? entry : best;
+    });
+  }
+
   List<DeckEntry> get allEntries => [...mainDeck, ...eggDeck];
 
   /// Cards in the main deck of the given category, in display order.
@@ -217,8 +233,7 @@ class DeckComposition {
     return issues;
   }
 
-  bool get isLegal =>
-      !issues.any((i) => i.severity == DeckIssueSeverity.error);
+  bool get isLegal => !issues.any((i) => i.severity == DeckIssueSeverity.error);
 
   static String _cardWord(int count) => count == 1 ? 'card' : 'cards';
 

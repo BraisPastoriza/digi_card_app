@@ -114,6 +114,18 @@ class $ReleasesTable extends Releases
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _printingCountMeta = const VerificationMeta(
+    'printingCount',
+  );
+  @override
+  late final GeneratedColumn<int> printingCount = GeneratedColumn<int>(
+    'printing_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _sortIndexMeta = const VerificationMeta(
     'sortIndex',
   );
@@ -138,6 +150,7 @@ class $ReleasesTable extends Releases
     productUri,
     cardlistUri,
     cardCount,
+    printingCount,
     sortIndex,
   ];
   @override
@@ -224,6 +237,15 @@ class $ReleasesTable extends Releases
         cardCount.isAcceptableOrUnknown(data['card_count']!, _cardCountMeta),
       );
     }
+    if (data.containsKey('printing_count')) {
+      context.handle(
+        _printingCountMeta,
+        printingCount.isAcceptableOrUnknown(
+          data['printing_count']!,
+          _printingCountMeta,
+        ),
+      );
+    }
     if (data.containsKey('sort_index')) {
       context.handle(
         _sortIndexMeta,
@@ -279,6 +301,10 @@ class $ReleasesTable extends Releases
         DriftSqlType.int,
         data['${effectivePrefix}card_count'],
       )!,
+      printingCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}printing_count'],
+      )!,
       sortIndex: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sort_index'],
@@ -302,7 +328,13 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
   final String? thumbnailUrl;
   final String? productUri;
   final String? cardlistUri;
+
+  /// Distinct cards in the release, counting a card once however many
+  /// alternate arts of it the release contains.
   final int cardCount;
+
+  /// Every printing in the release, alternate arts included.
+  final int printingCount;
 
   /// Position in the API's chronological release ordering.
   final int sortIndex;
@@ -317,6 +349,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     this.productUri,
     this.cardlistUri,
     required this.cardCount,
+    required this.printingCount,
     required this.sortIndex,
   });
   @override
@@ -344,6 +377,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
       map['cardlist_uri'] = Variable<String>(cardlistUri);
     }
     map['card_count'] = Variable<int>(cardCount);
+    map['printing_count'] = Variable<int>(printingCount);
     map['sort_index'] = Variable<int>(sortIndex);
     return map;
   }
@@ -372,6 +406,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           ? const Value.absent()
           : Value(cardlistUri),
       cardCount: Value(cardCount),
+      printingCount: Value(printingCount),
       sortIndex: Value(sortIndex),
     );
   }
@@ -392,6 +427,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
       productUri: serializer.fromJson<String?>(json['productUri']),
       cardlistUri: serializer.fromJson<String?>(json['cardlistUri']),
       cardCount: serializer.fromJson<int>(json['cardCount']),
+      printingCount: serializer.fromJson<int>(json['printingCount']),
       sortIndex: serializer.fromJson<int>(json['sortIndex']),
     );
   }
@@ -409,6 +445,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
       'productUri': serializer.toJson<String?>(productUri),
       'cardlistUri': serializer.toJson<String?>(cardlistUri),
       'cardCount': serializer.toJson<int>(cardCount),
+      'printingCount': serializer.toJson<int>(printingCount),
       'sortIndex': serializer.toJson<int>(sortIndex),
     };
   }
@@ -424,6 +461,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     Value<String?> productUri = const Value.absent(),
     Value<String?> cardlistUri = const Value.absent(),
     int? cardCount,
+    int? printingCount,
     int? sortIndex,
   }) => ReleaseRow(
     id: id ?? this.id,
@@ -436,6 +474,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     productUri: productUri.present ? productUri.value : this.productUri,
     cardlistUri: cardlistUri.present ? cardlistUri.value : this.cardlistUri,
     cardCount: cardCount ?? this.cardCount,
+    printingCount: printingCount ?? this.printingCount,
     sortIndex: sortIndex ?? this.sortIndex,
   );
   ReleaseRow copyWithCompanion(ReleasesCompanion data) {
@@ -458,6 +497,9 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           ? data.cardlistUri.value
           : this.cardlistUri,
       cardCount: data.cardCount.present ? data.cardCount.value : this.cardCount,
+      printingCount: data.printingCount.present
+          ? data.printingCount.value
+          : this.printingCount,
       sortIndex: data.sortIndex.present ? data.sortIndex.value : this.sortIndex,
     );
   }
@@ -475,6 +517,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           ..write('productUri: $productUri, ')
           ..write('cardlistUri: $cardlistUri, ')
           ..write('cardCount: $cardCount, ')
+          ..write('printingCount: $printingCount, ')
           ..write('sortIndex: $sortIndex')
           ..write(')'))
         .toString();
@@ -492,6 +535,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     productUri,
     cardlistUri,
     cardCount,
+    printingCount,
     sortIndex,
   );
   @override
@@ -508,6 +552,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           other.productUri == this.productUri &&
           other.cardlistUri == this.cardlistUri &&
           other.cardCount == this.cardCount &&
+          other.printingCount == this.printingCount &&
           other.sortIndex == this.sortIndex);
 }
 
@@ -522,6 +567,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
   final Value<String?> productUri;
   final Value<String?> cardlistUri;
   final Value<int> cardCount;
+  final Value<int> printingCount;
   final Value<int> sortIndex;
   final Value<int> rowid;
   const ReleasesCompanion({
@@ -535,6 +581,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     this.productUri = const Value.absent(),
     this.cardlistUri = const Value.absent(),
     this.cardCount = const Value.absent(),
+    this.printingCount = const Value.absent(),
     this.sortIndex = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -549,6 +596,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     this.productUri = const Value.absent(),
     this.cardlistUri = const Value.absent(),
     this.cardCount = const Value.absent(),
+    this.printingCount = const Value.absent(),
     this.sortIndex = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -565,6 +613,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     Expression<String>? productUri,
     Expression<String>? cardlistUri,
     Expression<int>? cardCount,
+    Expression<int>? printingCount,
     Expression<int>? sortIndex,
     Expression<int>? rowid,
   }) {
@@ -579,6 +628,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
       if (productUri != null) 'product_uri': productUri,
       if (cardlistUri != null) 'cardlist_uri': cardlistUri,
       if (cardCount != null) 'card_count': cardCount,
+      if (printingCount != null) 'printing_count': printingCount,
       if (sortIndex != null) 'sort_index': sortIndex,
       if (rowid != null) 'rowid': rowid,
     });
@@ -595,6 +645,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     Value<String?>? productUri,
     Value<String?>? cardlistUri,
     Value<int>? cardCount,
+    Value<int>? printingCount,
     Value<int>? sortIndex,
     Value<int>? rowid,
   }) {
@@ -609,6 +660,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
       productUri: productUri ?? this.productUri,
       cardlistUri: cardlistUri ?? this.cardlistUri,
       cardCount: cardCount ?? this.cardCount,
+      printingCount: printingCount ?? this.printingCount,
       sortIndex: sortIndex ?? this.sortIndex,
       rowid: rowid ?? this.rowid,
     );
@@ -647,6 +699,9 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     if (cardCount.present) {
       map['card_count'] = Variable<int>(cardCount.value);
     }
+    if (printingCount.present) {
+      map['printing_count'] = Variable<int>(printingCount.value);
+    }
     if (sortIndex.present) {
       map['sort_index'] = Variable<int>(sortIndex.value);
     }
@@ -669,6 +724,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
           ..write('productUri: $productUri, ')
           ..write('cardlistUri: $cardlistUri, ')
           ..write('cardCount: $cardCount, ')
+          ..write('printingCount: $printingCount, ')
           ..write('sortIndex: $sortIndex, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -940,6 +996,19 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
         requiredDuringInsert: false,
         defaultValue: const Constant('[]'),
       );
+  static const VerificationMeta _isAceMeta = const VerificationMeta('isAce');
+  @override
+  late final GeneratedColumn<bool> isAce = GeneratedColumn<bool>(
+    'is_ace',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_ace" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _dualFaceMeta = const VerificationMeta(
     'dualFace',
   );
@@ -1091,6 +1160,7 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
     digivolveCostMin,
     digivolveCostMax,
     digivolutionRequirements,
+    isAce,
     dualFace,
     dualCategory,
     notes,
@@ -1285,6 +1355,12 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
         ),
       );
     }
+    if (data.containsKey('is_ace')) {
+      context.handle(
+        _isAceMeta,
+        isAce.isAcceptableOrUnknown(data['is_ace']!, _isAceMeta),
+      );
+    }
     if (data.containsKey('dual_face')) {
       context.handle(
         _dualFaceMeta,
@@ -1468,6 +1544,10 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
         DriftSqlType.string,
         data['${effectivePrefix}digivolution_requirements'],
       )!,
+      isAce: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_ace'],
+      )!,
       dualFace: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}dual_face'],
@@ -1556,8 +1636,12 @@ class CardRow extends DataClass implements Insertable<CardRow> {
   final int? digivolveCostMax;
   final String digivolutionRequirements;
 
+  /// True for ACE cards, which carry the ACE marker and an Overflow cost.
+  /// The API has no field for it; the name ends in "ACE".
+  final bool isAce;
+
   /// The other face of a dual card, which is both a Digimon and an Option.
-  /// Stored as JSON; only the BT-25 dual cards have one.
+  /// Stored as JSON; only a handful of cards have one.
   final String? dualFace;
 
   /// [dualFace]'s category, so a category filter matches either face.
@@ -1607,6 +1691,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     this.digivolveCostMin,
     this.digivolveCostMax,
     required this.digivolutionRequirements,
+    required this.isAce,
     this.dualFace,
     this.dualCategory,
     this.notes,
@@ -1679,6 +1764,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     map['digivolution_requirements'] = Variable<String>(
       digivolutionRequirements,
     );
+    map['is_ace'] = Variable<bool>(isAce);
     if (!nullToAbsent || dualFace != null) {
       map['dual_face'] = Variable<String>(dualFace);
     }
@@ -1752,6 +1838,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           ? const Value.absent()
           : Value(digivolveCostMax),
       digivolutionRequirements: Value(digivolutionRequirements),
+      isAce: Value(isAce),
       dualFace: dualFace == null && nullToAbsent
           ? const Value.absent()
           : Value(dualFace),
@@ -1807,6 +1894,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
       digivolutionRequirements: serializer.fromJson<String>(
         json['digivolutionRequirements'],
       ),
+      isAce: serializer.fromJson<bool>(json['isAce']),
       dualFace: serializer.fromJson<String?>(json['dualFace']),
       dualCategory: serializer.fromJson<String?>(json['dualCategory']),
       notes: serializer.fromJson<String?>(json['notes']),
@@ -1851,6 +1939,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
       'digivolutionRequirements': serializer.toJson<String>(
         digivolutionRequirements,
       ),
+      'isAce': serializer.toJson<bool>(isAce),
       'dualFace': serializer.toJson<String?>(dualFace),
       'dualCategory': serializer.toJson<String?>(dualCategory),
       'notes': serializer.toJson<String?>(notes),
@@ -1891,6 +1980,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     Value<int?> digivolveCostMin = const Value.absent(),
     Value<int?> digivolveCostMax = const Value.absent(),
     String? digivolutionRequirements,
+    bool? isAce,
     Value<String?> dualFace = const Value.absent(),
     Value<String?> dualCategory = const Value.absent(),
     Value<String?> notes = const Value.absent(),
@@ -1939,6 +2029,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
         : this.digivolveCostMax,
     digivolutionRequirements:
         digivolutionRequirements ?? this.digivolutionRequirements,
+    isAce: isAce ?? this.isAce,
     dualFace: dualFace.present ? dualFace.value : this.dualFace,
     dualCategory: dualCategory.present ? dualCategory.value : this.dualCategory,
     notes: notes.present ? notes.value : this.notes,
@@ -1994,6 +2085,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
       digivolutionRequirements: data.digivolutionRequirements.present
           ? data.digivolutionRequirements.value
           : this.digivolutionRequirements,
+      isAce: data.isAce.present ? data.isAce.value : this.isAce,
       dualFace: data.dualFace.present ? data.dualFace.value : this.dualFace,
       dualCategory: data.dualCategory.present
           ? data.dualCategory.value
@@ -2044,6 +2136,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           ..write('digivolveCostMin: $digivolveCostMin, ')
           ..write('digivolveCostMax: $digivolveCostMax, ')
           ..write('digivolutionRequirements: $digivolutionRequirements, ')
+          ..write('isAce: $isAce, ')
           ..write('dualFace: $dualFace, ')
           ..write('dualCategory: $dualCategory, ')
           ..write('notes: $notes, ')
@@ -2086,6 +2179,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
     digivolveCostMin,
     digivolveCostMax,
     digivolutionRequirements,
+    isAce,
     dualFace,
     dualCategory,
     notes,
@@ -2127,6 +2221,7 @@ class CardRow extends DataClass implements Insertable<CardRow> {
           other.digivolveCostMin == this.digivolveCostMin &&
           other.digivolveCostMax == this.digivolveCostMax &&
           other.digivolutionRequirements == this.digivolutionRequirements &&
+          other.isAce == this.isAce &&
           other.dualFace == this.dualFace &&
           other.dualCategory == this.dualCategory &&
           other.notes == this.notes &&
@@ -2166,6 +2261,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
   final Value<int?> digivolveCostMin;
   final Value<int?> digivolveCostMax;
   final Value<String> digivolutionRequirements;
+  final Value<bool> isAce;
   final Value<String?> dualFace;
   final Value<String?> dualCategory;
   final Value<String?> notes;
@@ -2204,6 +2300,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     this.digivolveCostMin = const Value.absent(),
     this.digivolveCostMax = const Value.absent(),
     this.digivolutionRequirements = const Value.absent(),
+    this.isAce = const Value.absent(),
     this.dualFace = const Value.absent(),
     this.dualCategory = const Value.absent(),
     this.notes = const Value.absent(),
@@ -2243,6 +2340,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     this.digivolveCostMin = const Value.absent(),
     this.digivolveCostMax = const Value.absent(),
     this.digivolutionRequirements = const Value.absent(),
+    this.isAce = const Value.absent(),
     this.dualFace = const Value.absent(),
     this.dualCategory = const Value.absent(),
     this.notes = const Value.absent(),
@@ -2286,6 +2384,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     Expression<int>? digivolveCostMin,
     Expression<int>? digivolveCostMax,
     Expression<String>? digivolutionRequirements,
+    Expression<bool>? isAce,
     Expression<String>? dualFace,
     Expression<String>? dualCategory,
     Expression<String>? notes,
@@ -2326,6 +2425,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
       if (digivolveCostMax != null) 'digivolve_cost_max': digivolveCostMax,
       if (digivolutionRequirements != null)
         'digivolution_requirements': digivolutionRequirements,
+      if (isAce != null) 'is_ace': isAce,
       if (dualFace != null) 'dual_face': dualFace,
       if (dualCategory != null) 'dual_category': dualCategory,
       if (notes != null) 'notes': notes,
@@ -2367,6 +2467,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
     Value<int?>? digivolveCostMin,
     Value<int?>? digivolveCostMax,
     Value<String>? digivolutionRequirements,
+    Value<bool>? isAce,
     Value<String?>? dualFace,
     Value<String?>? dualCategory,
     Value<String?>? notes,
@@ -2407,6 +2508,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
       digivolveCostMax: digivolveCostMax ?? this.digivolveCostMax,
       digivolutionRequirements:
           digivolutionRequirements ?? this.digivolutionRequirements,
+      isAce: isAce ?? this.isAce,
       dualFace: dualFace ?? this.dualFace,
       dualCategory: dualCategory ?? this.dualCategory,
       notes: notes ?? this.notes,
@@ -2502,6 +2604,9 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
         digivolutionRequirements.value,
       );
     }
+    if (isAce.present) {
+      map['is_ace'] = Variable<bool>(isAce.value);
+    }
     if (dualFace.present) {
       map['dual_face'] = Variable<String>(dualFace.value);
     }
@@ -2569,6 +2674,7 @@ class CardsCompanion extends UpdateCompanion<CardRow> {
           ..write('digivolveCostMin: $digivolveCostMin, ')
           ..write('digivolveCostMax: $digivolveCostMax, ')
           ..write('digivolutionRequirements: $digivolutionRequirements, ')
+          ..write('isAce: $isAce, ')
           ..write('dualFace: $dualFace, ')
           ..write('dualCategory: $dualCategory, ')
           ..write('notes: $notes, ')
@@ -3044,8 +3150,22 @@ class $CardReleaseLinksTable extends CardReleaseLinks
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isPrimaryInReleaseMeta =
+      const VerificationMeta('isPrimaryInRelease');
   @override
-  List<GeneratedColumn> get $columns => [cardId, releaseId];
+  late final GeneratedColumn<bool> isPrimaryInRelease = GeneratedColumn<bool>(
+    'is_primary_in_release',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_primary_in_release" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [cardId, releaseId, isPrimaryInRelease];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3074,6 +3194,15 @@ class $CardReleaseLinksTable extends CardReleaseLinks
     } else if (isInserting) {
       context.missing(_releaseIdMeta);
     }
+    if (data.containsKey('is_primary_in_release')) {
+      context.handle(
+        _isPrimaryInReleaseMeta,
+        isPrimaryInRelease.isAcceptableOrUnknown(
+          data['is_primary_in_release']!,
+          _isPrimaryInReleaseMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3091,6 +3220,10 @@ class $CardReleaseLinksTable extends CardReleaseLinks
         DriftSqlType.string,
         data['${effectivePrefix}release_id'],
       )!,
+      isPrimaryInRelease: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_primary_in_release'],
+      )!,
     );
   }
 
@@ -3104,12 +3237,26 @@ class CardReleaseLinkRow extends DataClass
     implements Insertable<CardReleaseLinkRow> {
   final String cardId;
   final String releaseId;
-  const CardReleaseLinkRow({required this.cardId, required this.releaseId});
+
+  /// True for the printing that represents its card number *within this
+  /// release*.
+  ///
+  /// This cannot be the card's global primary printing: promo and
+  /// accessory products consist almost entirely of alternate arts whose base
+  /// printing lives in some other set, so collapsing globally left those
+  /// releases looking empty.
+  final bool isPrimaryInRelease;
+  const CardReleaseLinkRow({
+    required this.cardId,
+    required this.releaseId,
+    required this.isPrimaryInRelease,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['card_id'] = Variable<String>(cardId);
     map['release_id'] = Variable<String>(releaseId);
+    map['is_primary_in_release'] = Variable<bool>(isPrimaryInRelease);
     return map;
   }
 
@@ -3117,6 +3264,7 @@ class CardReleaseLinkRow extends DataClass
     return CardReleaseLinksCompanion(
       cardId: Value(cardId),
       releaseId: Value(releaseId),
+      isPrimaryInRelease: Value(isPrimaryInRelease),
     );
   }
 
@@ -3128,6 +3276,7 @@ class CardReleaseLinkRow extends DataClass
     return CardReleaseLinkRow(
       cardId: serializer.fromJson<String>(json['cardId']),
       releaseId: serializer.fromJson<String>(json['releaseId']),
+      isPrimaryInRelease: serializer.fromJson<bool>(json['isPrimaryInRelease']),
     );
   }
   @override
@@ -3136,18 +3285,26 @@ class CardReleaseLinkRow extends DataClass
     return <String, dynamic>{
       'cardId': serializer.toJson<String>(cardId),
       'releaseId': serializer.toJson<String>(releaseId),
+      'isPrimaryInRelease': serializer.toJson<bool>(isPrimaryInRelease),
     };
   }
 
-  CardReleaseLinkRow copyWith({String? cardId, String? releaseId}) =>
-      CardReleaseLinkRow(
-        cardId: cardId ?? this.cardId,
-        releaseId: releaseId ?? this.releaseId,
-      );
+  CardReleaseLinkRow copyWith({
+    String? cardId,
+    String? releaseId,
+    bool? isPrimaryInRelease,
+  }) => CardReleaseLinkRow(
+    cardId: cardId ?? this.cardId,
+    releaseId: releaseId ?? this.releaseId,
+    isPrimaryInRelease: isPrimaryInRelease ?? this.isPrimaryInRelease,
+  );
   CardReleaseLinkRow copyWithCompanion(CardReleaseLinksCompanion data) {
     return CardReleaseLinkRow(
       cardId: data.cardId.present ? data.cardId.value : this.cardId,
       releaseId: data.releaseId.present ? data.releaseId.value : this.releaseId,
+      isPrimaryInRelease: data.isPrimaryInRelease.present
+          ? data.isPrimaryInRelease.value
+          : this.isPrimaryInRelease,
     );
   }
 
@@ -3155,44 +3312,52 @@ class CardReleaseLinkRow extends DataClass
   String toString() {
     return (StringBuffer('CardReleaseLinkRow(')
           ..write('cardId: $cardId, ')
-          ..write('releaseId: $releaseId')
+          ..write('releaseId: $releaseId, ')
+          ..write('isPrimaryInRelease: $isPrimaryInRelease')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(cardId, releaseId);
+  int get hashCode => Object.hash(cardId, releaseId, isPrimaryInRelease);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CardReleaseLinkRow &&
           other.cardId == this.cardId &&
-          other.releaseId == this.releaseId);
+          other.releaseId == this.releaseId &&
+          other.isPrimaryInRelease == this.isPrimaryInRelease);
 }
 
 class CardReleaseLinksCompanion extends UpdateCompanion<CardReleaseLinkRow> {
   final Value<String> cardId;
   final Value<String> releaseId;
+  final Value<bool> isPrimaryInRelease;
   final Value<int> rowid;
   const CardReleaseLinksCompanion({
     this.cardId = const Value.absent(),
     this.releaseId = const Value.absent(),
+    this.isPrimaryInRelease = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CardReleaseLinksCompanion.insert({
     required String cardId,
     required String releaseId,
+    this.isPrimaryInRelease = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : cardId = Value(cardId),
        releaseId = Value(releaseId);
   static Insertable<CardReleaseLinkRow> custom({
     Expression<String>? cardId,
     Expression<String>? releaseId,
+    Expression<bool>? isPrimaryInRelease,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (cardId != null) 'card_id': cardId,
       if (releaseId != null) 'release_id': releaseId,
+      if (isPrimaryInRelease != null)
+        'is_primary_in_release': isPrimaryInRelease,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3200,11 +3365,13 @@ class CardReleaseLinksCompanion extends UpdateCompanion<CardReleaseLinkRow> {
   CardReleaseLinksCompanion copyWith({
     Value<String>? cardId,
     Value<String>? releaseId,
+    Value<bool>? isPrimaryInRelease,
     Value<int>? rowid,
   }) {
     return CardReleaseLinksCompanion(
       cardId: cardId ?? this.cardId,
       releaseId: releaseId ?? this.releaseId,
+      isPrimaryInRelease: isPrimaryInRelease ?? this.isPrimaryInRelease,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3218,6 +3385,9 @@ class CardReleaseLinksCompanion extends UpdateCompanion<CardReleaseLinkRow> {
     if (releaseId.present) {
       map['release_id'] = Variable<String>(releaseId.value);
     }
+    if (isPrimaryInRelease.present) {
+      map['is_primary_in_release'] = Variable<bool>(isPrimaryInRelease.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3229,6 +3399,7 @@ class CardReleaseLinksCompanion extends UpdateCompanion<CardReleaseLinkRow> {
     return (StringBuffer('CardReleaseLinksCompanion(')
           ..write('cardId: $cardId, ')
           ..write('releaseId: $releaseId, ')
+          ..write('isPrimaryInRelease: $isPrimaryInRelease, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4780,6 +4951,7 @@ typedef $$ReleasesTableCreateCompanionBuilder =
       Value<String?> productUri,
       Value<String?> cardlistUri,
       Value<int> cardCount,
+      Value<int> printingCount,
       Value<int> sortIndex,
       Value<int> rowid,
     });
@@ -4795,6 +4967,7 @@ typedef $$ReleasesTableUpdateCompanionBuilder =
       Value<String?> productUri,
       Value<String?> cardlistUri,
       Value<int> cardCount,
+      Value<int> printingCount,
       Value<int> sortIndex,
       Value<int> rowid,
     });
@@ -4855,6 +5028,11 @@ class $$ReleasesTableFilterComposer
 
   ColumnFilters<int> get cardCount => $composableBuilder(
     column: $table.cardCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get printingCount => $composableBuilder(
+    column: $table.printingCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4923,6 +5101,11 @@ class $$ReleasesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get printingCount => $composableBuilder(
+    column: $table.printingCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sortIndex => $composableBuilder(
     column: $table.sortIndex,
     builder: (column) => ColumnOrderings(column),
@@ -4976,6 +5159,11 @@ class $$ReleasesTableAnnotationComposer
   GeneratedColumn<int> get cardCount =>
       $composableBuilder(column: $table.cardCount, builder: (column) => column);
 
+  GeneratedColumn<int> get printingCount => $composableBuilder(
+    column: $table.printingCount,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get sortIndex =>
       $composableBuilder(column: $table.sortIndex, builder: (column) => column);
 }
@@ -5021,6 +5209,7 @@ class $$ReleasesTableTableManager
                 Value<String?> productUri = const Value.absent(),
                 Value<String?> cardlistUri = const Value.absent(),
                 Value<int> cardCount = const Value.absent(),
+                Value<int> printingCount = const Value.absent(),
                 Value<int> sortIndex = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReleasesCompanion(
@@ -5034,6 +5223,7 @@ class $$ReleasesTableTableManager
                 productUri: productUri,
                 cardlistUri: cardlistUri,
                 cardCount: cardCount,
+                printingCount: printingCount,
                 sortIndex: sortIndex,
                 rowid: rowid,
               ),
@@ -5049,6 +5239,7 @@ class $$ReleasesTableTableManager
                 Value<String?> productUri = const Value.absent(),
                 Value<String?> cardlistUri = const Value.absent(),
                 Value<int> cardCount = const Value.absent(),
+                Value<int> printingCount = const Value.absent(),
                 Value<int> sortIndex = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReleasesCompanion.insert(
@@ -5062,6 +5253,7 @@ class $$ReleasesTableTableManager
                 productUri: productUri,
                 cardlistUri: cardlistUri,
                 cardCount: cardCount,
+                printingCount: printingCount,
                 sortIndex: sortIndex,
                 rowid: rowid,
               ),
@@ -5114,6 +5306,7 @@ typedef $$CardsTableCreateCompanionBuilder =
       Value<int?> digivolveCostMin,
       Value<int?> digivolveCostMax,
       Value<String> digivolutionRequirements,
+      Value<bool> isAce,
       Value<String?> dualFace,
       Value<String?> dualCategory,
       Value<String?> notes,
@@ -5154,6 +5347,7 @@ typedef $$CardsTableUpdateCompanionBuilder =
       Value<int?> digivolveCostMin,
       Value<int?> digivolveCostMax,
       Value<String> digivolutionRequirements,
+      Value<bool> isAce,
       Value<String?> dualFace,
       Value<String?> dualCategory,
       Value<String?> notes,
@@ -5359,6 +5553,11 @@ class $$CardsTableFilterComposer extends Composer<_$AppDatabase, $CardsTable> {
 
   ColumnFilters<String> get digivolutionRequirements => $composableBuilder(
     column: $table.digivolutionRequirements,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAce => $composableBuilder(
+    column: $table.isAce,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5627,6 +5826,11 @@ class $$CardsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isAce => $composableBuilder(
+    column: $table.isAce,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get dualFace => $composableBuilder(
     column: $table.dualFace,
     builder: (column) => ColumnOrderings(column),
@@ -5782,6 +5986,9 @@ class $$CardsTableAnnotationComposer
     column: $table.digivolutionRequirements,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isAce =>
+      $composableBuilder(column: $table.isAce, builder: (column) => column);
 
   GeneratedColumn<String> get dualFace =>
       $composableBuilder(column: $table.dualFace, builder: (column) => column);
@@ -5957,6 +6164,7 @@ class $$CardsTableTableManager
                 Value<int?> digivolveCostMin = const Value.absent(),
                 Value<int?> digivolveCostMax = const Value.absent(),
                 Value<String> digivolutionRequirements = const Value.absent(),
+                Value<bool> isAce = const Value.absent(),
                 Value<String?> dualFace = const Value.absent(),
                 Value<String?> dualCategory = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -5995,6 +6203,7 @@ class $$CardsTableTableManager
                 digivolveCostMin: digivolveCostMin,
                 digivolveCostMax: digivolveCostMax,
                 digivolutionRequirements: digivolutionRequirements,
+                isAce: isAce,
                 dualFace: dualFace,
                 dualCategory: dualCategory,
                 notes: notes,
@@ -6035,6 +6244,7 @@ class $$CardsTableTableManager
                 Value<int?> digivolveCostMin = const Value.absent(),
                 Value<int?> digivolveCostMax = const Value.absent(),
                 Value<String> digivolutionRequirements = const Value.absent(),
+                Value<bool> isAce = const Value.absent(),
                 Value<String?> dualFace = const Value.absent(),
                 Value<String?> dualCategory = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -6073,6 +6283,7 @@ class $$CardsTableTableManager
                 digivolveCostMin: digivolveCostMin,
                 digivolveCostMax: digivolveCostMax,
                 digivolutionRequirements: digivolutionRequirements,
+                isAce: isAce,
                 dualFace: dualFace,
                 dualCategory: dualCategory,
                 notes: notes,
@@ -6723,12 +6934,14 @@ typedef $$CardReleaseLinksTableCreateCompanionBuilder =
     CardReleaseLinksCompanion Function({
       required String cardId,
       required String releaseId,
+      Value<bool> isPrimaryInRelease,
       Value<int> rowid,
     });
 typedef $$CardReleaseLinksTableUpdateCompanionBuilder =
     CardReleaseLinksCompanion Function({
       Value<String> cardId,
       Value<String> releaseId,
+      Value<bool> isPrimaryInRelease,
       Value<int> rowid,
     });
 
@@ -6778,6 +6991,11 @@ class $$CardReleaseLinksTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isPrimaryInRelease => $composableBuilder(
+    column: $table.isPrimaryInRelease,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$CardsTableFilterComposer get cardId {
     final $$CardsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -6816,6 +7034,11 @@ class $$CardReleaseLinksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isPrimaryInRelease => $composableBuilder(
+    column: $table.isPrimaryInRelease,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CardsTableOrderingComposer get cardId {
     final $$CardsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6851,6 +7074,11 @@ class $$CardReleaseLinksTableAnnotationComposer
   });
   GeneratedColumn<String> get releaseId =>
       $composableBuilder(column: $table.releaseId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isPrimaryInRelease => $composableBuilder(
+    column: $table.isPrimaryInRelease,
+    builder: (column) => column,
+  );
 
   $$CardsTableAnnotationComposer get cardId {
     final $$CardsTableAnnotationComposer composer = $composerBuilder(
@@ -6908,20 +7136,24 @@ class $$CardReleaseLinksTableTableManager
               ({
                 Value<String> cardId = const Value.absent(),
                 Value<String> releaseId = const Value.absent(),
+                Value<bool> isPrimaryInRelease = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CardReleaseLinksCompanion(
                 cardId: cardId,
                 releaseId: releaseId,
+                isPrimaryInRelease: isPrimaryInRelease,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String cardId,
                 required String releaseId,
+                Value<bool> isPrimaryInRelease = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CardReleaseLinksCompanion.insert(
                 cardId: cardId,
                 releaseId: releaseId,
+                isPrimaryInRelease: isPrimaryInRelease,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

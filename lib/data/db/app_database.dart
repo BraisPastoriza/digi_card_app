@@ -96,6 +96,5 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  static QueryExecutor _openConnection() =>
-      driftDatabase(name: 'digicard');
+  static QueryExecutor _openConnection() => driftDatabase(name: 'digicard');
 }

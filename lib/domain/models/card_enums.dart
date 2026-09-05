@@ -81,7 +81,7 @@ enum ReleaseGroup {
   booster('Booster Packs'),
   ex('EX Boosters'),
   starter('Starter Decks'),
-  advanceDeck('Advanced Decks'),
+  advanceDeck('AD'),
   limited('Limited Card Packs'),
   resurgence('Resurgence Boosters'),
   promo('Promotional Cards'),

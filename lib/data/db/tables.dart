@@ -5,8 +5,9 @@ import 'package:drift/drift.dart';
 /// without matching prefixes of other values.
 const listDelimiter = '|';
 
-String encodeList(Iterable<String> values) =>
-    values.isEmpty ? '' : '$listDelimiter${values.join(listDelimiter)}$listDelimiter';
+String encodeList(Iterable<String> values) => values.isEmpty
+    ? ''
+    : '$listDelimiter${values.join(listDelimiter)}$listDelimiter';
 
 List<String> decodeList(String? encoded) {
   if (encoded == null || encoded.isEmpty) return const [];
@@ -25,7 +26,13 @@ class Releases extends Table {
   TextColumn get thumbnailUrl => text().nullable()();
   TextColumn get productUri => text().nullable()();
   TextColumn get cardlistUri => text().nullable()();
+
+  /// Distinct cards in the release, counting a card once however many
+  /// alternate arts of it the release contains.
   IntColumn get cardCount => integer().withDefault(const Constant(0))();
+
+  /// Every printing in the release, alternate arts included.
+  IntColumn get printingCount => integer().withDefault(const Constant(0))();
 
   /// Position in the API's chronological release ordering.
   IntColumn get sortIndex => integer().withDefault(const Constant(0))();
@@ -76,8 +83,12 @@ class Cards extends Table {
   TextColumn get digivolutionRequirements =>
       text().withDefault(const Constant('[]'))();
 
+  /// True for ACE cards, which carry the ACE marker and an Overflow cost.
+  /// The API has no field for it; the name ends in "ACE".
+  BoolColumn get isAce => boolean().withDefault(const Constant(false))();
+
   /// The other face of a dual card, which is both a Digimon and an Option.
-  /// Stored as JSON; only the BT-25 dual cards have one.
+  /// Stored as JSON; only a handful of cards have one.
   TextColumn get dualFace => text().nullable()();
 
   /// [dualFace]'s category, so a category filter matches either face.
@@ -112,7 +123,8 @@ class Cards extends Table {
 /// and match them exactly.
 @DataClassName('CardTraitRow')
 class CardTraits extends Table {
-  TextColumn get cardId => text().references(Cards, #id, onDelete: KeyAction.cascade)();
+  TextColumn get cardId =>
+      text().references(Cards, #id, onDelete: KeyAction.cascade)();
   TextColumn get trait => text()();
 
   @override
@@ -122,7 +134,8 @@ class CardTraits extends Table {
 /// Normalised keywords parsed from effect text at sync time.
 @DataClassName('CardKeywordRow')
 class CardKeywords extends Table {
-  TextColumn get cardId => text().references(Cards, #id, onDelete: KeyAction.cascade)();
+  TextColumn get cardId =>
+      text().references(Cards, #id, onDelete: KeyAction.cascade)();
   TextColumn get keyword => text()();
 
   @override
@@ -132,8 +145,19 @@ class CardKeywords extends Table {
 /// Which releases a printing appears in. A printing can span several.
 @DataClassName('CardReleaseLinkRow')
 class CardReleaseLinks extends Table {
-  TextColumn get cardId => text().references(Cards, #id, onDelete: KeyAction.cascade)();
+  TextColumn get cardId =>
+      text().references(Cards, #id, onDelete: KeyAction.cascade)();
   TextColumn get releaseId => text()();
+
+  /// True for the printing that represents its card number *within this
+  /// release*.
+  ///
+  /// This cannot be the card's global primary printing: promo and
+  /// accessory products consist almost entirely of alternate arts whose base
+  /// printing lives in some other set, so collapsing globally left those
+  /// releases looking empty.
+  BoolColumn get isPrimaryInRelease =>
+      boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {cardId, releaseId};

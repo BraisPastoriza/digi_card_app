@@ -18,10 +18,9 @@ extension CardRowMapper on CardRow {
       parallelId: parallelId,
       name: name,
       category: CardCategory.tryParse(category) ?? CardCategory.digimon,
-      colors: decodeList(colors)
-          .map(CardColor.tryParse)
-          .whereType<CardColor>()
-          .toList(),
+      colors: decodeList(
+        colors,
+      ).map(CardColor.tryParse).whereType<CardColor>().toList(),
       imageUrl: imageUrl,
       rarity: rarity,
       supplementalStars: supplementalStars,
@@ -53,6 +52,7 @@ extension CardRowMapper on CardRow {
       dualFace: dualFace == null
           ? null
           : CardFace.fromJson(jsonDecode(dualFace!) as Map<String, dynamic>),
+      isAce: isAce,
     );
   }
 }
@@ -66,6 +66,7 @@ extension ReleaseRowMapper on ReleaseRow {
       orElse: () => ReleaseGroup.other,
     ),
     cardCount: cardCount,
+    printingCount: printingCount,
     sortIndex: sortIndex,
     genre: genre,
     date: releaseDate,

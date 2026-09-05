@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/digimon_colors.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/digimon_card.dart';
+import '../../shared/widgets/card_image_viewer.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/game_text.dart';
@@ -93,7 +94,7 @@ class _CardDetailViewState extends State<_CardDetailView> {
             children: [
               const SizedBox(height: 4),
               SizedBox(
-                height: 340,
+                height: 400,
                 child: PageView.builder(
                   controller: _pageController,
                   itemCount: widget.printings.length,
@@ -106,10 +107,20 @@ class _CardDetailViewState extends State<_CardDetailView> {
                     child: AnimatedScale(
                       scale: index == _index ? 1 : 0.92,
                       duration: const Duration(milliseconds: 180),
-                      child: CardThumbnail(
-                        card: widget.printings[index],
-                        borderRadius: 14,
-                        showColorEdge: false,
+                      child: GestureDetector(
+                        onTap: () => showCardImage(
+                          context,
+                          printings: widget.printings,
+                          initialIndex: index,
+                        ),
+                        child: CardThumbnail(
+                          card: widget.printings[index],
+                          borderRadius: 14,
+                          showColorEdge: false,
+                          // The page slot is not the card's aspect ratio, so
+                          // covering would crop the top and bottom off the art.
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
@@ -506,10 +517,7 @@ class _DigivolveSection extends StatelessWidget {
             Container(
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 11,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
                 color: AppSurfaces.surface,
                 borderRadius: BorderRadius.circular(10),
@@ -564,7 +572,9 @@ class _DualFaceSection extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppSurfaces.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DigimonColors.yellow.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: DigimonColors.yellow.withValues(alpha: 0.3),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

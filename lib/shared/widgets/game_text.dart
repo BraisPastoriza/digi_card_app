@@ -24,7 +24,11 @@ class GameText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final base = TextStyle(fontSize: fontSize, height: 1.5, color: scheme.onSurface);
+    final base = TextStyle(
+      fontSize: fontSize,
+      height: 1.5,
+      color: scheme.onSurface,
+    );
 
     final spans = <TextSpan>[];
     var index = 0;

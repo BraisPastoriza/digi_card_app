@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,12 +6,12 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/db/daos/release_dao.dart';
 import '../../domain/models/card_enums.dart';
-import '../../domain/models/card_filter.dart';
-import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
 import 'library_providers.dart';
+import 'widgets/release_tile.dart';
 
-/// Entry point of the library: every expansion, grouped by product line.
+/// Entry point of the library: every expansion, shown as its own box art and
+/// grouped by product line.
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
@@ -21,9 +20,13 @@ class LibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
-  /// Booster packs open by default; the rest stay collapsed so 93 expansions
-  /// do not arrive as one long scroll.
-  final _expanded = <ReleaseGroup>{ReleaseGroup.booster};
+  /// The main card pools open by default; the accessory products stay
+  /// collapsed so 93 expansions do not arrive as one long scroll.
+  final _expanded = <ReleaseGroup>{
+    ReleaseGroup.booster,
+    ReleaseGroup.ex,
+    ReleaseGroup.promo,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -77,10 +80,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                   ),
                   if (_expanded.contains(section.group))
-                    SliverList.builder(
-                      itemCount: section.releases.length,
-                      itemBuilder: (context, index) =>
-                          _ReleaseTile(release: section.releases[index]),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 240,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 12,
+                              // The art plus the two lines of label under it.
+                              mainAxisExtent: 148,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final release = section.releases[index];
+                          return ReleaseTile(
+                            release: release,
+                            onTap: () =>
+                                context.go('/library/release/${release.id}'),
+                          );
+                        }, childCount: section.releases.length),
+                      ),
                     ),
                 ],
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -109,7 +128,7 @@ class _SearchBarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: InkWell(
         onTap: () => context.go('/library/search'),
         borderRadius: BorderRadius.circular(12),
@@ -171,80 +190,6 @@ class _GroupHeader extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ReleaseTile extends StatelessWidget {
-  const _ReleaseTile({required this.release});
-
-  final CardRelease release;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final code = release.setCode;
-    return ListTile(
-      onTap: () => context.go('/library/release/${release.id}'),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: _ReleaseArt(url: release.thumbnailUrl),
-      title: Text(
-        release.displayName,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 3),
-        child: Row(
-          children: [
-            if (code != null) ...[
-              MetaBadge(code, color: scheme.primary),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(
-                [
-                  '${release.cardCount} cards',
-                  if (release.releaseYear != null) release.releaseYear!,
-                ].join(' · '),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        size: 20,
-        color: scheme.onSurfaceVariant,
-      ),
-    );
-  }
-}
-
-class _ReleaseArt extends StatelessWidget {
-  const _ReleaseArt({required this.url});
-
-  final String? url;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 46,
-      height: 46,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppSurfaces.surfaceHigh,
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: AppSurfaces.outline),
-      ),
-      child: url == null
-          ? Icon(
-              Icons.inventory_2_outlined,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            )
-          : CachedNetworkImage(imageUrl: url!, fit: BoxFit.cover),
     );
   }
 }
@@ -350,12 +295,4 @@ class _InfoRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Opens the search screen already filtered to one expansion.
-void openReleaseSearch(BuildContext context, WidgetRef ref, String releaseId) {
-  ref.read(cardFilterProvider.notifier).update(
-    CardFilter(releaseIds: {releaseId}),
-  );
-  context.go('/library/search');
 }

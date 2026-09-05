@@ -20,29 +20,69 @@ void main() {
       expect(KeywordParser.normalize('Recovery +1 ≪Deck≫'), 'Recovery');
     });
 
-    test('folds every printed spelling of a keyword into one', () {
-      // Card text spells this keyword eleven different ways across sets;
-      // each one that survives becomes a duplicate filter chip.
-      const variants = [
-        'Security Attack',
+    test('drops per-card qualifiers that narrow a keyword', () {
+      // Each of these would otherwise become its own filter chip.
+      expect(KeywordParser.normalize('Decode ([Aegiomon])'), 'Decode');
+      expect(KeywordParser.normalize('Decode《[Aegiomon]》'), 'Decode');
+      expect(KeywordParser.normalize('Decode (Blue Lv.4)'), 'Decode');
+      expect(KeywordParser.normalize('Decoy (Red/Black)'), 'Decoy');
+      expect(KeywordParser.normalize('Fragment ≪3≫'), 'Fragment');
+      expect(KeywordParser.normalize('Fragment 《3》'), 'Fragment');
+      expect(KeywordParser.normalize('Digi-Burst up to 4'), 'Digi-Burst');
+    });
+
+    test('drops the joiner left behind by two qualifiers', () {
+      // Stripping both parentheses out of "Decoy (Red)/(Black)" leaves a
+      // trailing slash.
+      expect(KeywordParser.normalize('Decoy (Red)/(Black)'), 'Decoy');
+      expect(KeywordParser.normalize('Decoy(Red)/(Black)'), 'Decoy');
+    });
+
+    test('folds every spelling of Security Attack, keeping its direction', () {
+      // The sign says what the card does; the number only says how much.
+      const plus = [
         'Security Attack +1',
-        'Security Attack -2',
-        'Security A.',
+        'Security Attack +2',
         'Security A. +1',
         'Security A.+1',
-        'Security A. -1',
+        'Security A. +3',
         // The sign can appear with no number after it.
         'Security A. +',
-        'Security A. -',
-        'S Attack -1',
       ];
-      for (final variant in variants) {
+      for (final variant in plus) {
         expect(
           KeywordParser.normalize(variant),
-          'Security Attack',
+          'Security Attack +',
           reason: 'normalizing "$variant"',
         );
       }
+
+      const minus = [
+        'Security Attack -1',
+        'Security Attack -3',
+        'Security A. -2',
+        'Security A. -',
+        'S Attack -1',
+      ];
+      for (final variant in minus) {
+        expect(
+          KeywordParser.normalize(variant),
+          'Security Attack -',
+          reason: 'normalizing "$variant"',
+        );
+      }
+
+      // Rules text that refers to the keyword without granting it.
+      expect(KeywordParser.normalize('Security Attack'), 'Security Attack');
+      expect(KeywordParser.normalize('Security A.'), 'Security Attack');
+    });
+
+    test('keeps magnitude-only keywords together', () {
+      // Nobody filters for "De-Digivolve 2" as opposed to "De-Digivolve 3".
+      expect(KeywordParser.normalize('De-Digivolve 2'), 'De-Digivolve');
+      expect(KeywordParser.normalize('De-Digivolve 3'), 'De-Digivolve');
+      expect(KeywordParser.normalize('Link +1'), 'Link');
+      expect(KeywordParser.normalize('DigiXros -2'), 'DigiXros');
     });
 
     test('rejects structural markers that are not keywords', () {
@@ -65,7 +105,7 @@ void main() {
           'this Digimon to force the attack to target it.)\n'
           '[When Digivolving] ＜Draw 1＞. Then gain ＜Security Attack +1＞.';
 
-      expect(KeywordParser.extract([effect]), ['Blocker', 'Security Attack']);
+      expect(KeywordParser.extract([effect]), ['Blocker', 'Security Attack +']);
     });
 
     test('merges keywords across effect fields without duplicating', () {

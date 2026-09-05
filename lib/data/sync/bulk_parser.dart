@@ -88,6 +88,10 @@ class ParsedCard {
   final String? errata;
   final String? dualFace;
   final String? dualCategory;
+
+  /// True for ACE cards. Derived from the printed name, which is the only
+  /// place the API records it.
+  bool get isAce => name.trimRight().endsWith('ACE');
 }
 
 /// Parses the downloaded bulk dump off the UI isolate.
@@ -144,9 +148,9 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
       .whereType<int>()
       .toList();
 
-  final limitations = _asMapList(attributes['limitations'])
-      .map(CardLimitation.fromJson)
-      .toList();
+  final limitations = _asMapList(
+    attributes['limitations'],
+  ).map(CardLimitation.fromJson).toList();
 
   final playCost = attributes['play-cost'] as int?;
   final useCost = attributes['use-cost'] as int?;

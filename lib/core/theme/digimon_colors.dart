@@ -33,7 +33,9 @@ abstract final class DigimonColors {
         ? const [Color(0xFF3A3A46), Color(0xFF3A3A46)]
         : colors.map(of).toList();
     return LinearGradient(
-      colors: swatches.length == 1 ? [swatches.first, swatches.first] : swatches,
+      colors: swatches.length == 1
+          ? [swatches.first, swatches.first]
+          : swatches,
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );

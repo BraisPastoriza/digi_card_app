@@ -82,6 +82,8 @@ class CardFilter {
     this.dp = const RangeFilter(),
     this.includeAlternateArts = false,
     this.restrictedOnly = false,
+    this.aceOnly = false,
+    this.dualOnly = false,
     this.sort = CardSort.number,
   });
 
@@ -114,6 +116,12 @@ class CardFilter {
   /// Limits results to cards on the official restriction list.
   final bool restrictedOnly;
 
+  /// ACE and dual cards cut across the four printed card types rather than
+  /// being types of their own, so they narrow the results instead of widening
+  /// them the way a second category chip would.
+  final bool aceOnly;
+  final bool dualOnly;
+
   final CardSort sort;
 
   bool get isEmpty =>
@@ -131,7 +139,9 @@ class CardFilter {
       digivolveCost.isEmpty &&
       dp.isEmpty &&
       !includeAlternateArts &&
-      !restrictedOnly;
+      !restrictedOnly &&
+      !aceOnly &&
+      !dualOnly;
 
   /// Number of active facets, shown as a badge on the filter button.
   int get activeFacetCount => [
@@ -149,6 +159,8 @@ class CardFilter {
     !dp.isEmpty,
     includeAlternateArts,
     restrictedOnly,
+    aceOnly,
+    dualOnly,
   ].where((active) => active).length;
 
   /// Short labels for the active facets, rendered as removable chips.
@@ -166,6 +178,8 @@ class CardFilter {
     if (!playCost.isEmpty) playCost.describe('Cost'),
     if (!digivolveCost.isEmpty) digivolveCost.describe('Digivolve'),
     if (!dp.isEmpty) dp.describe('DP'),
+    if (aceOnly) 'ACE',
+    if (dualOnly) 'Dual Card',
     if (includeAlternateArts) 'Alternate arts',
     if (restrictedOnly) 'Restricted',
   ];
@@ -187,6 +201,8 @@ class CardFilter {
     RangeFilter? dp,
     bool? includeAlternateArts,
     bool? restrictedOnly,
+    bool? aceOnly,
+    bool? dualOnly,
     CardSort? sort,
   }) => CardFilter(
     query: query ?? this.query,
@@ -205,6 +221,8 @@ class CardFilter {
     dp: dp ?? this.dp,
     includeAlternateArts: includeAlternateArts ?? this.includeAlternateArts,
     restrictedOnly: restrictedOnly ?? this.restrictedOnly,
+    aceOnly: aceOnly ?? this.aceOnly,
+    dualOnly: dualOnly ?? this.dualOnly,
     sort: sort ?? this.sort,
   );
 
@@ -226,6 +244,8 @@ class CardFilter {
       other.dp == dp &&
       other.includeAlternateArts == includeAlternateArts &&
       other.restrictedOnly == restrictedOnly &&
+      other.aceOnly == aceOnly &&
+      other.dualOnly == dualOnly &&
       other.sort == sort &&
       _sets.equals(other.colors, colors) &&
       _sets.equals(other.categories, categories) &&
@@ -246,6 +266,8 @@ class CardFilter {
     dp,
     includeAlternateArts,
     restrictedOnly,
+    aceOnly,
+    dualOnly,
     sort,
     _sets.hash(colors),
     _sets.hash(categories),

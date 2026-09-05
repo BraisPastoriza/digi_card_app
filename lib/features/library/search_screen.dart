@@ -340,7 +340,9 @@ class _ResultsHeader extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                       backgroundColor: scheme.primaryContainer,
-                      side: BorderSide(color: scheme.primary.withValues(alpha: 0.4)),
+                      side: BorderSide(
+                        color: scheme.primary.withValues(alpha: 0.4),
+                      ),
                     ),
                   ),
                 ActionChip(
