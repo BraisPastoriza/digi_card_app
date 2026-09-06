@@ -48,18 +48,36 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     return _resolveEntries(rows);
   }
 
+  /// Name a deck gets when the user did not supply one.
+  ///
+  /// Creating a deck does not stop to ask: naming it is far easier once you
+  /// can see what is in it, and the deck list renames in place.
+  static const defaultDeckName = 'New Deck';
+
+  /// [defaultDeckName], numbered past the decks already called that, so a
+  /// shelf of unnamed decks can still be told apart.
+  Future<String> nextDefaultDeckName() async {
+    final taken = (await select(decks).get()).map((d) => d.name).toSet();
+    if (!taken.contains(defaultDeckName)) return defaultDeckName;
+    for (var suffix = 2; ; suffix++) {
+      final candidate = '$defaultDeckName $suffix';
+      if (!taken.contains(candidate)) return candidate;
+    }
+  }
+
   /// Creates a deck along with its first revision, which becomes the active
   /// one. A deck always has at least one revision.
   Future<int> createDeck({
-    required String name,
+    String? name,
     String? description,
     String firstRevisionName = 'v1',
   }) async {
+    final deckName = name ?? await nextDefaultDeckName();
     return transaction(() async {
       final now = DateTime.now();
       final deckId = await into(decks).insert(
         DecksCompanion.insert(
-          name: name,
+          name: deckName,
           description: Value(description),
           createdAt: now,
           updatedAt: now,
@@ -108,6 +126,17 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
         description: description == null
             ? const Value.absent()
             : Value(description),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  /// Pins the card whose art stands for the deck in the deck list. Null hands
+  /// the choice back to the deck itself.
+  Future<void> setDeckThumbnail(int deckId, String? cardNumber) async {
+    await (update(decks)..where((d) => d.id.equals(deckId))).write(
+      DecksCompanion(
+        thumbnailCardNumber: Value(cardNumber),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -273,6 +302,9 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     required DigimonCard card,
     required int delta,
   }) async {
+    // The last line of defence: tokens are created by card effects during
+    // play and can never be part of a deck, whichever screen asked.
+    if (card.isToken) return 0;
     return transaction(() async {
       final existing =
           await (select(deckEntries)..where(
@@ -307,6 +339,68 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
                 e.cardNumber.equals(cardNumber),
           ))
           .write(DeckEntriesCompanion(printingId: Value(printingId)));
+      await _touchRevision(revisionId);
+    });
+  }
+
+  /// Creates a deck whose first revision holds [quantities], keyed by card
+  /// number. Used by the deck-list importer.
+  Future<int> createDeckFromList({
+    String? name,
+    required String revisionName,
+    required Map<String, int> quantities,
+  }) async {
+    final deckId = await createDeck(
+      name: name,
+      firstRevisionName: revisionName,
+    );
+    final revisionId = await activeRevisionIdOf(deckId);
+    if (revisionId != null) await replaceEntries(revisionId, quantities);
+    return deckId;
+  }
+
+  /// Adds an imported list to an existing deck as a revision of its own, so a
+  /// list found elsewhere can be tried against the deck it belongs to without
+  /// overwriting it.
+  Future<int> createRevisionFromList({
+    required int deckId,
+    required String name,
+    required Map<String, int> quantities,
+    bool makeActive = true,
+  }) async {
+    final revisionId = await createEmptyRevision(
+      deckId: deckId,
+      name: name,
+      makeActive: makeActive,
+    );
+    await replaceEntries(revisionId, quantities);
+    return revisionId;
+  }
+
+  /// Replaces everything in a revision with [quantities], keyed by card
+  /// number. Copies are written as given; legality is reported by
+  /// [DeckComposition], not enforced here.
+  Future<void> replaceEntries(
+    int revisionId,
+    Map<String, int> quantities,
+  ) async {
+    await transaction(() async {
+      await (delete(
+        deckEntries,
+      )..where((e) => e.revisionId.equals(revisionId))).go();
+      final wanted = quantities.entries.where((e) => e.value > 0).toList();
+      if (wanted.isNotEmpty) {
+        await batch((b) {
+          b.insertAll(deckEntries, [
+            for (final entry in wanted)
+              DeckEntriesCompanion.insert(
+                revisionId: revisionId,
+                cardNumber: entry.key,
+                quantity: entry.value,
+              ),
+          ]);
+        });
+      }
       await _touchRevision(revisionId);
     });
   }
@@ -408,6 +502,7 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     id: row.id,
     name: row.name,
     description: row.description,
+    thumbnailCardNumber: row.thumbnailCardNumber,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     activeRevisionId: row.activeRevisionId,

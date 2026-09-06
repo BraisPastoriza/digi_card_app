@@ -75,6 +75,7 @@ extension ReleaseRowMapper on ReleaseRow {
     thumbnailUrl: thumbnailUrl,
     productUri: productUri,
     cardlistUri: cardlistUri,
+    dataSource: dataSource,
   );
 }
 

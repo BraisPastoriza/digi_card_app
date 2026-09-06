@@ -6,10 +6,21 @@ import '../../../domain/models/deck.dart';
 import '../../../domain/models/digimon_card.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
-import 'deck_name_dialog.dart';
 
 /// Adds a copy of [card] to a deck the user picks, without leaving the card.
 Future<void> showAddToDeckSheet(BuildContext context, DigimonCard card) {
+  if (card.isToken) {
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tokens are created during play and cannot go in a deck.',
+          ),
+        ),
+      );
+    return Future.value();
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -100,10 +111,9 @@ class _AddToDeckSheet extends ConsumerWidget {
   }
 
   Future<void> _createDeckWithCard(BuildContext context, WidgetRef ref) async {
-    final name = await showDeckNameDialog(context, title: 'New deck');
-    if (name == null || !context.mounted) return;
-
     final dao = ref.read(deckDaoProvider);
+    // No name is asked for here either; the deck list renames in place.
+    final name = await dao.nextDefaultDeckName();
     final deckId = await dao.createDeck(name: name);
     // Read the revision from the database rather than a provider: nothing is
     // listening to the new deck yet, so an auto-disposing provider would be

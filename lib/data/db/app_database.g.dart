@@ -138,6 +138,17 @@ class $ReleasesTable extends Releases
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _dataSourceMeta = const VerificationMeta(
+    'dataSource',
+  );
+  @override
+  late final GeneratedColumn<String> dataSource = GeneratedColumn<String>(
+    'data_source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -152,6 +163,7 @@ class $ReleasesTable extends Releases
     cardCount,
     printingCount,
     sortIndex,
+    dataSource,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -252,6 +264,12 @@ class $ReleasesTable extends Releases
         sortIndex.isAcceptableOrUnknown(data['sort_index']!, _sortIndexMeta),
       );
     }
+    if (data.containsKey('data_source')) {
+      context.handle(
+        _dataSourceMeta,
+        dataSource.isAcceptableOrUnknown(data['data_source']!, _dataSourceMeta),
+      );
+    }
     return context;
   }
 
@@ -309,6 +327,10 @@ class $ReleasesTable extends Releases
         DriftSqlType.int,
         data['${effectivePrefix}sort_index'],
       )!,
+      dataSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_source'],
+      ),
     );
   }
 
@@ -338,6 +360,10 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
 
   /// Position in the API's chronological release ordering.
   final int sortIndex;
+
+  /// Name of the API the release's cards came from, when it was not the
+  /// primary one. Null for everything the primary API publishes.
+  final String? dataSource;
   const ReleaseRow({
     required this.id,
     required this.name,
@@ -351,6 +377,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     required this.cardCount,
     required this.printingCount,
     required this.sortIndex,
+    this.dataSource,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -379,6 +406,9 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     map['card_count'] = Variable<int>(cardCount);
     map['printing_count'] = Variable<int>(printingCount);
     map['sort_index'] = Variable<int>(sortIndex);
+    if (!nullToAbsent || dataSource != null) {
+      map['data_source'] = Variable<String>(dataSource);
+    }
     return map;
   }
 
@@ -408,6 +438,9 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
       cardCount: Value(cardCount),
       printingCount: Value(printingCount),
       sortIndex: Value(sortIndex),
+      dataSource: dataSource == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dataSource),
     );
   }
 
@@ -429,6 +462,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
       cardCount: serializer.fromJson<int>(json['cardCount']),
       printingCount: serializer.fromJson<int>(json['printingCount']),
       sortIndex: serializer.fromJson<int>(json['sortIndex']),
+      dataSource: serializer.fromJson<String?>(json['dataSource']),
     );
   }
   @override
@@ -447,6 +481,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
       'cardCount': serializer.toJson<int>(cardCount),
       'printingCount': serializer.toJson<int>(printingCount),
       'sortIndex': serializer.toJson<int>(sortIndex),
+      'dataSource': serializer.toJson<String?>(dataSource),
     };
   }
 
@@ -463,6 +498,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     int? cardCount,
     int? printingCount,
     int? sortIndex,
+    Value<String?> dataSource = const Value.absent(),
   }) => ReleaseRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -476,6 +512,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     cardCount: cardCount ?? this.cardCount,
     printingCount: printingCount ?? this.printingCount,
     sortIndex: sortIndex ?? this.sortIndex,
+    dataSource: dataSource.present ? dataSource.value : this.dataSource,
   );
   ReleaseRow copyWithCompanion(ReleasesCompanion data) {
     return ReleaseRow(
@@ -501,6 +538,9 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           ? data.printingCount.value
           : this.printingCount,
       sortIndex: data.sortIndex.present ? data.sortIndex.value : this.sortIndex,
+      dataSource: data.dataSource.present
+          ? data.dataSource.value
+          : this.dataSource,
     );
   }
 
@@ -518,7 +558,8 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           ..write('cardlistUri: $cardlistUri, ')
           ..write('cardCount: $cardCount, ')
           ..write('printingCount: $printingCount, ')
-          ..write('sortIndex: $sortIndex')
+          ..write('sortIndex: $sortIndex, ')
+          ..write('dataSource: $dataSource')
           ..write(')'))
         .toString();
   }
@@ -537,6 +578,7 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
     cardCount,
     printingCount,
     sortIndex,
+    dataSource,
   );
   @override
   bool operator ==(Object other) =>
@@ -553,7 +595,8 @@ class ReleaseRow extends DataClass implements Insertable<ReleaseRow> {
           other.cardlistUri == this.cardlistUri &&
           other.cardCount == this.cardCount &&
           other.printingCount == this.printingCount &&
-          other.sortIndex == this.sortIndex);
+          other.sortIndex == this.sortIndex &&
+          other.dataSource == this.dataSource);
 }
 
 class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
@@ -569,6 +612,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
   final Value<int> cardCount;
   final Value<int> printingCount;
   final Value<int> sortIndex;
+  final Value<String?> dataSource;
   final Value<int> rowid;
   const ReleasesCompanion({
     this.id = const Value.absent(),
@@ -583,6 +627,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     this.cardCount = const Value.absent(),
     this.printingCount = const Value.absent(),
     this.sortIndex = const Value.absent(),
+    this.dataSource = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ReleasesCompanion.insert({
@@ -598,6 +643,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     this.cardCount = const Value.absent(),
     this.printingCount = const Value.absent(),
     this.sortIndex = const Value.absent(),
+    this.dataSource = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -615,6 +661,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     Expression<int>? cardCount,
     Expression<int>? printingCount,
     Expression<int>? sortIndex,
+    Expression<String>? dataSource,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -630,6 +677,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
       if (cardCount != null) 'card_count': cardCount,
       if (printingCount != null) 'printing_count': printingCount,
       if (sortIndex != null) 'sort_index': sortIndex,
+      if (dataSource != null) 'data_source': dataSource,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -647,6 +695,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     Value<int>? cardCount,
     Value<int>? printingCount,
     Value<int>? sortIndex,
+    Value<String?>? dataSource,
     Value<int>? rowid,
   }) {
     return ReleasesCompanion(
@@ -662,6 +711,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
       cardCount: cardCount ?? this.cardCount,
       printingCount: printingCount ?? this.printingCount,
       sortIndex: sortIndex ?? this.sortIndex,
+      dataSource: dataSource ?? this.dataSource,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -705,6 +755,9 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
     if (sortIndex.present) {
       map['sort_index'] = Variable<int>(sortIndex.value);
     }
+    if (dataSource.present) {
+      map['data_source'] = Variable<String>(dataSource.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -726,6 +779,7 @@ class ReleasesCompanion extends UpdateCompanion<ReleaseRow> {
           ..write('cardCount: $cardCount, ')
           ..write('printingCount: $printingCount, ')
           ..write('sortIndex: $sortIndex, ')
+          ..write('dataSource: $dataSource, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3514,6 +3568,17 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, DeckRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _thumbnailCardNumberMeta =
+      const VerificationMeta('thumbnailCardNumber');
+  @override
+  late final GeneratedColumn<String> thumbnailCardNumber =
+      GeneratedColumn<String>(
+        'thumbnail_card_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3542,6 +3607,7 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, DeckRow> {
     name,
     description,
     activeRevisionId,
+    thumbnailCardNumber,
     createdAt,
     updatedAt,
   ];
@@ -3586,6 +3652,15 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, DeckRow> {
         ),
       );
     }
+    if (data.containsKey('thumbnail_card_number')) {
+      context.handle(
+        _thumbnailCardNumberMeta,
+        thumbnailCardNumber.isAcceptableOrUnknown(
+          data['thumbnail_card_number']!,
+          _thumbnailCardNumberMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3627,6 +3702,10 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, DeckRow> {
         DriftSqlType.int,
         data['${effectivePrefix}active_revision_id'],
       ),
+      thumbnailCardNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}thumbnail_card_number'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3649,6 +3728,10 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
   final String name;
   final String? description;
   final int? activeRevisionId;
+
+  /// Card number the user pinned as the deck's picture in the deck list.
+  /// Null lets the deck stand for itself with its biggest Digimon.
+  final String? thumbnailCardNumber;
   final DateTime createdAt;
   final DateTime updatedAt;
   const DeckRow({
@@ -3656,6 +3739,7 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
     required this.name,
     this.description,
     this.activeRevisionId,
+    this.thumbnailCardNumber,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -3669,6 +3753,9 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
     }
     if (!nullToAbsent || activeRevisionId != null) {
       map['active_revision_id'] = Variable<int>(activeRevisionId);
+    }
+    if (!nullToAbsent || thumbnailCardNumber != null) {
+      map['thumbnail_card_number'] = Variable<String>(thumbnailCardNumber);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -3685,6 +3772,9 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
       activeRevisionId: activeRevisionId == null && nullToAbsent
           ? const Value.absent()
           : Value(activeRevisionId),
+      thumbnailCardNumber: thumbnailCardNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(thumbnailCardNumber),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -3700,6 +3790,9 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
       activeRevisionId: serializer.fromJson<int?>(json['activeRevisionId']),
+      thumbnailCardNumber: serializer.fromJson<String?>(
+        json['thumbnailCardNumber'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -3712,6 +3805,7 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
       'activeRevisionId': serializer.toJson<int?>(activeRevisionId),
+      'thumbnailCardNumber': serializer.toJson<String?>(thumbnailCardNumber),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -3722,6 +3816,7 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
     String? name,
     Value<String?> description = const Value.absent(),
     Value<int?> activeRevisionId = const Value.absent(),
+    Value<String?> thumbnailCardNumber = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => DeckRow(
@@ -3731,6 +3826,9 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
     activeRevisionId: activeRevisionId.present
         ? activeRevisionId.value
         : this.activeRevisionId,
+    thumbnailCardNumber: thumbnailCardNumber.present
+        ? thumbnailCardNumber.value
+        : this.thumbnailCardNumber,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -3744,6 +3842,9 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
       activeRevisionId: data.activeRevisionId.present
           ? data.activeRevisionId.value
           : this.activeRevisionId,
+      thumbnailCardNumber: data.thumbnailCardNumber.present
+          ? data.thumbnailCardNumber.value
+          : this.thumbnailCardNumber,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -3756,6 +3857,7 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
           ..write('name: $name, ')
           ..write('description: $description, ')
           ..write('activeRevisionId: $activeRevisionId, ')
+          ..write('thumbnailCardNumber: $thumbnailCardNumber, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3768,6 +3870,7 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
     name,
     description,
     activeRevisionId,
+    thumbnailCardNumber,
     createdAt,
     updatedAt,
   );
@@ -3779,6 +3882,7 @@ class DeckRow extends DataClass implements Insertable<DeckRow> {
           other.name == this.name &&
           other.description == this.description &&
           other.activeRevisionId == this.activeRevisionId &&
+          other.thumbnailCardNumber == this.thumbnailCardNumber &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3788,6 +3892,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
   final Value<String> name;
   final Value<String?> description;
   final Value<int?> activeRevisionId;
+  final Value<String?> thumbnailCardNumber;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const DecksCompanion({
@@ -3795,6 +3900,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
     this.name = const Value.absent(),
     this.description = const Value.absent(),
     this.activeRevisionId = const Value.absent(),
+    this.thumbnailCardNumber = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -3803,6 +3909,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
     required String name,
     this.description = const Value.absent(),
     this.activeRevisionId = const Value.absent(),
+    this.thumbnailCardNumber = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : name = Value(name),
@@ -3813,6 +3920,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
     Expression<String>? name,
     Expression<String>? description,
     Expression<int>? activeRevisionId,
+    Expression<String>? thumbnailCardNumber,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -3821,6 +3929,8 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (activeRevisionId != null) 'active_revision_id': activeRevisionId,
+      if (thumbnailCardNumber != null)
+        'thumbnail_card_number': thumbnailCardNumber,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -3831,6 +3941,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
     Value<String>? name,
     Value<String?>? description,
     Value<int?>? activeRevisionId,
+    Value<String?>? thumbnailCardNumber,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -3839,6 +3950,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
       name: name ?? this.name,
       description: description ?? this.description,
       activeRevisionId: activeRevisionId ?? this.activeRevisionId,
+      thumbnailCardNumber: thumbnailCardNumber ?? this.thumbnailCardNumber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -3859,6 +3971,11 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
     if (activeRevisionId.present) {
       map['active_revision_id'] = Variable<int>(activeRevisionId.value);
     }
+    if (thumbnailCardNumber.present) {
+      map['thumbnail_card_number'] = Variable<String>(
+        thumbnailCardNumber.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3875,6 +3992,7 @@ class DecksCompanion extends UpdateCompanion<DeckRow> {
           ..write('name: $name, ')
           ..write('description: $description, ')
           ..write('activeRevisionId: $activeRevisionId, ')
+          ..write('thumbnailCardNumber: $thumbnailCardNumber, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -5012,6 +5130,7 @@ typedef $$ReleasesTableCreateCompanionBuilder =
       Value<int> cardCount,
       Value<int> printingCount,
       Value<int> sortIndex,
+      Value<String?> dataSource,
       Value<int> rowid,
     });
 typedef $$ReleasesTableUpdateCompanionBuilder =
@@ -5028,6 +5147,7 @@ typedef $$ReleasesTableUpdateCompanionBuilder =
       Value<int> cardCount,
       Value<int> printingCount,
       Value<int> sortIndex,
+      Value<String?> dataSource,
       Value<int> rowid,
     });
 
@@ -5097,6 +5217,11 @@ class $$ReleasesTableFilterComposer
 
   ColumnFilters<int> get sortIndex => $composableBuilder(
     column: $table.sortIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dataSource => $composableBuilder(
+    column: $table.dataSource,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5169,6 +5294,11 @@ class $$ReleasesTableOrderingComposer
     column: $table.sortIndex,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get dataSource => $composableBuilder(
+    column: $table.dataSource,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReleasesTableAnnotationComposer
@@ -5225,6 +5355,11 @@ class $$ReleasesTableAnnotationComposer
 
   GeneratedColumn<int> get sortIndex =>
       $composableBuilder(column: $table.sortIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get dataSource => $composableBuilder(
+    column: $table.dataSource,
+    builder: (column) => column,
+  );
 }
 
 class $$ReleasesTableTableManager
@@ -5270,6 +5405,7 @@ class $$ReleasesTableTableManager
                 Value<int> cardCount = const Value.absent(),
                 Value<int> printingCount = const Value.absent(),
                 Value<int> sortIndex = const Value.absent(),
+                Value<String?> dataSource = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReleasesCompanion(
                 id: id,
@@ -5284,6 +5420,7 @@ class $$ReleasesTableTableManager
                 cardCount: cardCount,
                 printingCount: printingCount,
                 sortIndex: sortIndex,
+                dataSource: dataSource,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5300,6 +5437,7 @@ class $$ReleasesTableTableManager
                 Value<int> cardCount = const Value.absent(),
                 Value<int> printingCount = const Value.absent(),
                 Value<int> sortIndex = const Value.absent(),
+                Value<String?> dataSource = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReleasesCompanion.insert(
                 id: id,
@@ -5314,6 +5452,7 @@ class $$ReleasesTableTableManager
                 cardCount: cardCount,
                 printingCount: printingCount,
                 sortIndex: sortIndex,
+                dataSource: dataSource,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7311,6 +7450,7 @@ typedef $$DecksTableCreateCompanionBuilder =
       required String name,
       Value<String?> description,
       Value<int?> activeRevisionId,
+      Value<String?> thumbnailCardNumber,
       required DateTime createdAt,
       required DateTime updatedAt,
     });
@@ -7320,6 +7460,7 @@ typedef $$DecksTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String?> description,
       Value<int?> activeRevisionId,
+      Value<String?> thumbnailCardNumber,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -7372,6 +7513,11 @@ class $$DecksTableFilterComposer extends Composer<_$AppDatabase, $DecksTable> {
 
   ColumnFilters<int> get activeRevisionId => $composableBuilder(
     column: $table.activeRevisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get thumbnailCardNumber => $composableBuilder(
+    column: $table.thumbnailCardNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7440,6 +7586,11 @@ class $$DecksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get thumbnailCardNumber => $composableBuilder(
+    column: $table.thumbnailCardNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7473,6 +7624,11 @@ class $$DecksTableAnnotationComposer
 
   GeneratedColumn<int> get activeRevisionId => $composableBuilder(
     column: $table.activeRevisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get thumbnailCardNumber => $composableBuilder(
+    column: $table.thumbnailCardNumber,
     builder: (column) => column,
   );
 
@@ -7540,6 +7696,7 @@ class $$DecksTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<int?> activeRevisionId = const Value.absent(),
+                Value<String?> thumbnailCardNumber = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => DecksCompanion(
@@ -7547,6 +7704,7 @@ class $$DecksTableTableManager
                 name: name,
                 description: description,
                 activeRevisionId: activeRevisionId,
+                thumbnailCardNumber: thumbnailCardNumber,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -7556,6 +7714,7 @@ class $$DecksTableTableManager
                 required String name,
                 Value<String?> description = const Value.absent(),
                 Value<int?> activeRevisionId = const Value.absent(),
+                Value<String?> thumbnailCardNumber = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
               }) => DecksCompanion.insert(
@@ -7563,6 +7722,7 @@ class $$DecksTableTableManager
                 name: name,
                 description: description,
                 activeRevisionId: activeRevisionId,
+                thumbnailCardNumber: thumbnailCardNumber,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

@@ -36,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -47,9 +47,21 @@ class AppDatabase extends _$AppDatabase {
     },
     // Everything on the card side is a cache of the published card list, so an
     // upgrade throws it away and re-syncs rather than migrating column by
-    // column. Decks are the only data the user authored, and they survive:
-    // they reference cards by printed number, not by row.
+    // column. That also covers the columns derived at sync time — keywords are
+    // parsed out of effect text, so a change to the parser only reaches the
+    // user through a version bump. Decks are the only data the user authored,
+    // and they survive: they reference cards by printed number, not by row.
+    // Their own columns do have to be migrated one by one.
+    // Note on version 8: it once carried a `tile_card_image` column on
+    // releases, precomputed at sync time. Working out a release's stand-in
+    // card is now done by querying the cards already on the device, so the
+    // column is gone from the schema without a version bump: an install that
+    // still has it simply never writes or reads it, and the next migration
+    // that recreates the card tables clears it away. Bumping instead would
+    // have cost every user a 25 MB re-download to change which picture a tile
+    // shows, which is what this move exists to stop.
     onUpgrade: (m, from, to) async {
+      if (from < 3) await m.addColumn(decks, decks.thumbnailCardNumber);
       await resetCardData(m);
     },
     beforeOpen: (details) async {

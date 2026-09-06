@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
+import '../../core/router/navigation.dart';
 import '../../domain/models/deck.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
+import 'decks_screen.dart';
 import 'widgets/deck_cards_tab.dart';
 import 'widgets/deck_name_dialog.dart';
 import 'widgets/deck_revisions_tab.dart';
 import 'widgets/deck_stats_tab.dart';
+import 'widgets/deck_thumbnail_sheet.dart';
 
 /// The deck editor: the active revision's cards, the revision history, and the
 /// deck's statistics.
@@ -84,7 +87,7 @@ class _DeckViewState extends ConsumerState<_DeckView>
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.go('/decks'),
+          onPressed: () => context.goBack('/decks'),
           icon: const Icon(Icons.arrow_back),
         ),
         title: Column(
@@ -107,11 +110,17 @@ class _DeckViewState extends ConsumerState<_DeckView>
             onSelected: (action) => _handle(context, action),
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'rename', child: Text('Rename deck')),
-              if (revision != null)
+              if (revision != null) ...[
+                const PopupMenuItem(
+                  value: 'thumbnail',
+                  child: Text('Deck thumbnail'),
+                ),
+                const PopupMenuItem(value: 'export', child: Text('Export')),
                 PopupMenuItem(
                   value: 'clear',
                   child: Text('Clear ${revision.name}'),
                 ),
+              ],
               PopupMenuItem(
                 value: 'delete',
                 child: Text(
@@ -173,6 +182,18 @@ class _DeckViewState extends ConsumerState<_DeckView>
           initialValue: deck.name,
         );
         if (name != null) await dao.updateDeck(deck.id, name: name);
+      case 'thumbnail':
+        final revisionId = deck.activeRevision?.id;
+        if (revisionId == null || !context.mounted) return;
+        await showDeckThumbnailSheet(
+          context,
+          deck: deck,
+          revisionId: revisionId,
+        );
+      case 'export':
+        final revisionId = deck.activeRevision?.id;
+        if (revisionId == null || !context.mounted) return;
+        context.push('/decks/${deck.id}/export/$revisionId');
       case 'clear':
         final revisionId = deck.activeRevision?.id;
         if (revisionId == null || !context.mounted) return;
@@ -187,16 +208,11 @@ class _DeckViewState extends ConsumerState<_DeckView>
         if (confirmed) await dao.clearRevision(revisionId);
       case 'delete':
         if (!context.mounted) return;
-        final confirmed = await _confirm(
-          context,
-          title: 'Delete ${deck.name}?',
-          message:
-              'The deck and all ${deck.revisions.length} of its '
-              'revisions are removed. This cannot be undone.',
-          confirmLabel: 'Delete',
-        );
+        final confirmed = await showDeleteDeckDialog(context, deck);
         if (confirmed) {
           await dao.deleteDeck(deck.id);
+          // The deck this screen was showing is gone, so there is nothing to
+          // pop back onto: go to the list instead.
           if (context.mounted) context.go('/decks');
         }
     }

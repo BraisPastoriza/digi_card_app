@@ -4,6 +4,12 @@
          tool, so release builds need their own declaration. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Saving an exported deck image to the gallery. Android 10 and later
+         write to shared storage through MediaStore and need no permission,
+         so this is capped at API 29. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"/>
+
     <application
         android:label="DigiCard App"
         android:name="${applicationName}"

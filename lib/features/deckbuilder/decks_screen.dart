@@ -21,7 +21,16 @@ class DecksScreen extends ConsumerWidget {
     final decks = ref.watch(decksProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Decks')),
+      appBar: AppBar(
+        title: const Text('Decks'),
+        actions: [
+          IconButton(
+            onPressed: () => context.push('/decks/import'),
+            icon: const Icon(Icons.file_download_outlined),
+            tooltip: 'Import deck list',
+          ),
+        ],
+      ),
       floatingActionButton: decks.valueOrNull?.isEmpty ?? true
           ? null
           : FloatingActionButton.extended(
@@ -60,17 +69,104 @@ class DecksScreen extends ConsumerWidget {
     );
   }
 
+  /// Creates a deck and opens it straight away.
+  ///
+  /// It is not worth a dialog: a deck is far easier to name once you can see
+  /// what went into it, and both the editor and a long press on the deck list
+  /// rename it in place.
   Future<void> _createDeck(BuildContext context, WidgetRef ref) async {
-    final name = await showDeckNameDialog(
-      context,
-      title: 'New deck',
-      label: 'Deck name',
-      confirmLabel: 'Create',
-    );
-    if (name == null || !context.mounted) return;
-    final deckId = await ref.read(deckDaoProvider).createDeck(name: name);
-    if (context.mounted) context.go('/decks/$deckId');
+    final deckId = await ref.read(deckDaoProvider).createDeck();
+    if (context.mounted) context.push('/decks/$deckId');
   }
+}
+
+/// The actions a long press on a deck offers, so renaming or throwing away a
+/// deck does not mean opening it first.
+Future<void> showDeckActionsSheet(
+  BuildContext context,
+  WidgetRef ref,
+  Deck deck,
+) {
+  final scheme = Theme.of(context).colorScheme;
+  return showModalBottomSheet<void>(
+    context: context,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: Text(
+              deck.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              deck.revisions.length == 1
+                  ? '1 revision'
+                  : '${deck.revisions.length} revisions',
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.drive_file_rename_outline),
+            title: const Text('Rename'),
+            onTap: () async {
+              Navigator.of(sheetContext).pop();
+              final name = await showDeckNameDialog(
+                context,
+                title: 'Rename deck',
+                label: 'Deck name',
+                initialValue: deck.name,
+              );
+              if (name != null) {
+                await ref.read(deckDaoProvider).updateDeck(deck.id, name: name);
+              }
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.delete_outline, color: scheme.error),
+            title: Text('Delete', style: TextStyle(color: scheme.error)),
+            onTap: () async {
+              Navigator.of(sheetContext).pop();
+              final confirmed = await showDeleteDeckDialog(context, deck);
+              if (confirmed) {
+                await ref.read(deckDaoProvider).deleteDeck(deck.id);
+              }
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Confirms throwing a deck away, spelling out that its revisions go with it.
+Future<bool> showDeleteDeckDialog(BuildContext context, Deck deck) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Delete ${deck.name}?'),
+      content: Text(
+        'The deck and all ${deck.revisions.length} of its revisions are '
+        'removed. This cannot be undone.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+  return result ?? false;
 }
 
 class _DeckCard extends ConsumerWidget {
@@ -90,7 +186,8 @@ class _DeckCard extends ConsumerWidget {
       color: AppSurfaces.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: () => context.go('/decks/${deck.id}'),
+        onTap: () => context.push('/decks/${deck.id}'),
+        onLongPress: () => showDeckActionsSheet(context, ref, deck),
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -101,9 +198,12 @@ class _DeckCard extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // The deck's biggest Digimon, so a shelf of decks is told apart
-              // by its art rather than by reading names.
-              _DeckArt(entry: composition?.signatureCard),
+              // The card the user pinned, or the deck's biggest Digimon, so a
+              // shelf of decks is told apart by its art rather than by
+              // reading names.
+              _DeckArt(
+                entry: composition?.thumbnailFor(deck.thumbnailCardNumber),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

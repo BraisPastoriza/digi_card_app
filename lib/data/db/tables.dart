@@ -37,6 +37,10 @@ class Releases extends Table {
   /// Position in the API's chronological release ordering.
   IntColumn get sortIndex => integer().withDefault(const Constant(0))();
 
+  /// Name of the API the release's cards came from, when it was not the
+  /// primary one. Null for everything the primary API publishes.
+  TextColumn get dataSource => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -174,6 +178,11 @@ class Decks extends Table {
   TextColumn get name => text()();
   TextColumn get description => text().nullable()();
   IntColumn get activeRevisionId => integer().nullable()();
+
+  /// Card number the user pinned as the deck's picture in the deck list.
+  /// Null lets the deck stand for itself with its biggest Digimon.
+  TextColumn get thumbnailCardNumber => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 }

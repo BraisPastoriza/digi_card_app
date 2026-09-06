@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
-import '../../../domain/models/card_enums.dart';
 import '../../../domain/models/deck.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
 import 'deck_card_tile.dart';
 
-/// The cards in the active revision, laid out the way a deck list is written:
-/// eggs first, then Digimon, Tamers and Options.
+/// The cards in the active revision, laid out the way a deck list is read:
+/// Digi-Eggs first, then the Digimon a level at a time, then Tamers and
+/// Options.
 ///
 /// Cards are shown as art rather than rows — a deck is recognised by its
 /// pictures, and the copy counts have to be readable while scanning 50 of
@@ -71,71 +71,42 @@ class _DeckCardsTabState extends ConsumerState<DeckCardsTab> {
           );
         }
 
-        final groups = <({String title, List<DeckEntry> entries, int? limit})>[
-          (
-            title: 'Egg deck',
-            entries: composition.entriesOfCategory(CardCategory.digiEgg),
-            limit: DeckRules.maxEggDeckSize,
-          ),
-          for (final category in const [
-            CardCategory.digimon,
-            CardCategory.tamer,
-            CardCategory.option,
-          ])
-            (
-              title: '${category.label}s',
-              entries: composition.entriesOfCategory(category),
-              limit: null,
-            ),
-        ];
-
         return GestureDetector(
           // Tapping the background closes an open stepper.
           onTap: () => setState(() => _openCard = null),
           behavior: HitTestBehavior.translucent,
           child: CustomScrollView(
             slivers: [
-              for (final group in groups)
-                if (group.entries.isNotEmpty) ...[
-                  SliverToBoxAdapter(
-                    child: _GroupHeader(
-                      title: group.title,
-                      count: group.entries.fold(
-                        0,
-                        (sum, e) => sum + e.quantity,
-                      ),
-                      limit: group.limit,
-                    ),
+              for (final section in composition.sections) ...[
+                SliverToBoxAdapter(child: _SectionHeader(section: section)),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(14, 2, 14, 10),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 150,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: cardAspectRatio,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final entry = section.entries[index];
+                      return DeckCardTile(
+                        card: entry.card,
+                        quantity: entry.quantity,
+                        expanded: _openCard == entry.cardNumber,
+                        onTap: () => setState(
+                          () => _openCard = _openCard == entry.cardNumber
+                              ? null
+                              : entry.cardNumber,
+                        ),
+                        onAdjust: (delta) => _adjust(entry, delta),
+                        onInfo: () => context.push('/card/${entry.cardNumber}'),
+                      );
+                    }, childCount: section.entries.length),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(14, 2, 14, 10),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 150,
-                            mainAxisSpacing: 14,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: cardAspectRatio,
-                          ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final entry = group.entries[index];
-                        return DeckCardTile(
-                          card: entry.card,
-                          quantity: entry.quantity,
-                          expanded: _openCard == entry.cardNumber,
-                          onTap: () => setState(
-                            () => _openCard = _openCard == entry.cardNumber
-                                ? null
-                                : entry.cardNumber,
-                          ),
-                          onAdjust: (delta) => _adjust(entry, delta),
-                          onInfo: () =>
-                              context.push('/card/${entry.cardNumber}'),
-                        );
-                      }, childCount: group.entries.length),
-                    ),
-                  ),
-                ],
+                ),
+              ],
               const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
           ),
@@ -145,25 +116,20 @@ class _DeckCardsTabState extends ConsumerState<DeckCardsTab> {
   }
 }
 
-class _GroupHeader extends StatelessWidget {
-  const _GroupHeader({
-    required this.title,
-    required this.count,
-    required this.limit,
-  });
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.section});
 
-  final String title;
-  final int count;
-  final int? limit;
+  final DeckSection section;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final overLimit = limit != null && count > limit!;
+    final limit = section.limit;
+    final overLimit = limit != null && section.count > limit;
     return SectionHeader(
-      title,
+      section.label,
       trailing: Text(
-        limit == null ? '$count' : '$count / $limit',
+        limit == null ? '${section.count}' : '${section.count} / $limit',
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w700,
