@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Release signing. The keystore and its passwords sign every public build;
+# committing either lets anyone publish as this app.
+key.properties
+*.jks
+*.keystore

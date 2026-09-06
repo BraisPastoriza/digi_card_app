@@ -1,4 +1,4 @@
-package com.example.digi_card_app
+package io.github.braispastoriza.digicard
 
 import io.flutter.embedding.android.FlutterActivity
 
