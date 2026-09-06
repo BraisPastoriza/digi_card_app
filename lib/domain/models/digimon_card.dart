@@ -367,6 +367,24 @@ class DigimonCard {
 
   bool get isDual => dualFace != null;
 
+  /// Whether this is a token, which can never be put in a deck.
+  bool get isToken => TokenCard.hasTokenNumber(number);
+
+  /// The section of a deck list this card is written under.
+  ///
+  /// A dual card is a Digimon on one face and an Option on the other, and
+  /// players file it with the Digimon: that is the face that digivolves and
+  /// the one the deck is built around. Whichever way the data happens to list
+  /// the two faces, the Digimon one wins.
+  CardCategory get deckCategory {
+    if (dualFace case final dual?
+        when category != CardCategory.digimon &&
+            dual.category == CardCategory.digimon) {
+      return CardCategory.digimon;
+    }
+    return category;
+  }
+
   /// The cost shown on the card, which lives in a different field for Options.
   int? get cost => category == CardCategory.option ? useCost : playCost;
 

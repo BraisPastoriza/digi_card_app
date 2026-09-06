@@ -12,10 +12,17 @@ abstract final class KeywordParser {
   /// fullwidth `＜＞`, ASCII `<>`, and the mathematical `⟨⟩` / `〈〉` pairs.
   static final _bracketed = RegExp(r'[＜<〈⟨]([^＞>〉⟩\n]{1,60})[＞>〉⟩]');
 
-  /// Per-card qualifiers: `Decoy (Black)`, `Decode ([Aegiomon])`,
-  /// `Fragment ≪3≫`, `Decode《[Aegiomon]》`. All of them narrow which cards a
-  /// keyword applies to, not which keyword it is.
-  static final _qualifier = RegExp(r'\s*[(（≪《][^)）≫》]*[)）≫》]');
+  /// Everything from the first qualifier bracket onwards: `Decoy (Black)`,
+  /// `Decode ([Aegiomon])`, `Fragment ≪3≫`, `Decode《[Aegiomon]》`. All of them
+  /// narrow which cards a keyword applies to, not which keyword it is, and a
+  /// qualifier always follows the name.
+  ///
+  /// The cut is made at the first bracket rather than by matching balanced
+  /// pairs because the qualifiers nest:
+  /// `Partition (green Lv.5 (green Lv.5 & blue Lv.5) blue Lv.5)` closes its
+  /// inner bracket first, so a pair-matching strip ends in the wrong place and
+  /// leaves `Partition blue Lv.5)` behind as a second, bogus keyword.
+  static final _qualifier = RegExp(r'\s*[(（≪《].*$', dotAll: true);
 
   /// `Digi-Burst up to 4`.
   static final _upTo = RegExp(r'\s*up\s+to\s*\d*\s*$', caseSensitive: false);
@@ -49,14 +56,7 @@ abstract final class KeywordParser {
   static String? normalize(String raw) {
     var term = raw.trim();
 
-    // Qualifiers can nest side by side — `Decoy (Red)/(Black)` has two — so
-    // strip until nothing changes.
-    String previous;
-    do {
-      previous = term;
-      term = term.replaceAll(_qualifier, '');
-    } while (term != previous);
-
+    term = term.replaceFirst(_qualifier, '');
     term = term.replaceAll(_upTo, '');
 
     // Read the direction before the magnitude is thrown away.

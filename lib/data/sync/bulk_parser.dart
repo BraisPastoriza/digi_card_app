@@ -197,7 +197,10 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
     digivolutionRequirements: jsonEncode(requirements),
     faqs: jsonEncode(_asMapList(attributes['faqs'])),
     limitations: jsonEncode(limitations.map((l) => l.toJson()).toList()),
-    rarity: _parseRarity(attributes['rarity'] as String?),
+    rarity: CardRarity.normalize(
+      attributes['rarity'] as String?,
+      isToken: TokenCard.hasTokenNumber(number),
+    ),
     supplementalStars: supplemental is Map<String, dynamic>
         ? supplemental['stars'] as int?
         : null,
@@ -258,26 +261,11 @@ List<String> _parseColors(Object? raw) {
       .toList();
 }
 
-/// Keeps only values that look like a printed rarity code (`C`, `U`, `R`,
-/// `SR`, `SEC`, `UR`, `P`).
-///
-/// A stray token card in the English data carries Japanese text in this field,
-/// which would otherwise show up as its own option in the rarity filter.
-String? _parseRarity(String? raw) {
-  if (raw == null) return null;
-  final rarity = raw.trim();
-  if (rarity.isEmpty) return null;
-  return RegExp(r'^[A-Za-z]{1,4}$').hasMatch(rarity) ? rarity : null;
-}
-
-/// Splits the API's slash-separated `type` field into individual traits.
+/// Splits the API's slash-separated `type` field into individual traits, in
+/// the spelling the filter groups them by.
 List<String> _parseTraits(String? raw) {
   if (raw == null || raw.isEmpty) return const [];
-  return raw
-      .split('/')
-      .map((trait) => trait.trim())
-      .where((trait) => trait.isNotEmpty)
-      .toList();
+  return CardTrait.normalizeAll(raw.split('/'));
 }
 
 List<String> _parseReleaseIds(Object? relationships) {

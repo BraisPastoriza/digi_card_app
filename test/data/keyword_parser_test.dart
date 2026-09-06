@@ -90,6 +90,23 @@ void main() {
       expect(KeywordParser.normalize('Draw 1'), isNull);
     });
 
+    test('strips a qualifier whose own brackets nest', () {
+      // BT23-047 prints Partition with a qualifier inside a qualifier. A
+      // pair-matching strip cuts at the inner closing bracket and leaves
+      // "Partition blue Lv.5)" behind as a second, bogus keyword.
+      expect(
+        KeywordParser.normalize(
+          'Partition (green Lv.5 (green Lv.5 & blue Lv.5) blue Lv.5)',
+        ),
+        'Partition',
+      );
+      expect(KeywordParser.normalize('Partition'), 'Partition');
+      expect(
+        KeywordParser.normalize('Partition (yellow Lv.6 & black Lv.6)'),
+        'Partition',
+      );
+    });
+
     test('rejects sentence fragments picked up by the bracket match', () {
       expect(
         KeywordParser.normalize('this Digimon may attack the player'),
