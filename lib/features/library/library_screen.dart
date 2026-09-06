@@ -6,7 +6,9 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/db/daos/release_dao.dart';
 import '../../domain/models/card_enums.dart';
+import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
+import 'attribution_screen.dart';
 import 'library_providers.dart';
 import 'widgets/release_tile.dart';
 
@@ -19,7 +21,8 @@ class LibraryScreen extends ConsumerStatefulWidget {
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+class _LibraryScreenState extends ConsumerState<LibraryScreen>
+    with TickerProviderStateMixin {
   /// The main card pools open by default; the accessory products stay
   /// collapsed so 93 expansions do not arrive as one long scroll.
   final _expanded = <ReleaseGroup>{
@@ -31,6 +34,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final sections = ref.watch(releaseSectionsProvider);
+    final cardArt = ref.watch(releaseCardArtProvider).valueOrNull ?? const {};
 
     return Scaffold(
       body: RefreshIndicator(
@@ -38,7 +42,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
+              // Floating and snapping, with the search bar riding along in the
+              // header: the expansion list is long, and having to scroll all
+              // the way back to the top to look something up is the kind of
+              // thing that makes people give up on searching.
               floating: true,
+              snap: true,
               title: const Text('Library'),
               actions: [
                 IconButton(
@@ -47,8 +56,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   tooltip: 'Card database',
                 ),
               ],
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(56),
+                child: _SearchBarButton(),
+              ),
             ),
-            const SliverToBoxAdapter(child: _SearchBarButton()),
             ...sections.when(
               loading: () => const [
                 SliverFillRemaining(
@@ -97,14 +109,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           final release = section.releases[index];
                           return ReleaseTile(
                             release: release,
+                            cardImage: cardArt[release.id],
                             onTap: () =>
-                                context.go('/library/release/${release.id}'),
+                                context.push('/library/release/${release.id}'),
                           );
                         }, childCount: section.releases.length),
                       ),
                     ),
                 ],
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverToBoxAdapter(
+                  child: AttributionFooter(
+                    onTap: () => context.push('/library/credits'),
+                  ),
+                ),
               ],
             ),
           ],
@@ -132,7 +149,7 @@ class _SearchBarButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: InkWell(
-        onTap: () => context.go('/library/search'),
+        onTap: () => context.push('/library/search'),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -237,7 +254,8 @@ class _DatabaseInfoSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Card data comes from the Heroicc API. Refreshing re-downloads '
+              'Card data comes from the Heroicc API, plus $secondarySourceName '
+              'for sets Heroicc has not published yet. Refreshing re-downloads '
               'the full card list, which is how new sets show up.',
               style: TextStyle(
                 fontSize: 13,
@@ -245,7 +263,16 @@ class _DatabaseInfoSheet extends ConsumerWidget {
                 color: scheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 6),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.push('/library/credits');
+              },
+              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+              child: const Text('Data sources & credits'),
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(

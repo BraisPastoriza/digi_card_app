@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/deckbuilder/deck_card_picker_screen.dart';
+import '../../features/deckbuilder/deck_export_screen.dart';
+import '../../features/deckbuilder/deck_import_screen.dart';
 import '../../features/deckbuilder/deck_screen.dart';
 import '../../features/deckbuilder/decks_screen.dart';
+import '../../features/library/attribution_screen.dart';
 import '../../features/library/card_detail_screen.dart';
 import '../../features/library/library_screen.dart';
 import '../../features/library/release_cards_screen.dart';
@@ -60,6 +63,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (_, _) => const SearchScreen(),
                   ),
                   GoRoute(
+                    path: 'credits',
+                    builder: (_, _) => const AttributionScreen(),
+                  ),
+                  GoRoute(
                     path: 'release/:releaseId',
                     builder: (_, state) => ReleaseCardsScreen(
                       releaseId: state.pathParameters['releaseId']!,
@@ -75,6 +82,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/decks',
                 builder: (_, _) => const DecksScreen(),
                 routes: [
+                  // Ahead of `:deckId`, which would otherwise swallow it and
+                  // then fail to parse "import" as a deck id.
+                  GoRoute(
+                    path: 'import',
+                    builder: (_, _) => const DeckImportScreen(),
+                  ),
                   GoRoute(
                     path: ':deckId',
                     builder: (_, state) => DeckScreen(
@@ -84,6 +97,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                       GoRoute(
                         path: 'add/:revisionId',
                         builder: (_, state) => DeckCardPickerScreen(
+                          deckId: int.parse(state.pathParameters['deckId']!),
+                          revisionId: int.parse(
+                            state.pathParameters['revisionId']!,
+                          ),
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'export/:revisionId',
+                        builder: (_, state) => DeckExportScreen(
                           deckId: int.parse(state.pathParameters['deckId']!),
                           revisionId: int.parse(
                             state.pathParameters['revisionId']!,
