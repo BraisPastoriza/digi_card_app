@@ -8,10 +8,12 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
+import '../api/digimoncard_io_api.dart';
 import '../api/heroi_api.dart';
 import '../db/app_database.dart';
 import '../db/tables.dart';
 import 'bulk_parser.dart';
+import 'digimoncard_io_parser.dart';
 
 /// Steps of a card database sync, in the order they run.
 enum SyncStage {
@@ -50,10 +52,11 @@ class SyncProgress {
 /// the whole dataset rather than merging: at ~25 MB that is both simpler and
 /// faster than reconciling 7,600 cards one by one.
 class CardSyncService {
-  CardSyncService(this._db, this._api);
+  CardSyncService(this._db, this._api, this._secondaryApi);
 
   final AppDatabase _db;
   final HeroiApi _api;
+  final DigimonCardIoApi _secondaryApi;
 
   Future<SyncStateRow?> currentState() =>
       _db.select(_db.syncState).getSingleOrNull();
@@ -131,8 +134,15 @@ class CardSyncService {
       controller.add(const SyncProgress(SyncStage.parsing));
       final cards = await parseBulkFile(downloadPath);
 
+      final previews = await _fetchPreviewSets(
+        ids,
+        controller,
+        knownNumbers: {for (final card in cards) card.number},
+      );
+      cards.addAll(previews.cards);
+
       controller.add(const SyncProgress(SyncStage.storing));
-      await _store(cards, details, ids);
+      await _store(cards, [...details, ...previews.details], ids);
 
       controller.add(const SyncProgress(SyncStage.indexing));
       await _db.rebuildSearchIndex();
@@ -165,6 +175,66 @@ class CardSyncService {
     }
   }
 
+  /// Fills in the sets the primary API has not published yet.
+  ///
+  /// Two things keep this contained. It skips any preview set the primary API
+  /// has started publishing, so each one retires itself the day the canonical
+  /// data lands and no code has to be deleted. And it swallows its own
+  /// failures: the secondary source is a bonus, so a sync must finish exactly
+  /// as it does today if that API is down, slow, or has changed shape.
+  Future<({List<ParsedCard> cards, List<ReleaseDetail> details})>
+  _fetchPreviewSets(
+    List<String> publishedIds,
+    StreamController<SyncProgress> controller, {
+    required Set<String> knownNumbers,
+  }) async {
+    final wanted = previewReleases
+        .where((preview) => !publishedIds.contains(preview.id))
+        .toList();
+    if (wanted.isEmpty) {
+      return (cards: <ParsedCard>[], details: <ReleaseDetail>[]);
+    }
+
+    final cards = <ParsedCard>[];
+    final details = <ReleaseDetail>[];
+
+    for (final preview in wanted) {
+      controller.add(
+        SyncProgress(SyncStage.releases, detail: 'Preview: ${preview.pack}'),
+      );
+      try {
+        // One request at a time: two sequential calls stay far under the
+        // secondary API's 15-per-10-seconds limit with no throttling of our
+        // own to get wrong.
+        final rows = await _secondaryApi.cardsInPack(preview.pack);
+        final parsed = parseDigimonCardIoPack(rows, preview);
+        if (parsed.isEmpty) continue;
+
+        // A Limited pack is mostly reprints of cards from other sets, and the
+        // primary source already has those — with better data and their real
+        // artwork. Only what is genuinely new gets stored; the reprints are
+        // linked to the pack through the release detail below, so the pack
+        // still lists its full contents.
+        cards.addAll(
+          parsed.where((card) => !knownNumbers.contains(card.number)),
+        );
+        details.add(
+          ReleaseDetail(
+            id: preview.id,
+            name: preview.name,
+            cardIds: parsed.map((card) => card.id).toList(),
+            genre: preview.genre,
+          ),
+        );
+      } on Object {
+        // Deliberately swallowed: an unreachable preview set must never cost
+        // the user the 7,600 cards the primary sync just downloaded.
+        continue;
+      }
+    }
+    return (cards: cards, details: details);
+  }
+
   Future<void> _store(
     List<ParsedCard> cards,
     List<ReleaseDetail> details,
@@ -189,6 +259,7 @@ class CardSyncService {
     }
 
     _addAllPromosRelease(releaseToCards, details);
+    _addAllLimitedRelease(releaseToCards, cards);
 
     // One printing per card number, chosen among the printings that release
     // actually contains. Choosing globally instead would leave promo and
@@ -239,13 +310,23 @@ class CardSyncService {
               cardlistUri: Value(detail.cardlistUri),
               cardCount: Value(primaryInRelease[detail.id]?.length ?? 0),
               printingCount: Value(releaseToCards[detail.id]?.length ?? 0),
-              // The aggregate promo release is not part of the API's own
-              // ordering; float it to the top of its group.
-              sortIndex: Value(
-                detail.id == allPromosReleaseId
-                    ? orderedIds.length + 1
-                    : orderedIds.indexOf(detail.id),
+              dataSource: Value(
+                previewReleases.any((p) => p.id == detail.id)
+                    ? secondarySourceName
+                    : null,
               ),
+              // Neither the promo aggregate nor a preview set appears in the
+              // API's own ordering. The aggregate floats to the top of its
+              // group; a preview set is the newest thing there is, so it sorts
+              // past every published release rather than to the -1 that
+              // `indexOf` would give it.
+              sortIndex: Value(switch (detail.id) {
+                allPromosReleaseId => orderedIds.length + 1,
+                final id when previewReleases.any((p) => p.id == id) =>
+                  orderedIds.length + 2,
+                allLimitedReleaseId => orderedIds.length + 3,
+                final id => orderedIds.indexOf(id),
+              }),
             ),
         ]);
 
@@ -337,6 +418,24 @@ class CardSyncService {
     }
   }
 
+  /// Files every Limited card under one aggregate release.
+  ///
+  /// The same problem the promo aggregate solves: a Limited card is a bonus
+  /// tucked into some other product, six at a time, so the product it came in
+  /// is the one thing the person holding it cannot look it up by.
+  void _addAllLimitedRelease(
+    Map<String, Set<String>> releaseToCards,
+    List<ParsedCard> cards,
+  ) {
+    final limited = {
+      for (final card in cards)
+        if (card.number.toUpperCase().startsWith('LM-')) card.id,
+    };
+    if (limited.isNotEmpty) {
+      releaseToCards[allLimitedReleaseId] = limited;
+    }
+  }
+
   /// The API's releases plus the synthetic promo aggregate, which borrows its
   /// artwork from the plain promotion-card product.
   List<ReleaseDetail> _withAllPromos(List<ReleaseDetail> details) {
@@ -352,6 +451,12 @@ class CardSyncService {
         genre: 'Promotion Card',
         imageUrl: donor?.imageUrl,
         thumbnailUrl: donor?.thumbnailUrl,
+      ),
+      const ReleaseDetail(
+        id: allLimitedReleaseId,
+        name: 'All LM',
+        cardIds: [],
+        genre: 'Premium Bandai',
       ),
     ];
   }

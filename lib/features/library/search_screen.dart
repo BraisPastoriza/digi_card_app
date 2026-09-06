@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/card_filter.dart';
 import '../../shared/widgets/common.dart';
@@ -27,13 +28,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _controller.text = ref.read(cardFilterProvider).query;
+    _controller.text = ref
+        .read(cardFilterProvider(CardSearchScope.library))
+        .query;
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    // Cancelled first, so a pending keystroke cannot write the query back
+    // after it has been cleared.
     _debounce?.cancel();
+    // A search is a throwaway act: leaving this screen clears it, so coming
+    // back — or opening the other search — starts fresh rather than on top of
+    // whatever was last looked up.
+    ref.invalidate(cardFilterProvider(CardSearchScope.library));
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -44,7 +53,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _onQueryChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), () {
-      ref.read(cardFilterProvider.notifier).setQuery(value);
+      ref
+          .read(cardFilterProvider(CardSearchScope.library).notifier)
+          .setQuery(value);
     });
   }
 
@@ -52,22 +63,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.pixels >= position.maxScrollExtent - 600) {
-      ref.read(cardSearchProvider.notifier).loadMore();
+      ref.read(cardSearchProvider(CardSearchScope.library).notifier).loadMore();
     }
   }
 
   Future<void> _openFilters() async {
-    final filter = ref.read(cardFilterProvider);
+    final filter = ref.read(cardFilterProvider(CardSearchScope.library));
     final updated = await showFilterSheet(context, filter);
     if (updated != null) {
-      ref.read(cardFilterProvider.notifier).update(updated);
+      ref
+          .read(cardFilterProvider(CardSearchScope.library).notifier)
+          .update(updated);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final filter = ref.watch(cardFilterProvider);
-    final results = ref.watch(cardSearchProvider);
+    final filter = ref.watch(cardFilterProvider(CardSearchScope.library));
+    final results = ref.watch(cardSearchProvider(CardSearchScope.library));
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -80,7 +93,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.go('/library'),
+                    onPressed: () => context.goBack('/library'),
                     icon: const Icon(Icons.arrow_back),
                   ),
                   Expanded(
@@ -121,10 +134,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           _ResultsHeader(
             filter: filter,
             total: results.valueOrNull?.total,
-            onClearFacets: () =>
-                ref.read(cardFilterProvider.notifier).clearFacets(),
+            onClearFacets: () => ref
+                .read(cardFilterProvider(CardSearchScope.library).notifier)
+                .clearFacets(),
             onSortChanged: (sort) => ref
-                .read(cardFilterProvider.notifier)
+                .read(cardFilterProvider(CardSearchScope.library).notifier)
                 .update(filter.copyWith(sort: sort)),
           ),
           Expanded(
@@ -146,7 +160,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ? null
                           : OutlinedButton(
                               onPressed: () => ref
-                                  .read(cardFilterProvider.notifier)
+                                  .read(
+                                    cardFilterProvider(
+                                      CardSearchScope.library,
+                                    ).notifier,
+                                  )
                                   .clearFacets(),
                               child: const Text('Clear filters'),
                             ),

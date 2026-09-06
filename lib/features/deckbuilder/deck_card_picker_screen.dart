@@ -47,13 +47,21 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
   @override
   void initState() {
     super.initState();
-    _controller.text = ref.read(cardFilterProvider).query;
+    _controller.text = ref
+        .read(cardFilterProvider(CardSearchScope.deckBuilder))
+        .query;
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    // Cancelled first, so a pending keystroke cannot write the query back
+    // after it has been cleared.
     _debounce?.cancel();
+    // A search is a throwaway act: leaving this screen clears it, so coming
+    // back — or opening the other search — starts fresh rather than on top of
+    // whatever was last looked up.
+    ref.invalidate(cardFilterProvider(CardSearchScope.deckBuilder));
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -62,7 +70,9 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
   void _onQueryChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), () {
-      ref.read(cardFilterProvider.notifier).setQuery(value);
+      ref
+          .read(cardFilterProvider(CardSearchScope.deckBuilder).notifier)
+          .setQuery(value);
     });
   }
 
@@ -70,7 +80,9 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.pixels >= position.maxScrollExtent - 600) {
-      ref.read(cardSearchProvider.notifier).loadMore();
+      ref
+          .read(cardSearchProvider(CardSearchScope.deckBuilder).notifier)
+          .loadMore();
     }
   }
 
@@ -120,8 +132,8 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filter = ref.watch(cardFilterProvider);
-    final results = ref.watch(cardSearchProvider);
+    final filter = ref.watch(cardFilterProvider(CardSearchScope.deckBuilder));
+    final results = ref.watch(cardSearchProvider(CardSearchScope.deckBuilder));
     final quantities = ref.watch(revisionQuantitiesProvider(widget.revisionId));
     final composition = ref
         .watch(compositionProvider(widget.revisionId))
@@ -160,7 +172,13 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                     onPressed: () async {
                       final updated = await showFilterSheet(context, filter);
                       if (updated != null) {
-                        ref.read(cardFilterProvider.notifier).update(updated);
+                        ref
+                            .read(
+                              cardFilterProvider(
+                                CardSearchScope.deckBuilder,
+                              ).notifier,
+                            )
+                            .update(updated);
                       }
                     },
                     icon: Badge(
@@ -191,7 +209,11 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                           ? null
                           : OutlinedButton(
                               onPressed: () => ref
-                                  .read(cardFilterProvider.notifier)
+                                  .read(
+                                    cardFilterProvider(
+                                      CardSearchScope.deckBuilder,
+                                    ).notifier,
+                                  )
                                   .clearFacets(),
                               child: const Text('Clear filters'),
                             ),

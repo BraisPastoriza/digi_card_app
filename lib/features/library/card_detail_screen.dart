@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/digimon_colors.dart';
 import '../../domain/models/card_enums.dart';
+import '../../domain/models/card_release.dart';
 import '../../domain/models/digimon_card.dart';
 import '../../shared/widgets/card_image_viewer.dart';
 import '../../shared/widgets/card_thumbnail.dart';
@@ -89,6 +90,8 @@ class _CardDetailViewState extends State<_CardDetailView> {
             ),
           ],
         ),
+        if (previewReleases.any((p) => card.releaseIds.contains(p.id)))
+          const SliverToBoxAdapter(child: _PreviewCardNotice()),
         SliverToBoxAdapter(
           child: Column(
             children: [
@@ -437,14 +440,19 @@ class _StatGrid extends StatelessWidget {
           border: Border.all(color: AppSurfaces.outline),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-        child: Wrap(
-          children: [
-            for (final (label, value) in stats)
-              SizedBox(
-                width: MediaQuery.sizeOf(context).width / 3 - 18,
-                child: _Stat(label: label, value: value),
-              ),
-          ],
+        // Measured against the box the stats actually sit in rather than
+        // against the screen: a third of the screen width is not a third of
+        // this container, so the columns never lined up.
+        child: LayoutBuilder(
+          builder: (context, constraints) => Wrap(
+            children: [
+              for (final (label, value) in stats)
+                SizedBox(
+                  width: constraints.maxWidth / 3,
+                  child: _Stat(label: label, value: value),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -463,10 +471,11 @@ class _Stat extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label.toUpperCase(),
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -477,6 +486,7 @@ class _Stat extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             value,
+            textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
         ],
@@ -798,6 +808,10 @@ class _FaqSection extends StatelessWidget {
                   tilePadding: const EdgeInsets.symmetric(horizontal: 14),
                   childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                   expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  // Without this the children column defaults to centred, so a
+                  // short answer sat in the middle of the tile while a long one
+                  // filled the width and looked left-aligned.
+                  expandedAlignment: Alignment.centerLeft,
                   title: Text(
                     faq.question,
                     style: const TextStyle(
@@ -829,6 +843,46 @@ class _FaqSection extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown on a card from a set the main database has not published yet, so the
+/// empty rulings and missing alternate arts read as "not published" rather
+/// than "this card has none".
+class _PreviewCardNotice extends StatelessWidget {
+  const _PreviewCardNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppSurfaces.outline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.science_outlined, size: 16, color: scheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Preview card from a set that is not in the main card database '
+              'yet. Its text is community-sourced and may change, and it has '
+              'no rulings or alternate arts here.',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
       ),
     );

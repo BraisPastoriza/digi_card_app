@@ -87,7 +87,22 @@ abstract final class AppTheme {
         backgroundColor: AppSurfaces.surfaceHigh,
         selectedColor: scheme.primaryContainer,
         side: const BorderSide(color: AppSurfaces.outline),
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        // Same problem the navigation bar had: Material picks a dark default
+        // for the tick and the label of a selected chip, which lands on an
+        // already dark plate. Selecting a filter has to brighten it, never
+        // dim it, so both follow the colour meant to sit on that plate.
+        checkmarkColor: scheme.onPrimaryContainer,
+        iconTheme: IconThemeData(size: 18, color: scheme.onPrimaryContainer),
+        labelStyle: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: scheme.onSurface,
+        ),
+        secondaryLabelStyle: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: scheme.onPrimaryContainer,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -118,6 +133,19 @@ abstract final class AppTheme {
         elevation: 0,
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        // Selecting a destination must not darken its icon. Material's
+        // default paints the selected icon in `onSecondaryContainer`, which
+        // against this theme's indicator is a dark tone on a dark plate and
+        // reads as the icon having been switched off. The icon follows the
+        // label instead: brighter when selected, never darker.
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: 24,
+            color: states.contains(WidgetState.selected)
+                ? scheme.onSurface
+                : scheme.onSurfaceVariant,
+          ),
+        ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontSize: 12,
@@ -156,6 +184,10 @@ abstract final class AppTheme {
         style: SegmentedButton.styleFrom(
           backgroundColor: AppSurfaces.surfaceHigh,
           selectedBackgroundColor: scheme.primaryContainer,
+          // The segmented button shares the chips' selected plate, so it needs
+          // the same treatment for its label and tick.
+          foregroundColor: scheme.onSurface,
+          selectedForegroundColor: scheme.onPrimaryContainer,
           side: const BorderSide(color: AppSurfaces.outline),
         ),
       ),

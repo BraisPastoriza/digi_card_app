@@ -1,6 +1,7 @@
 import 'package:digi_card_app/domain/models/card_enums.dart';
 import 'package:digi_card_app/domain/models/card_filter.dart';
 import 'package:digi_card_app/domain/models/card_release.dart';
+import 'package:digi_card_app/domain/models/digimon_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -73,6 +74,97 @@ void main() {
     });
   });
 
+  group('CardRelease.isOwnCardNumber', () {
+    CardRelease release(String name, {String id = 'x'}) => CardRelease(
+      id: id,
+      name: name,
+      group: ReleaseGroup.booster,
+      cardCount: 0,
+      sortIndex: 0,
+    );
+
+    test('separates a set own cards from the reprints it bundles', () {
+      final bt25 = release('DUAL REVOLUTION [BT-25]');
+
+      expect(bt25.isOwnCardNumber('BT25-001'), isTrue);
+      expect(bt25.isOwnCardNumber('BT25-137'), isTrue);
+      // The eight alternate arts BT-25 ships, which sort ahead of BT25-001
+      // by printed number because 2 reads as less than 25.
+      expect(bt25.isOwnCardNumber('BT2-047'), isFalse);
+      expect(bt25.isOwnCardNumber('BT11-032'), isFalse);
+      expect(bt25.isOwnCardNumber('ST24-01'), isFalse);
+      expect(bt25.isOwnCardNumber('EX1-020'), isFalse);
+    });
+
+    test('lines up a set number written with a leading zero', () {
+      final ad01 = release('DIGIMON GENERATION [AD-01]');
+
+      expect(ad01.isOwnCardNumber('AD1-002'), isTrue);
+      expect(ad01.isOwnCardNumber('BT21-046'), isFalse);
+    });
+
+    test('keeps the plain LM cards a Limited pack introduces', () {
+      final lm08 = release('LIMITED CARD PACK FINAL CREST [LM-08]');
+
+      expect(lm08.isOwnCardNumber('LM-057'), isTrue);
+      expect(lm08.isOwnCardNumber('P-201'), isFalse);
+      expect(lm08.isOwnCardNumber('BT11-023'), isFalse);
+    });
+
+    test('treats everything as its own when the name has no set code', () {
+      final promos = release('All Promos');
+
+      expect(promos.isOwnCardNumber('P-001'), isTrue);
+      expect(promos.isOwnCardNumber('BT2-047'), isTrue);
+    });
+  });
+
+  group('withOwnCardsFirst', () {
+    DigimonCard card(String number) => DigimonCard(
+      id: number,
+      number: number,
+      parallelId: 0,
+      name: number,
+      category: CardCategory.digimon,
+      colors: const [CardColor.red],
+      imageUrl: 'https://example.invalid/$number.webp',
+    );
+
+    test('moves the reprints after the set, keeping each order', () {
+      final release = CardRelease(
+        id: 'bt-25',
+        name: 'DUAL REVOLUTION [BT-25]',
+        group: ReleaseGroup.booster,
+        cardCount: 0,
+        sortIndex: 0,
+      );
+      // The order the card-number query returns them in.
+      final cards = [
+        card('BT2-047'),
+        card('BT11-032'),
+        card('BT25-001'),
+        card('BT25-002'),
+      ];
+
+      expect(withOwnCardsFirst(cards, release).map((c) => c.number), [
+        'BT25-001',
+        'BT25-002',
+        'BT2-047',
+        'BT11-032',
+      ]);
+    });
+
+    test('leaves a release with nothing to move untouched', () {
+      final cards = [card('BT25-001'), card('BT25-002')];
+
+      expect(
+        withOwnCardsFirst(cards, null),
+        same(cards),
+        reason: 'no release to compare against',
+      );
+    });
+  });
+
   group('classifyRelease', () {
     test('sorts each product line into its own bucket', () {
       expect(classifyRelease('bt-25'), ReleaseGroup.booster);
@@ -82,6 +174,29 @@ void main() {
       expect(classifyRelease('ad-01'), ReleaseGroup.advanceDeck);
       expect(classifyRelease('lm-07'), ReleaseGroup.limited);
       expect(classifyRelease('rb-01'), ReleaseGroup.resurgence);
+    });
+
+    test('files the Special Limited Set with the LM packs it is made of', () {
+      expect(classifyRelease('special-limited-set'), ReleaseGroup.limited);
+    });
+
+    test('files the synthetic aggregates in the group they gather from', () {
+      expect(classifyRelease(allPromosReleaseId), ReleaseGroup.promo);
+      expect(classifyRelease(allLimitedReleaseId), ReleaseGroup.limited);
+    });
+
+    test('the preview sets land in the group their slug implies', () {
+      for (final preview in previewReleases) {
+        expect(
+          classifyRelease(preview.id),
+          isNot(ReleaseGroup.other),
+          reason: preview.id,
+        );
+      }
+      expect(classifyRelease('lm-08'), ReleaseGroup.limited);
+      expect(classifyRelease('lm-09'), ReleaseGroup.limited);
+      expect(classifyRelease('bt-26'), ReleaseGroup.booster);
+      expect(classifyRelease('ex-13'), ReleaseGroup.ex);
     });
 
     test('keeps promo buckets out of the numbered sets', () {

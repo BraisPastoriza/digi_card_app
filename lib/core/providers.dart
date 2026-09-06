@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/api/digimoncard_io_api.dart';
 import '../data/api/heroi_api.dart';
 import '../data/db/app_database.dart';
 import '../data/db/daos/card_dao.dart';
@@ -15,6 +16,12 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 });
 
 final heroiApiProvider = Provider<HeroiApi>((ref) => HeroiApi());
+
+/// Secondary card source, used only for the sets the primary API has not
+/// published yet.
+final digimonCardIoApiProvider = Provider<DigimonCardIoApi>(
+  (ref) => DigimonCardIoApi(),
+);
 
 final cardDaoProvider = Provider<CardDao>(
   (ref) => ref.watch(appDatabaseProvider).cardDao,
@@ -32,6 +39,7 @@ final cardSyncServiceProvider = Provider<CardSyncService>(
   (ref) => CardSyncService(
     ref.watch(appDatabaseProvider),
     ref.watch(heroiApiProvider),
+    ref.watch(digimonCardIoApiProvider),
   ),
 );
 

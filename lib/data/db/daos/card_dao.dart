@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../domain/models/card_enums.dart';
 import '../../../domain/models/card_filter.dart';
 import '../../../domain/models/digimon_card.dart';
 import '../app_database.dart';
@@ -79,6 +80,71 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     return {for (final row in rows) row.number: row.toDigimonCard()};
   }
 
+  /// Primary printings looked up by printed name, case-insensitively, for
+  /// importing deck lists that name cards without their number.
+  ///
+  /// A name can be shared by several numbers (Agumon is printed a dozen
+  /// times over), so the lowest number wins and the importer says which card
+  /// it settled on.
+  Future<Map<String, DigimonCard>> cardsByNames(Iterable<String> names) async {
+    final wanted = {for (final name in names) name.toLowerCase().trim()}
+      ..remove('');
+    if (wanted.isEmpty) return {};
+    final query = select(cards)
+      ..where((c) => c.name.lower().isIn(wanted) & c.isPrimary.equals(true))
+      ..orderBy([(c) => OrderingTerm.asc(c.numberSort)]);
+    final resolved = <String, DigimonCard>{};
+    for (final row in await query.get()) {
+      resolved.putIfAbsent(row.name.toLowerCase(), () => row.toDigimonCard());
+    }
+    return resolved;
+  }
+
+  /// A card from each of [releaseIds] to stand in for its product photo.
+  ///
+  /// Worked out here rather than stored on the release, because it is derived
+  /// entirely from cards that are already on the device: keeping it as a
+  /// column meant every change to the choice cost a full re-download to
+  /// recompute, which is a lot of bytes to move a picture.
+  ///
+  /// Promotional buckets get their newest promo — they are not built around a
+  /// boss card, and hundreds of loose cards with no level or DP would
+  /// otherwise tie at nothing. Everything else gets its biggest Digimon, the
+  /// same reading a deck's signature card uses.
+  Future<Map<String, String>> representativeCardImages(
+    Set<String> releaseIds, {
+    required bool Function(String releaseId) prefersNewestPromo,
+  }) async {
+    if (releaseIds.isEmpty) return const {};
+
+    final links = alias(cardReleaseLinks, 'l');
+    final query = select(cards).join([
+      innerJoin(links, links.cardId.equalsExp(cards.id)),
+    ])..where(links.releaseId.isIn(releaseIds));
+
+    final best = <String, CardRow>{};
+    for (final row in await query.get()) {
+      final releaseId = row.readTable(links).releaseId;
+      final card = row.readTable(cards);
+      final promoRule = prefersNewestPromo(releaseId);
+      if (promoRule && !card.number.toUpperCase().startsWith('P-')) continue;
+
+      final current = best[releaseId];
+      if (current == null ||
+          (promoRule
+              ? card.numberSort.compareTo(current.numberSort) > 0
+              : _showiness(card) > _showiness(current))) {
+        best[releaseId] = card;
+      }
+    }
+    return {for (final entry in best.entries) entry.key: entry.value.imageUrl};
+  }
+
+  /// How much a card looks like the face of its set: level first, then the
+  /// numbers that separate two cards of the same level.
+  static int _showiness(CardRow card) =>
+      (card.level ?? 0) * 1000000 + (card.dp ?? 0) + (card.cost ?? 0);
+
   /// Cards belonging to a release, in card-number order.
   ///
   /// Collapsing alternate arts uses the per-release flag rather than the
@@ -88,6 +154,7 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
   Future<List<DigimonCard>> cardsInRelease(
     String releaseId, {
     bool includeAlternateArts = false,
+    bool promosOnly = false,
   }) async {
     final link = selectOnly(cardReleaseLinks)
       ..addColumns([cardReleaseLinks.cardId])
@@ -98,7 +165,14 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
                   cardReleaseLinks.isPrimaryInRelease.equals(true),
       );
     final query = select(cards)
-      ..where((c) => c.id.isInQuery(link))
+      ..where(
+        (c) => promosOnly
+            // Promo products bundle alternate arts of ordinary set cards
+            // alongside the promos proper, and only the promos carry a `P-`
+            // number.
+            ? c.id.isInQuery(link) & c.number.like('P-%')
+            : c.id.isInQuery(link),
+      )
       ..orderBy([(c) => OrderingTerm.asc(c.numberSort)]);
     final rows = await query.get();
     return rows.map((row) => row.toDigimonCard()).toList();
@@ -118,7 +192,12 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     cardKeywords.keyword,
   );
 
-  Future<List<String>> distinctRarities() => _distinctCardValues(cards.rarity);
+  /// Rarities in printed order, least rare first, rather than the
+  /// alphabetical order SQL would give them.
+  Future<List<String>> distinctRarities() async {
+    final rarities = await _distinctCardValues(cards.rarity);
+    return rarities..sort(CardRarity.compare);
+  }
 
   Future<List<String>> distinctForms() => _distinctCardValues(cards.form);
 
@@ -272,8 +351,24 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     if (filter.aceOnly) predicate = predicate & cards.isAce.equals(true);
     if (filter.dualOnly) predicate = predicate & cards.dualFace.isNotNull();
 
+    predicate =
+        predicate &
+        switch (filter.tokens) {
+          TokenMode.include => const Constant(true),
+          TokenMode.only => _isToken,
+          TokenMode.exclude => _isToken.not(),
+        };
+
     return predicate;
   }
+
+  /// Matches the token printings.
+  ///
+  /// Nothing in the card data marks a token, so this mirrors
+  /// [DigimonCard.isToken] and goes by the printed number: `TOKEN` on its own,
+  /// or a set code followed by it (`BT22-TOKEN`, `ST22-TOKEN01`).
+  Expression<bool> get _isToken =>
+      cards.number.like('TOKEN%') | cards.number.like('%-TOKEN%');
 
   Expression<bool> _range(GeneratedColumn<int> column, RangeFilter range) {
     var predicate = const Constant(true) as Expression<bool>;

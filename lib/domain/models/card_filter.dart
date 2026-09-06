@@ -27,6 +27,22 @@ enum ColorMatchMode {
   final String label;
 }
 
+/// How a search treats token cards.
+///
+/// Tokens belong in the library — they are printed with the sets and players
+/// look them up — but they can never go in a deck, so the deck builder
+/// searches with [exclude] whatever the user has filtered on.
+enum TokenMode {
+  /// Tokens appear alongside everything else. The library's default.
+  include,
+
+  /// Only tokens, which is what the Card type filter's Token chip asks for.
+  only,
+
+  /// No tokens at all.
+  exclude,
+}
+
 /// A closed numeric range. Both ends are optional and inclusive.
 class RangeFilter {
   const RangeFilter({this.min, this.max});
@@ -84,6 +100,7 @@ class CardFilter {
     this.restrictedOnly = false,
     this.aceOnly = false,
     this.dualOnly = false,
+    this.tokens = TokenMode.include,
     this.sort = CardSort.number,
   });
 
@@ -122,6 +139,9 @@ class CardFilter {
   final bool aceOnly;
   final bool dualOnly;
 
+  /// Whether tokens are searched for, ignored, or the only thing wanted.
+  final TokenMode tokens;
+
   final CardSort sort;
 
   bool get isEmpty =>
@@ -141,7 +161,8 @@ class CardFilter {
       !includeAlternateArts &&
       !restrictedOnly &&
       !aceOnly &&
-      !dualOnly;
+      !dualOnly &&
+      tokens == TokenMode.include;
 
   /// Number of active facets, shown as a badge on the filter button.
   int get activeFacetCount => [
@@ -161,6 +182,7 @@ class CardFilter {
     restrictedOnly,
     aceOnly,
     dualOnly,
+    tokens != TokenMode.include,
   ].where((active) => active).length;
 
   /// Short labels for the active facets, rendered as removable chips.
@@ -180,6 +202,7 @@ class CardFilter {
     if (!dp.isEmpty) dp.describe('DP'),
     if (aceOnly) 'ACE',
     if (dualOnly) 'Dual Card',
+    if (tokens == TokenMode.only) 'Token',
     if (includeAlternateArts) 'Alternate arts',
     if (restrictedOnly) 'Restricted',
   ];
@@ -203,6 +226,7 @@ class CardFilter {
     bool? restrictedOnly,
     bool? aceOnly,
     bool? dualOnly,
+    TokenMode? tokens,
     CardSort? sort,
   }) => CardFilter(
     query: query ?? this.query,
@@ -223,6 +247,7 @@ class CardFilter {
     restrictedOnly: restrictedOnly ?? this.restrictedOnly,
     aceOnly: aceOnly ?? this.aceOnly,
     dualOnly: dualOnly ?? this.dualOnly,
+    tokens: tokens ?? this.tokens,
     sort: sort ?? this.sort,
   );
 
@@ -246,6 +271,7 @@ class CardFilter {
       other.restrictedOnly == restrictedOnly &&
       other.aceOnly == aceOnly &&
       other.dualOnly == dualOnly &&
+      other.tokens == tokens &&
       other.sort == sort &&
       _sets.equals(other.colors, colors) &&
       _sets.equals(other.categories, categories) &&
@@ -268,6 +294,7 @@ class CardFilter {
     restrictedOnly,
     aceOnly,
     dualOnly,
+    tokens,
     sort,
     _sets.hash(colors),
     _sets.hash(categories),

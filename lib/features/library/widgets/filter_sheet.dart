@@ -164,7 +164,8 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 selectedCount:
                     _draft.categories.length +
                     (_draft.aceOnly ? 1 : 0) +
-                    (_draft.dualOnly ? 1 : 0),
+                    (_draft.dualOnly ? 1 : 0) +
+                    (_draft.tokens == TokenMode.include ? 0 : 1),
                 expanded: _open.contains('Card type'),
                 onToggle: () => _toggleSection('Card type'),
                 child: Column(
@@ -182,7 +183,8 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'ACE and dual cards narrow whichever types are selected.',
+                      'ACE, dual and token cards narrow whichever types are '
+                      'selected.',
                       style: TextStyle(
                         fontSize: 11.5,
                         color: scheme.onSurfaceVariant,
@@ -203,6 +205,19 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                           selected: _draft.dualOnly,
                           onSelected: (value) =>
                               _edit((f) => f.copyWith(dualOnly: value)),
+                        ),
+                        // Tokens are printed as Digimon, so they have no card
+                        // type of their own to sit beside the four above.
+                        FilterChip(
+                          label: const Text('Token'),
+                          selected: _draft.tokens == TokenMode.only,
+                          onSelected: (value) => _edit(
+                            (f) => f.copyWith(
+                              tokens: value
+                                  ? TokenMode.only
+                                  : TokenMode.include,
+                            ),
+                          ),
                         ),
                       ],
                     ),
