@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same value as AppSurfaces.background, so the window the system paints
+         before Flutter's first frame matches the app instead of flashing
+         white. The app has one theme and it is dark, so this does not vary
+         with the system's light/dark setting. -->
+    <color name="launch_background">#FF0E0E12</color>
+</resources>

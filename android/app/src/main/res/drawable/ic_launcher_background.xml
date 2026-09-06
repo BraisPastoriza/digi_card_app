@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Background layer of the adaptive launcher icon: the app's brand gradient,
+     drawn as a shape rather than a bitmap so the launcher can shift it against
+     the foreground without ever exposing an edge. Angle 315 runs it from the
+     top-left to the bottom-right, matching the mark inside the app. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="linear"
+        android:angle="315"
+        android:startColor="#FF8A3D"
+        android:endColor="#FF5A52" />
+</shape>

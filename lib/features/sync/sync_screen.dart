@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/sync/card_sync_service.dart';
+import '../../shared/widgets/app_logo.dart';
 
 /// First-run screen that fills the local card database.
 ///
@@ -73,7 +74,7 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const _AppMark(),
+              const AppLogo(),
               const SizedBox(height: 28),
               const Text(
                 'DigiCard App',
@@ -221,32 +222,5 @@ class _SyncError extends StatelessWidget {
           'database only needs to download once.';
     }
     return text;
-  }
-}
-
-/// Simple mark built from the app's accent, standing in until there is
-/// artwork to use.
-class _AppMark extends StatelessWidget {
-  const _AppMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 72,
-      height: 72,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [AppTheme.seed, Color(0xFFFF5A52)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: const Icon(
-        Icons.style_rounded,
-        size: 34,
-        color: Color(0xFF261200),
-      ),
-    );
   }
 }
