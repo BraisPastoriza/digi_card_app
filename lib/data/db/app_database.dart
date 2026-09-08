@@ -4,6 +4,8 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'daos/card_dao.dart';
 import 'daos/deck_dao.dart';
 import 'daos/release_dao.dart';
+import 'daos/staple_dao.dart';
+import 'default_staples.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
@@ -25,9 +27,11 @@ const cardSearchTable = 'card_search';
     Decks,
     DeckRevisions,
     DeckEntries,
+    StapleLists,
+    StapleEntries,
     SyncState,
   ],
-  daos: [CardDao, ReleaseDao, DeckDao],
+  daos: [CardDao, ReleaseDao, DeckDao, StapleDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -36,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,14 +48,15 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
       await _createSearchIndex();
       await _createIndexes();
+      await stapleDao.seed(defaultStapleLists);
     },
     // Everything on the card side is a cache of the published card list, so an
     // upgrade throws it away and re-syncs rather than migrating column by
     // column. That also covers the columns derived at sync time — keywords are
     // parsed out of effect text, so a change to the parser only reaches the
-    // user through a version bump. Decks are the only data the user authored,
-    // and they survive: they reference cards by printed number, not by row.
-    // Their own columns do have to be migrated one by one.
+    // user through a version bump. Decks and staple lists are the data the
+    // user authored, and they survive: they reference cards by printed number,
+    // not by row. Their own columns do have to be migrated one by one.
     // Note on version 8: it once carried a `tile_card_image` column on
     // releases, precomputed at sync time. Working out a release's stand-in
     // card is now done by querying the cards already on the device, so the
@@ -62,6 +67,14 @@ class AppDatabase extends _$AppDatabase {
     // shows, which is what this move exists to stop.
     onUpgrade: (m, from, to) async {
       if (from < 3) await m.addColumn(decks, decks.thumbnailCardNumber);
+      // Staples are the user's own data, so they are created and seeded once
+      // here rather than rebuilt on launch: a seeded list the user deletes
+      // stays deleted.
+      if (from < 11) {
+        await m.createTable(stapleLists);
+        await m.createTable(stapleEntries);
+        await stapleDao.seed(defaultStapleLists);
+      }
       await resetCardData(m);
     },
     beforeOpen: (details) async {
@@ -69,8 +82,9 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  /// Drops and recreates the card tables, leaving decks untouched. The next
-  /// launch finds no cards and runs a sync.
+  /// Drops and recreates the card tables, leaving everything the user made —
+  /// decks and staple lists — untouched. The next launch finds no cards and
+  /// runs a sync.
   Future<void> resetCardData(Migrator m) async {
     final cardTables = <TableInfo<Table, dynamic>>[
       cardReleaseLinks,

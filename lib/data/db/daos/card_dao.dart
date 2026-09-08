@@ -319,6 +319,12 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
           );
     }
 
+    // The source being searched, not a facet: an empty set means the whole
+    // library, and a non-empty one is a staple list the picker is showing.
+    if (filter.cardNumbers.isNotEmpty) {
+      predicate = predicate & cards.number.isIn(filter.cardNumbers);
+    }
+
     if (filter.releaseIds.isNotEmpty) {
       predicate =
           predicate &

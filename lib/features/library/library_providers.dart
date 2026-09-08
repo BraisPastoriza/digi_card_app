@@ -122,12 +122,19 @@ final attributeOptionsProvider = FutureProvider<List<String>>(
 /// with its own rules applied on top.
 enum CardSearchScope {
   library,
-  deckBuilder;
+  deckBuilder,
+
+  /// Picking the cards that make up a staple list. Its own scope so browsing
+  /// for a list does not leave the deck builder filtered to what was picked.
+  staples;
 
   /// [filter] as this scope has to run it.
   CardFilter apply(CardFilter filter) => switch (this) {
     CardSearchScope.library => filter,
-    CardSearchScope.deckBuilder => filter.copyWith(tokens: TokenMode.exclude),
+    // Neither the deck builder nor a staple list can hold a token: one is a
+    // deck, the other is a list of cards to put in one.
+    CardSearchScope.deckBuilder ||
+    CardSearchScope.staples => filter.copyWith(tokens: TokenMode.exclude),
   };
 }
 

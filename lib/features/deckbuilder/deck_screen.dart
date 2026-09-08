@@ -4,14 +4,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
 import '../../core/router/navigation.dart';
+import '../../domain/models/card_filter.dart';
 import '../../domain/models/deck.dart';
 import '../../shared/widgets/common.dart';
+import '../library/library_providers.dart';
 import 'deck_providers.dart';
 import 'decks_screen.dart';
 import 'widgets/deck_cards_tab.dart';
 import 'widgets/deck_name_dialog.dart';
 import 'widgets/deck_revisions_tab.dart';
 import 'widgets/deck_stats_tab.dart';
+import 'widgets/staple_source_sheet.dart';
 import 'widgets/deck_thumbnail_sheet.dart';
 
 /// The deck editor: the active revision's cards, the revision history, and the
@@ -191,6 +194,21 @@ class _DeckViewState extends ConsumerState<_DeckView>
           deck: deck,
           revisionId: revisionId,
         );
+      case 'staples':
+        // The picker already shows a list and puts copies in the deck, so
+        // this only chooses which list it opens on.
+        final revisionId = deck.activeRevision?.id;
+        if (revisionId == null || !context.mounted) return;
+        final list = await showStapleSourceSheet(context);
+        if (list == null || !context.mounted) return;
+        ref
+            .read(cardFilterProvider(CardSearchScope.deckBuilder).notifier)
+            .update(
+              const CardFilter().copyWith(
+                cardNumbers: list.cardNumbers.toSet(),
+              ),
+            );
+        context.pushOnce('/decks/${deck.id}/add/$revisionId');
       case 'hand':
         // Offered whatever state the deck is in: a deck that cannot be dealt
         // from says so on the screen itself, which is a better answer than a

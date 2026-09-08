@@ -65,6 +65,40 @@ void main() {
     });
   });
 
+  group('CardFilter card-number scope', () {
+    // The staple list being browsed is the source of the search, not a filter
+    // the user picked, so it behaves differently from every other set.
+    const scoped = CardFilter(cardNumbers: {'BT1-001', 'BT1-002'});
+
+    test('does not count or show as a facet', () {
+      expect(scoped.activeFacetCount, 0);
+      expect(scoped.activeFacets(), isEmpty);
+    });
+
+    test('survives clearing the facets', () {
+      const filter = CardFilter(
+        query: 'boost',
+        cardNumbers: {'BT1-001'},
+        colors: {CardColor.red},
+      );
+      final cleared = filter.clearedFacets();
+
+      expect(cleared.cardNumbers, {'BT1-001'});
+      expect(cleared.query, 'boost');
+      expect(cleared.colors, isEmpty);
+    });
+
+    test('still makes the filter non-empty', () {
+      // Nothing is filtered, but the search is not the whole library either.
+      expect(scoped.isEmpty, isFalse);
+    });
+
+    test('two scopes with the same numbers are equal', () {
+      expect(scoped, const CardFilter(cardNumbers: {'BT1-002', 'BT1-001'}));
+      expect(scoped, isNot(const CardFilter(cardNumbers: {'BT1-001'})));
+    });
+  });
+
   group('CardFilter.activeFacets', () {
     test('one chip per trait, each removing only itself', () {
       const filter = CardFilter(traits: {'Dragon', 'Vaccine'});

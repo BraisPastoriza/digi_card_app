@@ -4683,6 +4683,628 @@ class DeckEntriesCompanion extends UpdateCompanion<DeckEntryRow> {
   }
 }
 
+class $StapleListsTable extends StapleLists
+    with TableInfo<$StapleListsTable, StapleListRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StapleListsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortIndexMeta = const VerificationMeta(
+    'sortIndex',
+  );
+  @override
+  late final GeneratedColumn<int> sortIndex = GeneratedColumn<int>(
+    'sort_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    sortIndex,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'staple_lists';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StapleListRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sort_index')) {
+      context.handle(
+        _sortIndexMeta,
+        sortIndex.isAcceptableOrUnknown(data['sort_index']!, _sortIndexMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StapleListRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StapleListRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      sortIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_index'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StapleListsTable createAlias(String alias) {
+    return $StapleListsTable(attachedDatabase, alias);
+  }
+}
+
+class StapleListRow extends DataClass implements Insertable<StapleListRow> {
+  final int id;
+  final String name;
+
+  /// Position in the user's own ordering of the lists.
+  final int sortIndex;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const StapleListRow({
+    required this.id,
+    required this.name,
+    required this.sortIndex,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['sort_index'] = Variable<int>(sortIndex);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  StapleListsCompanion toCompanion(bool nullToAbsent) {
+    return StapleListsCompanion(
+      id: Value(id),
+      name: Value(name),
+      sortIndex: Value(sortIndex),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory StapleListRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StapleListRow(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      sortIndex: serializer.fromJson<int>(json['sortIndex']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'sortIndex': serializer.toJson<int>(sortIndex),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  StapleListRow copyWith({
+    int? id,
+    String? name,
+    int? sortIndex,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => StapleListRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    sortIndex: sortIndex ?? this.sortIndex,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  StapleListRow copyWithCompanion(StapleListsCompanion data) {
+    return StapleListRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      sortIndex: data.sortIndex.present ? data.sortIndex.value : this.sortIndex,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StapleListRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('sortIndex: $sortIndex, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, sortIndex, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StapleListRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.sortIndex == this.sortIndex &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class StapleListsCompanion extends UpdateCompanion<StapleListRow> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> sortIndex;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const StapleListsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sortIndex = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  StapleListsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.sortIndex = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<StapleListRow> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? sortIndex,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (sortIndex != null) 'sort_index': sortIndex,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  StapleListsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<int>? sortIndex,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return StapleListsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      sortIndex: sortIndex ?? this.sortIndex,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sortIndex.present) {
+      map['sort_index'] = Variable<int>(sortIndex.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StapleListsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('sortIndex: $sortIndex, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StapleEntriesTable extends StapleEntries
+    with TableInfo<$StapleEntriesTable, StapleEntryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StapleEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _listIdMeta = const VerificationMeta('listId');
+  @override
+  late final GeneratedColumn<int> listId = GeneratedColumn<int>(
+    'list_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES staple_lists (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _cardNumberMeta = const VerificationMeta(
+    'cardNumber',
+  );
+  @override
+  late final GeneratedColumn<String> cardNumber = GeneratedColumn<String>(
+    'card_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [listId, cardNumber, addedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'staple_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StapleEntryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('list_id')) {
+      context.handle(
+        _listIdMeta,
+        listId.isAcceptableOrUnknown(data['list_id']!, _listIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_listIdMeta);
+    }
+    if (data.containsKey('card_number')) {
+      context.handle(
+        _cardNumberMeta,
+        cardNumber.isAcceptableOrUnknown(data['card_number']!, _cardNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cardNumberMeta);
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {listId, cardNumber};
+  @override
+  StapleEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StapleEntryRow(
+      listId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}list_id'],
+      )!,
+      cardNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}card_number'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StapleEntriesTable createAlias(String alias) {
+    return $StapleEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class StapleEntryRow extends DataClass implements Insertable<StapleEntryRow> {
+  final int listId;
+  final String cardNumber;
+  final DateTime addedAt;
+  const StapleEntryRow({
+    required this.listId,
+    required this.cardNumber,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['list_id'] = Variable<int>(listId);
+    map['card_number'] = Variable<String>(cardNumber);
+    map['added_at'] = Variable<DateTime>(addedAt);
+    return map;
+  }
+
+  StapleEntriesCompanion toCompanion(bool nullToAbsent) {
+    return StapleEntriesCompanion(
+      listId: Value(listId),
+      cardNumber: Value(cardNumber),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory StapleEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StapleEntryRow(
+      listId: serializer.fromJson<int>(json['listId']),
+      cardNumber: serializer.fromJson<String>(json['cardNumber']),
+      addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'listId': serializer.toJson<int>(listId),
+      'cardNumber': serializer.toJson<String>(cardNumber),
+      'addedAt': serializer.toJson<DateTime>(addedAt),
+    };
+  }
+
+  StapleEntryRow copyWith({
+    int? listId,
+    String? cardNumber,
+    DateTime? addedAt,
+  }) => StapleEntryRow(
+    listId: listId ?? this.listId,
+    cardNumber: cardNumber ?? this.cardNumber,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  StapleEntryRow copyWithCompanion(StapleEntriesCompanion data) {
+    return StapleEntryRow(
+      listId: data.listId.present ? data.listId.value : this.listId,
+      cardNumber: data.cardNumber.present
+          ? data.cardNumber.value
+          : this.cardNumber,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StapleEntryRow(')
+          ..write('listId: $listId, ')
+          ..write('cardNumber: $cardNumber, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(listId, cardNumber, addedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StapleEntryRow &&
+          other.listId == this.listId &&
+          other.cardNumber == this.cardNumber &&
+          other.addedAt == this.addedAt);
+}
+
+class StapleEntriesCompanion extends UpdateCompanion<StapleEntryRow> {
+  final Value<int> listId;
+  final Value<String> cardNumber;
+  final Value<DateTime> addedAt;
+  final Value<int> rowid;
+  const StapleEntriesCompanion({
+    this.listId = const Value.absent(),
+    this.cardNumber = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StapleEntriesCompanion.insert({
+    required int listId,
+    required String cardNumber,
+    required DateTime addedAt,
+    this.rowid = const Value.absent(),
+  }) : listId = Value(listId),
+       cardNumber = Value(cardNumber),
+       addedAt = Value(addedAt);
+  static Insertable<StapleEntryRow> custom({
+    Expression<int>? listId,
+    Expression<String>? cardNumber,
+    Expression<DateTime>? addedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (listId != null) 'list_id': listId,
+      if (cardNumber != null) 'card_number': cardNumber,
+      if (addedAt != null) 'added_at': addedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StapleEntriesCompanion copyWith({
+    Value<int>? listId,
+    Value<String>? cardNumber,
+    Value<DateTime>? addedAt,
+    Value<int>? rowid,
+  }) {
+    return StapleEntriesCompanion(
+      listId: listId ?? this.listId,
+      cardNumber: cardNumber ?? this.cardNumber,
+      addedAt: addedAt ?? this.addedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (listId.present) {
+      map['list_id'] = Variable<int>(listId.value);
+    }
+    if (cardNumber.present) {
+      map['card_number'] = Variable<String>(cardNumber.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<DateTime>(addedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StapleEntriesCompanion(')
+          ..write('listId: $listId, ')
+          ..write('cardNumber: $cardNumber, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncStateTable extends SyncState
     with TableInfo<$SyncStateTable, SyncStateRow> {
   @override
@@ -4742,6 +5364,18 @@ class $SyncStateTable extends SyncState
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _derivedVersionMeta = const VerificationMeta(
+    'derivedVersion',
+  );
+  @override
+  late final GeneratedColumn<int> derivedVersion = GeneratedColumn<int>(
+    'derived_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4749,6 +5383,7 @@ class $SyncStateTable extends SyncState
     bulkId,
     syncedAt,
     cardCount,
+    derivedVersion,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4792,6 +5427,15 @@ class $SyncStateTable extends SyncState
         cardCount.isAcceptableOrUnknown(data['card_count']!, _cardCountMeta),
       );
     }
+    if (data.containsKey('derived_version')) {
+      context.handle(
+        _derivedVersionMeta,
+        derivedVersion.isAcceptableOrUnknown(
+          data['derived_version']!,
+          _derivedVersionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -4821,6 +5465,10 @@ class $SyncStateTable extends SyncState
         DriftSqlType.int,
         data['${effectivePrefix}card_count'],
       )!,
+      derivedVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}derived_version'],
+      )!,
     );
   }
 
@@ -4840,12 +5488,18 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
   final String? bulkId;
   final DateTime? syncedAt;
   final int cardCount;
+
+  /// Version of the parsers the stored cards were last read with. See
+  /// `CardDataVersions`. Zero for a database written before the app tracked
+  /// it, which is what makes those re-derive on the next launch.
+  final int derivedVersion;
   const SyncStateRow({
     required this.id,
     this.bulkUpdatedAt,
     this.bulkId,
     this.syncedAt,
     required this.cardCount,
+    required this.derivedVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4861,6 +5515,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       map['synced_at'] = Variable<DateTime>(syncedAt);
     }
     map['card_count'] = Variable<int>(cardCount);
+    map['derived_version'] = Variable<int>(derivedVersion);
     return map;
   }
 
@@ -4877,6 +5532,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           ? const Value.absent()
           : Value(syncedAt),
       cardCount: Value(cardCount),
+      derivedVersion: Value(derivedVersion),
     );
   }
 
@@ -4891,6 +5547,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       bulkId: serializer.fromJson<String?>(json['bulkId']),
       syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
       cardCount: serializer.fromJson<int>(json['cardCount']),
+      derivedVersion: serializer.fromJson<int>(json['derivedVersion']),
     );
   }
   @override
@@ -4902,6 +5559,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       'bulkId': serializer.toJson<String?>(bulkId),
       'syncedAt': serializer.toJson<DateTime?>(syncedAt),
       'cardCount': serializer.toJson<int>(cardCount),
+      'derivedVersion': serializer.toJson<int>(derivedVersion),
     };
   }
 
@@ -4911,6 +5569,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     Value<String?> bulkId = const Value.absent(),
     Value<DateTime?> syncedAt = const Value.absent(),
     int? cardCount,
+    int? derivedVersion,
   }) => SyncStateRow(
     id: id ?? this.id,
     bulkUpdatedAt: bulkUpdatedAt.present
@@ -4919,6 +5578,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     bulkId: bulkId.present ? bulkId.value : this.bulkId,
     syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
     cardCount: cardCount ?? this.cardCount,
+    derivedVersion: derivedVersion ?? this.derivedVersion,
   );
   SyncStateRow copyWithCompanion(SyncStateCompanion data) {
     return SyncStateRow(
@@ -4929,6 +5589,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       bulkId: data.bulkId.present ? data.bulkId.value : this.bulkId,
       syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
       cardCount: data.cardCount.present ? data.cardCount.value : this.cardCount,
+      derivedVersion: data.derivedVersion.present
+          ? data.derivedVersion.value
+          : this.derivedVersion,
     );
   }
 
@@ -4939,14 +5602,21 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           ..write('bulkUpdatedAt: $bulkUpdatedAt, ')
           ..write('bulkId: $bulkId, ')
           ..write('syncedAt: $syncedAt, ')
-          ..write('cardCount: $cardCount')
+          ..write('cardCount: $cardCount, ')
+          ..write('derivedVersion: $derivedVersion')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, bulkUpdatedAt, bulkId, syncedAt, cardCount);
+  int get hashCode => Object.hash(
+    id,
+    bulkUpdatedAt,
+    bulkId,
+    syncedAt,
+    cardCount,
+    derivedVersion,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4955,7 +5625,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           other.bulkUpdatedAt == this.bulkUpdatedAt &&
           other.bulkId == this.bulkId &&
           other.syncedAt == this.syncedAt &&
-          other.cardCount == this.cardCount);
+          other.cardCount == this.cardCount &&
+          other.derivedVersion == this.derivedVersion);
 }
 
 class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
@@ -4964,12 +5635,14 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   final Value<String?> bulkId;
   final Value<DateTime?> syncedAt;
   final Value<int> cardCount;
+  final Value<int> derivedVersion;
   const SyncStateCompanion({
     this.id = const Value.absent(),
     this.bulkUpdatedAt = const Value.absent(),
     this.bulkId = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.cardCount = const Value.absent(),
+    this.derivedVersion = const Value.absent(),
   });
   SyncStateCompanion.insert({
     this.id = const Value.absent(),
@@ -4977,6 +5650,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.bulkId = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.cardCount = const Value.absent(),
+    this.derivedVersion = const Value.absent(),
   });
   static Insertable<SyncStateRow> custom({
     Expression<int>? id,
@@ -4984,6 +5658,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Expression<String>? bulkId,
     Expression<DateTime>? syncedAt,
     Expression<int>? cardCount,
+    Expression<int>? derivedVersion,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4991,6 +5666,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       if (bulkId != null) 'bulk_id': bulkId,
       if (syncedAt != null) 'synced_at': syncedAt,
       if (cardCount != null) 'card_count': cardCount,
+      if (derivedVersion != null) 'derived_version': derivedVersion,
     });
   }
 
@@ -5000,6 +5676,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Value<String?>? bulkId,
     Value<DateTime?>? syncedAt,
     Value<int>? cardCount,
+    Value<int>? derivedVersion,
   }) {
     return SyncStateCompanion(
       id: id ?? this.id,
@@ -5007,6 +5684,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       bulkId: bulkId ?? this.bulkId,
       syncedAt: syncedAt ?? this.syncedAt,
       cardCount: cardCount ?? this.cardCount,
+      derivedVersion: derivedVersion ?? this.derivedVersion,
     );
   }
 
@@ -5028,6 +5706,9 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     if (cardCount.present) {
       map['card_count'] = Variable<int>(cardCount.value);
     }
+    if (derivedVersion.present) {
+      map['derived_version'] = Variable<int>(derivedVersion.value);
+    }
     return map;
   }
 
@@ -5038,7 +5719,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
           ..write('bulkUpdatedAt: $bulkUpdatedAt, ')
           ..write('bulkId: $bulkId, ')
           ..write('syncedAt: $syncedAt, ')
-          ..write('cardCount: $cardCount')
+          ..write('cardCount: $cardCount, ')
+          ..write('derivedVersion: $derivedVersion')
           ..write(')'))
         .toString();
   }
@@ -5057,10 +5739,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $DecksTable decks = $DecksTable(this);
   late final $DeckRevisionsTable deckRevisions = $DeckRevisionsTable(this);
   late final $DeckEntriesTable deckEntries = $DeckEntriesTable(this);
+  late final $StapleListsTable stapleLists = $StapleListsTable(this);
+  late final $StapleEntriesTable stapleEntries = $StapleEntriesTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final CardDao cardDao = CardDao(this as AppDatabase);
   late final ReleaseDao releaseDao = ReleaseDao(this as AppDatabase);
   late final DeckDao deckDao = DeckDao(this as AppDatabase);
+  late final StapleDao stapleDao = StapleDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5074,6 +5759,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     decks,
     deckRevisions,
     deckEntries,
+    stapleLists,
+    stapleEntries,
     syncState,
   ];
   @override
@@ -5112,6 +5799,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('deck_entries', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'staple_lists',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('staple_entries', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -8493,6 +9187,590 @@ typedef $$DeckEntriesTableProcessedTableManager =
       DeckEntryRow,
       PrefetchHooks Function({bool revisionId})
     >;
+typedef $$StapleListsTableCreateCompanionBuilder =
+    StapleListsCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<int> sortIndex,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+    });
+typedef $$StapleListsTableUpdateCompanionBuilder =
+    StapleListsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<int> sortIndex,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+final class $$StapleListsTableReferences
+    extends BaseReferences<_$AppDatabase, $StapleListsTable, StapleListRow> {
+  $$StapleListsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$StapleEntriesTable, List<StapleEntryRow>>
+  _stapleEntriesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.stapleEntries,
+    aliasName: $_aliasNameGenerator(db.stapleLists.id, db.stapleEntries.listId),
+  );
+
+  $$StapleEntriesTableProcessedTableManager get stapleEntriesRefs {
+    final manager = $$StapleEntriesTableTableManager(
+      $_db,
+      $_db.stapleEntries,
+    ).filter((f) => f.listId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_stapleEntriesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$StapleListsTableFilterComposer
+    extends Composer<_$AppDatabase, $StapleListsTable> {
+  $$StapleListsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortIndex => $composableBuilder(
+    column: $table.sortIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> stapleEntriesRefs(
+    Expression<bool> Function($$StapleEntriesTableFilterComposer f) f,
+  ) {
+    final $$StapleEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stapleEntries,
+      getReferencedColumn: (t) => t.listId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StapleEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.stapleEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$StapleListsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StapleListsTable> {
+  $$StapleListsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortIndex => $composableBuilder(
+    column: $table.sortIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StapleListsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StapleListsTable> {
+  $$StapleListsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get sortIndex =>
+      $composableBuilder(column: $table.sortIndex, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> stapleEntriesRefs<T extends Object>(
+    Expression<T> Function($$StapleEntriesTableAnnotationComposer a) f,
+  ) {
+    final $$StapleEntriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stapleEntries,
+      getReferencedColumn: (t) => t.listId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StapleEntriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stapleEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$StapleListsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StapleListsTable,
+          StapleListRow,
+          $$StapleListsTableFilterComposer,
+          $$StapleListsTableOrderingComposer,
+          $$StapleListsTableAnnotationComposer,
+          $$StapleListsTableCreateCompanionBuilder,
+          $$StapleListsTableUpdateCompanionBuilder,
+          (StapleListRow, $$StapleListsTableReferences),
+          StapleListRow,
+          PrefetchHooks Function({bool stapleEntriesRefs})
+        > {
+  $$StapleListsTableTableManager(_$AppDatabase db, $StapleListsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StapleListsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StapleListsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StapleListsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> sortIndex = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => StapleListsCompanion(
+                id: id,
+                name: name,
+                sortIndex: sortIndex,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<int> sortIndex = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+              }) => StapleListsCompanion.insert(
+                id: id,
+                name: name,
+                sortIndex: sortIndex,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$StapleListsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({stapleEntriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (stapleEntriesRefs) db.stapleEntries,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (stapleEntriesRefs)
+                    await $_getPrefetchedData<
+                      StapleListRow,
+                      $StapleListsTable,
+                      StapleEntryRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$StapleListsTableReferences
+                          ._stapleEntriesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$StapleListsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).stapleEntriesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.listId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$StapleListsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StapleListsTable,
+      StapleListRow,
+      $$StapleListsTableFilterComposer,
+      $$StapleListsTableOrderingComposer,
+      $$StapleListsTableAnnotationComposer,
+      $$StapleListsTableCreateCompanionBuilder,
+      $$StapleListsTableUpdateCompanionBuilder,
+      (StapleListRow, $$StapleListsTableReferences),
+      StapleListRow,
+      PrefetchHooks Function({bool stapleEntriesRefs})
+    >;
+typedef $$StapleEntriesTableCreateCompanionBuilder =
+    StapleEntriesCompanion Function({
+      required int listId,
+      required String cardNumber,
+      required DateTime addedAt,
+      Value<int> rowid,
+    });
+typedef $$StapleEntriesTableUpdateCompanionBuilder =
+    StapleEntriesCompanion Function({
+      Value<int> listId,
+      Value<String> cardNumber,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+
+final class $$StapleEntriesTableReferences
+    extends BaseReferences<_$AppDatabase, $StapleEntriesTable, StapleEntryRow> {
+  $$StapleEntriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $StapleListsTable _listIdTable(_$AppDatabase db) =>
+      db.stapleLists.createAlias(
+        $_aliasNameGenerator(db.stapleEntries.listId, db.stapleLists.id),
+      );
+
+  $$StapleListsTableProcessedTableManager get listId {
+    final $_column = $_itemColumn<int>('list_id')!;
+
+    final manager = $$StapleListsTableTableManager(
+      $_db,
+      $_db.stapleLists,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_listIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$StapleEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $StapleEntriesTable> {
+  $$StapleEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get cardNumber => $composableBuilder(
+    column: $table.cardNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$StapleListsTableFilterComposer get listId {
+    final $$StapleListsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.stapleLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StapleListsTableFilterComposer(
+            $db: $db,
+            $table: $db.stapleLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StapleEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $StapleEntriesTable> {
+  $$StapleEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get cardNumber => $composableBuilder(
+    column: $table.cardNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$StapleListsTableOrderingComposer get listId {
+    final $$StapleListsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.stapleLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StapleListsTableOrderingComposer(
+            $db: $db,
+            $table: $db.stapleLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StapleEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StapleEntriesTable> {
+  $$StapleEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get cardNumber => $composableBuilder(
+    column: $table.cardNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+
+  $$StapleListsTableAnnotationComposer get listId {
+    final $$StapleListsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.stapleLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StapleListsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stapleLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StapleEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StapleEntriesTable,
+          StapleEntryRow,
+          $$StapleEntriesTableFilterComposer,
+          $$StapleEntriesTableOrderingComposer,
+          $$StapleEntriesTableAnnotationComposer,
+          $$StapleEntriesTableCreateCompanionBuilder,
+          $$StapleEntriesTableUpdateCompanionBuilder,
+          (StapleEntryRow, $$StapleEntriesTableReferences),
+          StapleEntryRow,
+          PrefetchHooks Function({bool listId})
+        > {
+  $$StapleEntriesTableTableManager(_$AppDatabase db, $StapleEntriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StapleEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StapleEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StapleEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> listId = const Value.absent(),
+                Value<String> cardNumber = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StapleEntriesCompanion(
+                listId: listId,
+                cardNumber: cardNumber,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int listId,
+                required String cardNumber,
+                required DateTime addedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => StapleEntriesCompanion.insert(
+                listId: listId,
+                cardNumber: cardNumber,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$StapleEntriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({listId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (listId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.listId,
+                                referencedTable: $$StapleEntriesTableReferences
+                                    ._listIdTable(db),
+                                referencedColumn: $$StapleEntriesTableReferences
+                                    ._listIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$StapleEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StapleEntriesTable,
+      StapleEntryRow,
+      $$StapleEntriesTableFilterComposer,
+      $$StapleEntriesTableOrderingComposer,
+      $$StapleEntriesTableAnnotationComposer,
+      $$StapleEntriesTableCreateCompanionBuilder,
+      $$StapleEntriesTableUpdateCompanionBuilder,
+      (StapleEntryRow, $$StapleEntriesTableReferences),
+      StapleEntryRow,
+      PrefetchHooks Function({bool listId})
+    >;
 typedef $$SyncStateTableCreateCompanionBuilder =
     SyncStateCompanion Function({
       Value<int> id,
@@ -8500,6 +9778,7 @@ typedef $$SyncStateTableCreateCompanionBuilder =
       Value<String?> bulkId,
       Value<DateTime?> syncedAt,
       Value<int> cardCount,
+      Value<int> derivedVersion,
     });
 typedef $$SyncStateTableUpdateCompanionBuilder =
     SyncStateCompanion Function({
@@ -8508,6 +9787,7 @@ typedef $$SyncStateTableUpdateCompanionBuilder =
       Value<String?> bulkId,
       Value<DateTime?> syncedAt,
       Value<int> cardCount,
+      Value<int> derivedVersion,
     });
 
 class $$SyncStateTableFilterComposer
@@ -8541,6 +9821,11 @@ class $$SyncStateTableFilterComposer
 
   ColumnFilters<int> get cardCount => $composableBuilder(
     column: $table.cardCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get derivedVersion => $composableBuilder(
+    column: $table.derivedVersion,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8578,6 +9863,11 @@ class $$SyncStateTableOrderingComposer
     column: $table.cardCount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get derivedVersion => $composableBuilder(
+    column: $table.derivedVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncStateTableAnnotationComposer
@@ -8605,6 +9895,11 @@ class $$SyncStateTableAnnotationComposer
 
   GeneratedColumn<int> get cardCount =>
       $composableBuilder(column: $table.cardCount, builder: (column) => column);
+
+  GeneratedColumn<int> get derivedVersion => $composableBuilder(
+    column: $table.derivedVersion,
+    builder: (column) => column,
+  );
 }
 
 class $$SyncStateTableTableManager
@@ -8643,12 +9938,14 @@ class $$SyncStateTableTableManager
                 Value<String?> bulkId = const Value.absent(),
                 Value<DateTime?> syncedAt = const Value.absent(),
                 Value<int> cardCount = const Value.absent(),
+                Value<int> derivedVersion = const Value.absent(),
               }) => SyncStateCompanion(
                 id: id,
                 bulkUpdatedAt: bulkUpdatedAt,
                 bulkId: bulkId,
                 syncedAt: syncedAt,
                 cardCount: cardCount,
+                derivedVersion: derivedVersion,
               ),
           createCompanionCallback:
               ({
@@ -8657,12 +9954,14 @@ class $$SyncStateTableTableManager
                 Value<String?> bulkId = const Value.absent(),
                 Value<DateTime?> syncedAt = const Value.absent(),
                 Value<int> cardCount = const Value.absent(),
+                Value<int> derivedVersion = const Value.absent(),
               }) => SyncStateCompanion.insert(
                 id: id,
                 bulkUpdatedAt: bulkUpdatedAt,
                 bulkId: bulkId,
                 syncedAt: syncedAt,
                 cardCount: cardCount,
+                derivedVersion: derivedVersion,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -8709,6 +10008,10 @@ class $AppDatabaseManager {
       $$DeckRevisionsTableTableManager(_db, _db.deckRevisions);
   $$DeckEntriesTableTableManager get deckEntries =>
       $$DeckEntriesTableTableManager(_db, _db.deckEntries);
+  $$StapleListsTableTableManager get stapleLists =>
+      $$StapleListsTableTableManager(_db, _db.stapleLists);
+  $$StapleEntriesTableTableManager get stapleEntries =>
+      $$StapleEntriesTableTableManager(_db, _db.stapleEntries);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
 }

@@ -7,6 +7,9 @@ import '../../features/deckbuilder/deck_export_screen.dart';
 import '../../features/deckbuilder/deck_import_screen.dart';
 import '../../features/deckbuilder/deck_screen.dart';
 import '../../features/deckbuilder/decks_screen.dart';
+import '../../features/deckbuilder/staple_card_picker_screen.dart';
+import '../../features/deckbuilder/staple_list_screen.dart';
+import '../../features/deckbuilder/test_hand_screen.dart';
 import '../../features/library/attribution_screen.dart';
 import '../../features/library/card_detail_screen.dart';
 import '../../features/library/library_screen.dart';
@@ -82,11 +85,25 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/decks',
                 builder: (_, _) => const DecksScreen(),
                 routes: [
-                  // Ahead of `:deckId`, which would otherwise swallow it and
-                  // then fail to parse "import" as a deck id.
+                  // Ahead of `:deckId`, which would otherwise swallow them
+                  // and then fail to parse "import" as a deck id.
                   GoRoute(
                     path: 'import',
                     builder: (_, _) => const DeckImportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'staples/:listId',
+                    builder: (_, state) => StapleListScreen(
+                      listId: int.parse(state.pathParameters['listId']!),
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'add',
+                        builder: (_, state) => StapleCardPickerScreen(
+                          listId: int.parse(state.pathParameters['listId']!),
+                        ),
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: ':deckId',

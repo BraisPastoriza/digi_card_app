@@ -15,6 +15,7 @@ import '../../shared/widgets/card_thumbnail.dart';
 import '../library/widgets/filter_sheet.dart';
 import 'widgets/deck_card_tile.dart';
 import 'deck_providers.dart';
+import 'staple_providers.dart';
 
 /// Card search wired to a deck revision: tapping a card adds a copy and opens
 /// its stepper, and the running deck counts stay visible while browsing.
@@ -22,6 +23,11 @@ import 'deck_providers.dart';
 /// It shares the library's filter state deliberately — a player who has just
 /// narrowed the library to "red Lv.4" expects the same view when they come to
 /// add those cards to a deck.
+///
+/// The row of chips above the results picks what is being searched: the whole
+/// library, or one staple list. Scoping the existing search rather than
+/// opening a list of its own means the search box, the filters, the deck
+/// counts and the copy steppers all keep working inside a list.
 class DeckCardPickerScreen extends ConsumerStatefulWidget {
   const DeckCardPickerScreen({
     super.key,
@@ -192,6 +198,12 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
               ),
             ),
           ),
+          _StapleSources(
+            selected: filter.cardNumbers,
+            onSelect: (numbers) => ref
+                .read(cardFilterProvider(CardSearchScope.deckBuilder).notifier)
+                .update(filter.copyWith(cardNumbers: numbers)),
+          ),
           if (composition != null) _DeckCounter(composition: composition),
           Expanded(
             child: results.when(
@@ -205,7 +217,10 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                   ? EmptyState(
                       icon: Icons.search_off,
                       title: 'No cards found',
-                      message: 'Try a different search or clear the filters.',
+                      message: filter.cardNumbers.isEmpty
+                          ? 'Try a different search or clear the filters.'
+                          : 'Nothing in this list matches. Try another '
+                                'source, search or filter.',
                       action: filter.activeFacetCount == 0
                           ? null
                           : OutlinedButton(
@@ -259,6 +274,62 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                     ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Picks what the search runs over: everything, or one staple list.
+///
+/// Nothing shows when the user has no lists — a row with a single "All cards"
+/// chip in it would only take up space.
+class _StapleSources extends ConsumerWidget {
+  const _StapleSources({required this.selected, required this.onSelect});
+
+  /// Card numbers the search is currently scoped to, empty for the library.
+  final Set<String> selected;
+  final void Function(Set<String>) onSelect;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lists = ref.watch(stapleListsProvider).valueOrNull ?? const [];
+    if (lists.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: ChoiceChip(
+              label: const Text('All cards'),
+              selected: selected.isEmpty,
+              visualDensity: VisualDensity.compact,
+              labelStyle: const TextStyle(fontSize: 12),
+              onSelected: (_) => onSelect(const {}),
+            ),
+          ),
+          for (final list in lists)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: Text('${list.name} · ${list.count}'),
+                // A list is the source when the search is scoped to exactly
+                // its cards; comparing the sets keeps two lists that happen
+                // to overlap from both looking selected.
+                selected:
+                    selected.isNotEmpty &&
+                    selected.length == list.cardNumbers.length &&
+                    selected.containsAll(list.cardNumbers),
+                visualDensity: VisualDensity.compact,
+                labelStyle: const TextStyle(fontSize: 12),
+                onSelected: (chosen) =>
+                    onSelect(chosen ? list.cardNumbers.toSet() : const {}),
+              ),
+            ),
         ],
       ),
     );

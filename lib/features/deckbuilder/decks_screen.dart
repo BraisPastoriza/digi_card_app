@@ -11,8 +11,14 @@ import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
 import 'widgets/deck_name_dialog.dart';
+import 'widgets/staples_tab.dart';
 
-/// The deck list — every deck the user has built.
+/// The deck shelf: the decks the user has built, and the staple lists they
+/// keep at hand while building them.
+///
+/// Staples live here rather than in a tab of their own: they are lists of
+/// cards, read while a deck is being put together, so they belong beside the
+/// decks rather than beside the library.
 class DecksScreen extends ConsumerStatefulWidget {
   const DecksScreen({super.key});
 
@@ -20,7 +26,14 @@ class DecksScreen extends ConsumerStatefulWidget {
   ConsumerState<DecksScreen> createState() => _DecksScreenState();
 }
 
-class _DecksScreenState extends ConsumerState<DecksScreen> {
+class _DecksScreenState extends ConsumerState<DecksScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 2, vsync: this)
+    ..addListener(() {
+      // Rebuild so the button in the corner belongs to the tab on screen.
+      if (!_tabs.indexIsChanging) setState(() {});
+    });
+
   final _controller = TextEditingController();
   String _query = '';
 
@@ -30,6 +43,7 @@ class _DecksScreenState extends ConsumerState<DecksScreen> {
 
   @override
   void dispose() {
+    _tabs.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -54,98 +68,120 @@ class _DecksScreenState extends ConsumerState<DecksScreen> {
   @override
   Widget build(BuildContext context) {
     final decks = ref.watch(decksProvider);
+    final onDecks = _tabs.index == 0;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Decks'),
         actions: [
-          IconButton(
-            onPressed: () => context.pushOnce('/decks/import'),
-            icon: const Icon(Icons.file_download_outlined),
-            tooltip: 'Import deck list',
-          ),
-        ],
-      ),
-      floatingActionButton: decks.valueOrNull?.isEmpty ?? true
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _createDeck(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text('New deck'),
+          if (onDecks)
+            IconButton(
+              onPressed: () => context.pushOnce('/decks/import'),
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: 'Import deck list',
             ),
-      body: decks.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => EmptyState(
-          icon: Icons.error_outline,
-          title: 'Could not load decks',
-          message: '$error',
+        ],
+        bottom: TabBar(
+          controller: _tabs,
+          tabs: const [
+            Tab(text: 'Decks'),
+            Tab(text: 'Staples'),
+          ],
         ),
-        data: (decks) {
-          if (decks.isEmpty) {
-            return EmptyState(
-              icon: Icons.layers_outlined,
-              title: 'No decks yet',
-              message:
-                  'Build a deck of 50 cards plus up to 5 Digi-Eggs. Every '
-                  'deck keeps its own revisions, so you can try changes '
-                  'without losing what worked.',
-              action: FilledButton.icon(
-                onPressed: () => _createDeck(context, ref),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Create your first deck'),
-              ),
-            );
-          }
+      ),
+      floatingActionButton: onDecks
+          ? (decks.valueOrNull?.isEmpty ?? true
+                ? null
+                : FloatingActionButton.extended(
+                    onPressed: () => _createDeck(context, ref),
+                    icon: const Icon(Icons.add),
+                    label: const Text('New deck'),
+                  ))
+          : FloatingActionButton.extended(
+              onPressed: () => createStapleList(context, ref),
+              icon: const Icon(Icons.add),
+              label: const Text('New list'),
+            ),
+      body: TabBarView(
+        controller: _tabs,
+        children: [_buildDecks(decks), const StaplesTab()],
+      ),
+    );
+  }
 
-          final visible = _matching(decks);
-          return Column(
-            children: [
-              if (decks.length >= _searchFrom)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: TextField(
-                    controller: _controller,
-                    onChanged: (value) => setState(() => _query = value),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: 'Search decks',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _controller.clear();
-                                setState(() => _query = '');
-                              },
-                            ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
+  Widget _buildDecks(AsyncValue<List<Deck>> decks) {
+    return decks.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => EmptyState(
+        icon: Icons.error_outline,
+        title: 'Could not load decks',
+        message: '$error',
+      ),
+      data: (decks) {
+        if (decks.isEmpty) {
+          return EmptyState(
+            icon: Icons.layers_outlined,
+            title: 'No decks yet',
+            message:
+                'Build a deck of 50 cards plus up to 5 Digi-Eggs. Every '
+                'deck keeps its own revisions, so you can try changes '
+                'without losing what worked.',
+            action: FilledButton.icon(
+              onPressed: () => _createDeck(context, ref),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Create your first deck'),
+            ),
+          );
+        }
+
+        final visible = _matching(decks);
+        return Column(
+          children: [
+            if (decks.length >= _searchFrom)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: TextField(
+                  controller: _controller,
+                  onChanged: (value) => setState(() => _query = value),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: 'Search decks',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () {
+                              _controller.clear();
+                              setState(() => _query = '');
+                            },
+                          ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
                   ),
                 ),
-              Expanded(
-                child: visible.isEmpty
-                    ? EmptyState(
-                        icon: Icons.search_off,
-                        title: 'No decks match',
-                        message: 'Nothing here is called "${_query.trim()}".',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                        itemCount: visible.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) =>
-                            _DeckCard(deck: visible[index]),
-                      ),
               ),
-            ],
-          );
-        },
-      ),
+            Expanded(
+              child: visible.isEmpty
+                  ? EmptyState(
+                      icon: Icons.search_off,
+                      title: 'No decks match',
+                      message: 'Nothing here is called "${_query.trim()}".',
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                      itemCount: visible.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) =>
+                          _DeckCard(deck: visible[index]),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -214,6 +214,39 @@ class DeckEntries extends Table {
   Set<Column> get primaryKey => {revisionId, cardNumber};
 }
 
+/// A named list of cards the user keeps at hand while building decks — the
+/// memory boosts, the floodgates, the tamers that are always worth a look.
+///
+/// A staple list is a catalogue, not a deck: it has no size, no legality and
+/// no copies. It answers "which cards do this job", and the copies belong to
+/// whatever deck is being built at the time.
+@DataClassName('StapleListRow')
+class StapleLists extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+
+  /// Position in the user's own ordering of the lists.
+  IntColumn get sortIndex => integer().withDefault(const Constant(0))();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+}
+
+/// One card in a staple list, keyed by printed number the way a deck entry is,
+/// so a list survives the card table being rebuilt by a sync.
+///
+/// No quantity column: a card is either in the list or it is not.
+@DataClassName('StapleEntryRow')
+class StapleEntries extends Table {
+  IntColumn get listId =>
+      integer().references(StapleLists, #id, onDelete: KeyAction.cascade)();
+  TextColumn get cardNumber => text()();
+  DateTimeColumn get addedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {listId, cardNumber};
+}
+
 /// Bookkeeping for the card database sync: what was downloaded and when.
 @DataClassName('SyncStateRow')
 class SyncState extends Table {

@@ -100,6 +100,31 @@ void main() {
     });
   });
 
+  group('card-number scope', () {
+    test('limits the search to the numbers given', () async {
+      expect(
+        await search(const CardFilter(cardNumbers: {'BT1-002', 'BT1-004'})),
+        ['BT1-002', 'BT1-004'],
+      );
+    });
+
+    test('narrows further with the facets on top of it', () async {
+      expect(
+        await search(
+          const CardFilter(
+            cardNumbers: {'BT1-001', 'BT1-002', 'BT1-004'},
+            traits: {'Dragon'},
+          ),
+        ),
+        ['BT1-001', 'BT1-002'],
+      );
+    });
+
+    test('an empty scope is the whole library', () async {
+      expect(await search(const CardFilter()), hasLength(4));
+    });
+  });
+
   test('an all-of match still narrows the rest of the filter', () async {
     expect(
       await search(

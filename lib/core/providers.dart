@@ -6,6 +6,7 @@ import '../data/db/app_database.dart';
 import '../data/db/daos/card_dao.dart';
 import '../data/db/daos/deck_dao.dart';
 import '../data/db/daos/release_dao.dart';
+import '../data/db/daos/staple_dao.dart';
 import '../data/sync/card_sync_service.dart';
 
 /// The single database connection for the app's lifetime.
@@ -33,6 +34,10 @@ final releaseDaoProvider = Provider<ReleaseDao>(
 
 final deckDaoProvider = Provider<DeckDao>(
   (ref) => ref.watch(appDatabaseProvider).deckDao,
+);
+
+final stapleDaoProvider = Provider<StapleDao>(
+  (ref) => ref.watch(appDatabaseProvider).stapleDao,
 );
 
 final cardSyncServiceProvider = Provider<CardSyncService>(
