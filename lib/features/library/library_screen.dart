@@ -12,6 +12,7 @@ import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
 import 'attribution_screen.dart';
 import 'library_providers.dart';
+import 'preview_providers.dart';
 import 'widgets/release_tile.dart';
 
 /// Entry point of the library: every expansion, shown as its own box art and
@@ -34,13 +35,32 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   };
 
   @override
+  void initState() {
+    super.initState();
+    // The sets that are still being revealed go stale on their own, and this
+    // is the screen every session starts on. Checking here is what makes a
+    // newly spoiled card turn up without the user thinking to ask for it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(ref.read(previewRefreshProvider.notifier).refreshIfStale());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final sections = ref.watch(releaseSectionsProvider);
     final cardArt = ref.watch(releaseCardArtProvider).valueOrNull ?? const {};
 
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(releaseSectionsProvider),
+        onRefresh: () async {
+          // Pulling down here asks the two things that can actually have
+          // changed since the last launch: the preview sets, and the counts
+          // this list is drawn from.
+          await ref.read(previewRefreshProvider.notifier).refresh();
+          ref.invalidate(releaseSectionsProvider);
+        },
         child: CustomScrollView(
           slivers: [
             SliverAppBar(

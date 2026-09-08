@@ -10,8 +10,11 @@ import '../../core/app_info.dart';
 ///
 /// Their documented rate limit is 15 requests per 10 seconds per IP, with a
 /// block of up to an hour for repeat offenders. A sync makes one request per
-/// preview set — two — and makes them one at a time, so the limit is never
-/// anywhere near in play.
+/// preview set, one at a time, so the limit is never anywhere near in play —
+/// and a refresh of the preview sets, which the user can now ask for by
+/// pulling down on a set, makes exactly one. [_backoff] is there anyway: if
+/// this app ever does manage to annoy them, it should be by accident and
+/// briefly, not by retrying into a block.
 class DigimonCardIoApi {
   DigimonCardIoApi({Dio? dio})
     : _dio =
@@ -41,18 +44,34 @@ class DigimonCardIoApi {
   static bool _isReadable(int? status) =>
       status != null && status >= 200 && status < 500;
 
+  /// How long to wait after being told to slow down, per attempt.
+  ///
+  /// Their window is 10 seconds, so one wait clears an accidental burst; the
+  /// second is there for the case where somebody else on the same IP is the
+  /// one being throttled. After that the caller gets an empty list and the
+  /// preview set simply keeps the data it already had.
+  static const _backoff = [Duration(seconds: 4), Duration(seconds: 11)];
+
   /// Every card row the API lists for a pack, e.g. `BT-26`.
   ///
   /// Returns an empty list when the pack is unknown or the API answers with
   /// its error object: a preview set that has not been revealed yet is an
   /// expected outcome, not an error.
+  /// Backs off and retries when the API says it is being called too often,
+  /// rather than treating a 429 as "this pack is empty" and moving on.
   Future<List<Map<String, dynamic>>> cardsInPack(String pack) async {
-    final response = await _dio.get<dynamic>(
-      '/search',
-      queryParameters: {'pack': pack, 'series': 'Digimon Card Game'},
-    );
-    final data = response.data;
-    if (data is! List) return const [];
-    return data.whereType<Map<String, dynamic>>().toList();
+    for (var attempt = 0; ; attempt++) {
+      final response = await _dio.get<dynamic>(
+        '/search',
+        queryParameters: {'pack': pack, 'series': 'Digimon Card Game'},
+      );
+      if (response.statusCode == 429 && attempt < _backoff.length) {
+        await Future<void>.delayed(_backoff[attempt]);
+        continue;
+      }
+      final data = response.data;
+      if (data is! List) return const [];
+      return data.whereType<Map<String, dynamic>>().toList();
+    }
   }
 }

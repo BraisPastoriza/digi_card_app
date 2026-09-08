@@ -94,6 +94,23 @@ void main() {
       },
     );
 
+    test('prints the digivolve line once when two columns repeat it', () {
+      // Every preview row that has a digivolve line carries the same one in
+      // both `xros_req` and `alt_effect`.
+      final card = parseDigimonCardIoPack([
+        _row({
+          'xros_req': '[Digivolve] Lv.2 w/[Appmon] trait: Cost 0',
+          'alt_effect': '[Digivolve] Lv.2 w/[Appmon] trait: Cost 0',
+          'main_effect': '[On Play] Draw 1.',
+        }),
+      ], _release).single;
+
+      expect(
+        card.effect,
+        '[Digivolve] Lv.2 w/[Appmon] trait: Cost 0\n[On Play] Draw 1.',
+      );
+    });
+
     test('reads source_effect as inherited or security by its marker', () {
       final digimon = parseDigimonCardIoPack([_row({})], _release).single;
       expect(digimon.inheritedEffect, startsWith('[When Attacking]'));

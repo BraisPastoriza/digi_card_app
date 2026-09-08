@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
+import '../../domain/models/digimon_card.dart';
 import '../api/digimoncard_io_api.dart';
 import '../api/heroi_api.dart';
 import '../db/app_database.dart';
@@ -235,6 +236,157 @@ class CardSyncService {
     return (cards: cards, details: details);
   }
 
+  /// Re-fetches the preview sets and writes back what changed, without
+  /// touching the 7,600 cards the primary source provided.
+  ///
+  /// A preview set is a set that has been revealed but not published: cards
+  /// trickle into the secondary source over weeks as they are spoiled, and
+  /// corrections keep landing after that. A full sync is the only thing that
+  /// used to pick those up, and a full sync is skipped whenever the primary
+  /// dump is unchanged — which it is for months at a time — so an EX-13 that
+  /// was half-revealed on the day of the first sync stayed half-revealed.
+  ///
+  /// [onlyReleaseId] refreshes a single set, which is what pulling down inside
+  /// one does. Returns the sets that actually changed.
+  Future<List<String>> refreshPreviews({String? onlyReleaseId}) async {
+    final stored = await _db.releaseDao.allReleases();
+    final wanted = [
+      for (final preview in previewReleases)
+        if (onlyReleaseId == null || preview.id == onlyReleaseId)
+          // Only sets still standing in for unpublished data. Once the primary
+          // API publishes one, a full sync replaces it and it must not be
+          // overwritten from the secondary source again.
+          if (stored.any((r) => r.id == preview.id && r.isPreview)) preview,
+    ];
+
+    final changed = <String>[];
+    for (final preview in wanted) {
+      try {
+        final rows = await _secondaryApi.cardsInPack(preview.pack);
+        final parsed = parseDigimonCardIoPack(rows, preview);
+        // An empty answer means the pack is unknown to them or they are having
+        // a bad day. Either way it is not a reason to empty a set the user can
+        // currently browse.
+        if (parsed.isEmpty) continue;
+        if (await _storePreview(preview, parsed)) changed.add(preview.id);
+      } on Object {
+        // Same bargain as during a sync: the secondary source is a bonus, and
+        // failing to reach it costs the user nothing they already had.
+        continue;
+      }
+    }
+    return changed;
+  }
+
+  /// Replaces one preview release's contents with [parsed].
+  ///
+  /// Returns whether anything actually changed, so a pull-to-refresh can say
+  /// "nothing new" rather than implying it found something.
+  Future<bool> _storePreview(
+    PreviewRelease preview,
+    List<ParsedCard> parsed,
+  ) async {
+    // Cards this release currently contributes, split by whether they are its
+    // own or somebody else's. A Limited pack is mostly reprints of cards the
+    // primary source owns: those are linked here but must survive a refresh,
+    // because deleting them would take the real card, its artwork and its
+    // rulings out of every other set it belongs to.
+    final links = await (_db.select(
+      _db.cardReleaseLinks,
+    )..where((l) => l.releaseId.equals(preview.id))).get();
+    final linkedIds = links.map((l) => l.cardId).toSet();
+    final owned = <String>{};
+    if (linkedIds.isNotEmpty) {
+      final rows = await (_db.select(
+        _db.cards,
+      )..where((c) => c.id.isIn(linkedIds))).get();
+      for (final row in rows) {
+        if (decodeList(row.releaseIds).every((id) => id == preview.id)) {
+          owned.add(row.id);
+        }
+      }
+    }
+
+    // Cards the rest of the database already has under this number are
+    // reprints; the release links to the printing that is already there rather
+    // than storing a second, thinner copy of it.
+    final existing = await _db.cardDao.cardsByNumbers(
+      parsed.map((card) => card.number).toSet(),
+    );
+    final fresh = [
+      for (final card in parsed)
+        if (!existing.containsKey(card.number) || owned.contains(card.id)) card,
+    ];
+    final linkTargets = {
+      for (final card in parsed)
+        if (existing.containsKey(card.number) && !owned.contains(card.id))
+          existing[card.number]!.id
+        else
+          card.id,
+    };
+
+    final unchanged =
+        linkTargets.length == linkedIds.length &&
+        linkTargets.containsAll(linkedIds) &&
+        _sameCardText(fresh, existing);
+
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.cardReleaseLinks,
+      )..where((l) => l.releaseId.equals(preview.id))).go();
+      // Cascades take the traits, keywords and any remaining links with them.
+      if (owned.isNotEmpty) {
+        await (_db.delete(_db.cards)..where((c) => c.id.isIn(owned))).go();
+      }
+
+      await _db.batch((batch) {
+        batch.insertAll(_db.cards, [
+          for (final card in fresh) _cardCompanion(card, {preview.id}),
+        ]);
+        batch.insertAll(_db.cardTraits, [
+          for (final card in fresh)
+            for (final trait in card.traits)
+              CardTraitsCompanion.insert(cardId: card.id, trait: trait),
+        ]);
+        batch.insertAll(_db.cardKeywords, [
+          for (final card in fresh)
+            for (final keyword in card.keywords)
+              CardKeywordsCompanion.insert(cardId: card.id, keyword: keyword),
+        ]);
+        batch.insertAll(_db.cardReleaseLinks, [
+          for (final cardId in linkTargets)
+            CardReleaseLinksCompanion.insert(
+              cardId: cardId,
+              releaseId: preview.id,
+            ),
+        ]);
+        batch.update(
+          _db.releases,
+          ReleasesCompanion(
+            cardCount: Value(linkTargets.length),
+            printingCount: Value(linkTargets.length),
+          ),
+          where: (r) => r.id.equals(preview.id),
+        );
+      });
+    });
+
+    await _db.refreshSearchIndexFor({...owned, ...linkTargets});
+    return !unchanged;
+  }
+
+  /// Whether every card in [fresh] is already stored with the same text, which
+  /// is what separates "they corrected a card" from "nothing happened".
+  bool _sameCardText(List<ParsedCard> fresh, Map<String, DigimonCard> stored) =>
+      fresh.every((card) {
+        final current = stored[card.number];
+        return current != null &&
+            current.name == card.name &&
+            current.effect == card.effect &&
+            current.inheritedEffect == card.inheritedEffect &&
+            current.securityEffect == card.securityEffect;
+      });
+
   Future<void> _store(
     List<ParsedCard> cards,
     List<ReleaseDetail> details,
@@ -332,46 +484,7 @@ class CardSyncService {
 
         batch.insertAll(_db.cards, [
           for (final card in cards)
-            CardsCompanion.insert(
-              id: card.id,
-              number: card.number,
-              parallelId: Value(card.parallelId),
-              name: card.name,
-              category: card.category,
-              colors: Value(encodeList(card.colors)),
-              colorCount: Value(card.colors.length),
-              rarity: Value(card.rarity),
-              supplementalStars: Value(card.supplementalStars),
-              level: Value(card.level),
-              playCost: Value(card.playCost),
-              useCost: Value(card.useCost),
-              cost: Value(card.cost),
-              dp: Value(card.dp),
-              form: Value(card.form),
-              attribute: Value(card.attribute),
-              blockIcon: Value(card.blockIcon),
-              traits: Value(encodeList(card.traits)),
-              keywords: Value(encodeList(card.keywords)),
-              effect: Value(card.effect),
-              inheritedEffect: Value(card.inheritedEffect),
-              securityEffect: Value(card.securityEffect),
-              digivolveCostMin: Value(card.digivolveCostMin),
-              digivolveCostMax: Value(card.digivolveCostMax),
-              digivolutionRequirements: Value(card.digivolutionRequirements),
-              dualFace: Value(card.dualFace),
-              dualCategory: Value(card.dualCategory),
-              notes: Value(card.notes),
-              faqs: Value(card.faqs),
-              errata: Value(card.errata),
-              limitations: Value(card.limitations),
-              copyLimit: Value(card.copyLimit),
-              ruleCopyLimit: Value(card.ruleCopyLimit),
-              imageUrl: card.imageUrl,
-              releaseIds: Value(encodeList(links[card.id] ?? const {})),
-              isPrimary: Value(card.isPrimary),
-              isAce: Value(card.isAce),
-              numberSort: Value(card.numberSort),
-            ),
+            _cardCompanion(card, links[card.id] ?? const {}),
         ]);
 
         batch.insertAll(_db.cardTraits, [
@@ -400,6 +513,53 @@ class CardSyncService {
       });
     });
   }
+
+  /// One card row, whichever sync path put it there. Shared so a preview
+  /// refresh cannot drift into storing a differently-shaped card than a full
+  /// sync does.
+  static CardsCompanion _cardCompanion(
+    ParsedCard card,
+    Iterable<String> releaseIds,
+  ) => CardsCompanion.insert(
+    id: card.id,
+    number: card.number,
+    parallelId: Value(card.parallelId),
+    name: card.name,
+    category: card.category,
+    colors: Value(encodeList(card.colors)),
+    colorCount: Value(card.colors.length),
+    rarity: Value(card.rarity),
+    supplementalStars: Value(card.supplementalStars),
+    level: Value(card.level),
+    playCost: Value(card.playCost),
+    useCost: Value(card.useCost),
+    cost: Value(card.cost),
+    dp: Value(card.dp),
+    form: Value(card.form),
+    attribute: Value(card.attribute),
+    blockIcon: Value(card.blockIcon),
+    traits: Value(encodeList(card.traits)),
+    keywords: Value(encodeList(card.keywords)),
+    effect: Value(card.effect),
+    inheritedEffect: Value(card.inheritedEffect),
+    securityEffect: Value(card.securityEffect),
+    digivolveCostMin: Value(card.digivolveCostMin),
+    digivolveCostMax: Value(card.digivolveCostMax),
+    digivolutionRequirements: Value(card.digivolutionRequirements),
+    dualFace: Value(card.dualFace),
+    dualCategory: Value(card.dualCategory),
+    notes: Value(card.notes),
+    faqs: Value(card.faqs),
+    errata: Value(card.errata),
+    limitations: Value(card.limitations),
+    copyLimit: Value(card.copyLimit),
+    ruleCopyLimit: Value(card.ruleCopyLimit),
+    imageUrl: card.imageUrl,
+    releaseIds: Value(encodeList(releaseIds)),
+    isPrimary: Value(card.isPrimary),
+    isAce: Value(card.isAce),
+    numberSort: Value(card.numberSort),
+  );
 
   /// Files every promotional card under one aggregate release, so a player who
   /// only has the card in hand can find it without knowing which event or

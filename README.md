@@ -62,6 +62,15 @@ arts. The list of them is hardcoded in `previewReleases`, and each one retires
 itself the day Heroicc starts publishing it — the sync skips any preview whose
 id the primary API already serves, so no code has to be deleted.
 
+Preview sets are re-read between full syncs. A full sync is skipped whenever
+the Heroicc bulk dump is unchanged, and that dump is republished every few
+months, so without this a set revealed card by card stayed frozen at whatever
+had been spoiled on the day of the first sync. Opening the library or a
+preview set checks them if they have not been checked in six hours, and
+pulling down inside a preview set checks that one on demand. The refresh
+replaces only that set's own cards: reprints it lists that the primary source
+owns are re-linked, never overwritten or deleted. See `refreshPreviews`.
+
 Two things the API does not provide are derived at sync time:
 
 - **Keywords** (`Blocker`, `Rush`, `Piercing`, …) are parsed out of the effect

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../core/utils/digivolve_parser.dart';
 import '../../core/utils/keyword_parser.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
@@ -46,7 +47,7 @@ ParsedCard? _parseRow(Map<String, dynamic> row, PreviewRelease release) {
   final category = _category(type);
 
   // Their schema splits what the primary source prints as one block of effect
-  // text across three columns: the digivolve line lives in `xros_req` or
+  // text across three columns: the digivolve line lives in `xros_req` and
   // `alt_effect`, the rest in `main_effect`. Rejoining them in printed order
   // is what makes the two sources read alike on the card screen.
   final effect = _joinLines([
@@ -68,10 +69,15 @@ ParsedCard? _parseRow(Map<String, dynamic> row, PreviewRelease release) {
   final isOption = category == CardCategory.option;
 
   final requirements = _digivolveRequirements(row);
-  final requirementCosts = requirements
-      .map((r) => r.cost)
-      .whereType<int>()
-      .toList();
+
+  // As in the primary parser: the cost range the filter runs on covers the
+  // effect-box conditions too, which this source leaves in the text as well.
+  final requirementCosts = [
+    ...requirements.map((r) => r.cost).whereType<int>(),
+    ...DigivolveParser.alternativesIn(
+      effect,
+    ).map((r) => r.cost).whereType<int>(),
+  ];
 
   final ruleCopyLimit = CopyLimit.fromRuleText([
     effect,
@@ -209,8 +215,17 @@ String? _text(Object? raw) {
   return text.isEmpty ? null : text;
 }
 
+/// Joins the columns that make up one block of card text, dropping a column
+/// that only repeats one already taken.
+///
+/// `xros_req` and `alt_effect` hold the same digivolve line on every row that
+/// fills them — 332 of them across the four preview packs, never two
+/// different lines — so joining both printed the card's alternative
+/// digivolution condition twice in the effect box. The check is on the text
+/// and not on the column, because a row that did fill the two differently
+/// would be carrying two real lines.
 String? _joinLines(List<String?> parts) {
-  final lines = parts.whereType<String>().toList();
+  final lines = <String>{...parts.whereType<String>()};
   return lines.isEmpty ? null : lines.join('\n');
 }
 
