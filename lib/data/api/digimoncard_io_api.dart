@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../core/app_info.dart';
+
 /// Read-only client for the digimoncard.io public API.
 ///
 /// This is the app's *secondary* card source. It exists for one job: the two
@@ -30,8 +32,9 @@ class DigimonCardIoApi {
   static const baseUrl = 'https://digimoncard.io/api-public';
 
   /// Both APIs ask callers to identify themselves; the primary one says it may
-  /// eventually require it.
-  static const userAgent = 'DigiCardApp/1.0';
+  /// eventually require it. The header names the app, its version and its
+  /// repository, so an operator can see what this traffic is. See [AppInfo].
+  static const userAgent = AppInfo.userAgent;
 
   final Dio _dio;
 

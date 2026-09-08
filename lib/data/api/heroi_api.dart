@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../core/app_info.dart';
+
 /// One of the pre-built card dumps offered by `/bulk-data`.
 class BulkDataFile {
   const BulkDataFile({
@@ -52,7 +54,9 @@ class ReleaseDetail {
 /// Read-only client for the Heroicc Digimon Card Game API.
 ///
 /// The API is public and unauthenticated, but asks callers to identify
-/// themselves with a User-Agent, so every request carries one.
+/// themselves with a User-Agent, so every request carries one — naming the
+/// app, its version and its repository, so Heroicc can see who is calling and
+/// read the code that does it. See [AppInfo].
 class HeroiApi {
   HeroiApi({Dio? dio})
     : _dio =
@@ -70,7 +74,7 @@ class HeroiApi {
           );
 
   static const baseUrl = 'https://api.heroi.cc';
-  static const userAgent = 'DigiCardApp/1.0';
+  static const userAgent = AppInfo.userAgent;
 
   /// The app ships English cards only; the API also serves ja, ko and zh-Hans.
   static const language = 'en';
@@ -182,6 +186,8 @@ class HeroiApi {
     await _dio.download(
       file.downloadUrl,
       savePath,
+      // The dump is served from a different host than the API, so it needs
+      // the identifying header spelled out rather than inherited.
       options: Options(headers: const {'User-Agent': userAgent}),
       onReceiveProgress: (received, total) {
         // `total` is -1 when the server omits Content-Length; fall back to the

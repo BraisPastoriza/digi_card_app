@@ -41,6 +41,13 @@ locally; card images are cached as you view them.
 Card data comes from the [Heroicc API](https://heroi.cc/docs/api) at
 `https://api.heroi.cc`, which is public and unauthenticated.
 
+Both APIs are run as a courtesy, so every request the app makes identifies
+itself: `DigiCardApp/<version> (+<repository URL>)`, defined once in
+`AppInfo`. An operator looking at their access log can tell which client the
+traffic is, what version of it, and read the code that produced it. The
+secondary source publishes a rate limit, and the client backs off and retries
+when it is told to rather than treating a 429 as an empty set.
+
 The app syncs by downloading the English bulk dump (~25 MB, ~7,700 printings
 covering ~4,400 distinct cards) in one request and writing it to a local
 SQLite database, rather than fetching cards individually — the per-card and
@@ -127,7 +134,7 @@ than crash.
 Useful when the API changes shape:
 
 ```bash
-curl -H "User-Agent: DigiCardApp/1.0" https://api.heroi.cc/bulk-data
+curl -H "User-Agent: DigiCardApp/1.1.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
 curl -o en.json <the English download link from that response>
 dart run tool/inspect_bulk.dart en.json
 ```
