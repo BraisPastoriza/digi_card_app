@@ -62,7 +62,8 @@ class _DeckCardsTabState extends ConsumerState<DeckCardsTab> {
             title: 'This revision is empty',
             message:
                 'Add 50 cards to the main deck and up to 5 Digi-Eggs to the '
-                'egg deck.',
+                'egg deck. A deck with nothing in it is not kept, so leaving '
+                'now is the same as never having made it.',
             action: FilledButton.icon(
               onPressed: widget.onAddCards,
               icon: const Icon(Icons.search, size: 18),

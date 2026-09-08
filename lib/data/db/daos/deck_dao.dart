@@ -142,6 +142,36 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     );
   }
 
+  /// Throws a deck away when it holds no cards in any of its revisions.
+  ///
+  /// A deck is a container for cards, and one created and left empty is a row
+  /// the user never really asked for — creating a deck opens it straight away,
+  /// so backing out of that screen is how somebody says "not this after all".
+  /// Called when the editor closes; returns whether the deck was discarded.
+  ///
+  /// It counts across every revision on purpose: a deck whose cards live on a
+  /// branch the user is not currently editing is not empty.
+  Future<bool> discardIfEmpty(int deckId) async {
+    final revisions = await (select(
+      deckRevisions,
+    )..where((r) => r.deckId.equals(deckId))).get();
+
+    if (revisions.isNotEmpty) {
+      final cards = deckEntries.quantity.sum();
+      final row =
+          await (selectOnly(deckEntries)
+                ..addColumns([cards])
+                ..where(
+                  deckEntries.revisionId.isIn(revisions.map((r) => r.id)),
+                ))
+              .getSingle();
+      if ((row.read(cards) ?? 0) > 0) return false;
+    }
+
+    await deleteDeck(deckId);
+    return true;
+  }
+
   Future<void> deleteDeck(int deckId) async {
     await (delete(decks)..where((d) => d.id.equals(deckId))).go();
   }

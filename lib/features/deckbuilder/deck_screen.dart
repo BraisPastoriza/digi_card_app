@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
+import '../../data/db/daos/deck_dao.dart';
 import '../../core/router/navigation.dart';
 import '../../domain/models/card_filter.dart';
 import '../../domain/models/deck.dart';
@@ -67,6 +70,11 @@ class _DeckView extends ConsumerStatefulWidget {
 
 class _DeckViewState extends ConsumerState<_DeckView>
     with SingleTickerProviderStateMixin {
+  /// Read once, up front: the deck is tidied up as this screen goes away, and
+  /// reading a provider while the widget is being disposed is not something to
+  /// rely on.
+  late final DeckDao _dao = ref.read(deckDaoProvider);
+
   late final TabController _tabs = TabController(length: 3, vsync: this)
     ..addListener(() {
       // Rebuild so the add-cards button can hide on the tabs it does not
@@ -78,6 +86,11 @@ class _DeckViewState extends ConsumerState<_DeckView>
 
   @override
   void dispose() {
+    // Leaving a deck you never put a card in is the same as never having made
+    // it: creating one opens the editor straight away, so closing it empty is
+    // how somebody backs out. Fire and forget — the screen is going, and
+    // nothing left on it depends on the answer.
+    unawaited(_dao.discardIfEmpty(deck.id));
     _tabs.dispose();
     super.dispose();
   }
