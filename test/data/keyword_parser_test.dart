@@ -135,6 +135,50 @@ void main() {
       expect(keywords, ['Blocker', 'Rush']);
     });
 
+    test('leaves the keywords named in reminder text out', () {
+      // BT22-062. Collision's reminder says what Collision does: the Blocker
+      // it grants lands on the opponent's Digimon, not on this card. Reading
+      // it as a keyword made every card explaining Collision answer a search
+      // for Blocker.
+      const collision =
+          "＜Collision＞ (During this Digimon's attack, all of your "
+          "opponent's Digimon gain ＜Blocker＞, and must block if possible.)\n"
+          "[When Digivolving] This Digimon gets +4000 DP until your "
+          "opponent's turn ends.";
+
+      expect(KeywordParser.extract([collision]), ['Collision']);
+    });
+
+    test('keeps a keyword the card grants outside reminder text', () {
+      // BT21-077 hands Collision to an opposing Digimon, reminder and all, so
+      // the card itself still counts as a Collision card.
+      const granting =
+          "[On Play] Give 1 of your opponent's Digimon ＜Collision＞ (During "
+          "this Digimon's attack, all of your opponent's Digimon gain "
+          "＜Blocker＞, and must block if possible.) until their turn ends. "
+          "Then this Digimon gains ＜Rush＞.";
+
+      expect(KeywordParser.extract([granting]), ['Collision', 'Rush']);
+    });
+
+    test('does not take on the keywords of a token it spells out', () {
+      // The parenthetical describes the token being played, which is a card of
+      // its own with its own entry in the library.
+      const token =
+          '[On Play] You may play 1 [Hinukamuy] Token. '
+          '(Digimon/White/6000 DP/＜Alliance＞ ＜Reboot＞ ＜Blocker＞)';
+
+      expect(KeywordParser.extract([token]), isEmpty);
+    });
+
+    test('counts a keyword after an unclosed bracket', () {
+      // A stray closing bracket must not leave the reader stuck inside a
+      // reminder for the rest of the card.
+      const stray = 'Draw 1 card). Then this Digimon gains ＜Rush＞.';
+
+      expect(KeywordParser.extract([stray]), ['Rush']);
+    });
+
     test('returns nothing for text without keywords', () {
       expect(KeywordParser.extract(['[Main] Gain 2 memory.']), isEmpty);
     });

@@ -35,6 +35,11 @@ abstract final class KeywordParser {
   /// which would otherwise normalise to `Decoy/`.
   static final _trailingSeparator = RegExp(r'[\s/·,、]+$');
 
+  /// Brackets that open and close reminder text, in both widths the card
+  /// text uses.
+  static const _openParen = '(（';
+  static const _closeParen = ')）';
+
   /// Bracketed terms that are structural markers rather than keywords.
   static const _notKeywords = {'rule', 'draw'};
 
@@ -91,15 +96,54 @@ abstract final class KeywordParser {
 
   /// Every distinct keyword across the given blocks of card text, in the order
   /// they first appear.
+  ///
+  /// Terms printed inside reminder text are left out, because reminder text
+  /// says what some *other* keyword does:
+  ///
+  /// ```
+  /// ＜Collision＞ (During this Digimon's attack, all of your opponent's
+  /// Digimon gain ＜Blocker＞, and must block if possible.)
+  /// ```
+  ///
+  /// That card has Collision, not Blocker — the Blocker is on the Digimon
+  /// facing it. Counting it made a search for Blocker return every card that
+  /// merely explains Collision, and the same held for the Security Attack in
+  /// Alliance's reminder and for the keywords a card lists when it spells out
+  /// the token it creates.
   static List<String> extract(Iterable<String?> texts) {
     final found = <String>{};
     for (final text in texts) {
       if (text == null || text.isEmpty) continue;
-      for (final match in _bracketed.allMatches(text)) {
+      for (final match in _printedTerms(text)) {
         final keyword = normalize(match.group(1)!);
         if (keyword != null) found.add(keyword);
       }
     }
     return found.toList();
+  }
+
+  /// The bracketed terms in [text] the card carries itself, skipping the ones
+  /// inside a parenthetical.
+  ///
+  /// Nesting is counted over the gaps between terms rather than over the whole
+  /// string, so the brackets of a qualifier — `＜Decoy (Red/Black)＞` — belong
+  /// to the term they are printed in and never open a reminder of their own.
+  static Iterable<RegExpMatch> _printedTerms(String text) sync* {
+    var depth = 0;
+    var index = 0;
+    for (final match in _bracketed.allMatches(text)) {
+      final gap = text.substring(index, match.start);
+      for (var i = 0; i < gap.length; i++) {
+        if (_openParen.contains(gap[i])) {
+          depth++;
+        } else if (_closeParen.contains(gap[i])) {
+          // Clamped: a stray closing bracket must not drive the count below
+          // zero and hide the reminder text that comes after it.
+          depth = depth == 0 ? 0 : depth - 1;
+        }
+      }
+      if (depth == 0) yield match;
+      index = match.end;
+    }
   }
 }
