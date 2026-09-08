@@ -42,6 +42,17 @@ String writeDeckList(DeckComposition composition, DeckListFormat format) => [
       ),
 ].join('\n');
 
+/// Writes a staple list out in the same shape.
+///
+/// Every line says one copy: a staple list is a set of cards, and the copies
+/// belong to whatever deck the reader puts them in. Writing it as a deck list
+/// anyway means the result pastes into this app's own importer and into the
+/// tools that read deck lists, rather than being a format only this app knows.
+String writeStapleList(List<DigimonCard> cards, DeckListFormat format) => [
+  for (final card in cards)
+    format.line(quantity: 1, name: card.name, number: card.number),
+].join('\n');
+
 /// One line of a pasted deck list, before it is matched against the library.
 class DeckListLine {
   const DeckListLine({

@@ -126,6 +126,44 @@ void main() {
     });
   });
 
+  group('writeStapleList', () {
+    final cards = [
+      _card(number: 'BT1-090', name: 'Gravity Crush'),
+      _card(number: 'BT4-111', name: 'Jack Raid'),
+    ];
+
+    test('writes one copy of each card, in the order the list holds them', () {
+      // A staple list is a set of cards; the copies belong to whatever deck
+      // the reader puts them in.
+      expect(
+        writeStapleList(cards, DeckListFormat.standard),
+        '1 Gravity Crush BT1-090\n1 Jack Raid BT4-111',
+      );
+    });
+
+    test('takes the same formats a deck list does', () {
+      expect(
+        writeStapleList(cards, DeckListFormat.untap),
+        '1 Gravity Crush (BT1-090)\n1 Jack Raid (BT4-111)',
+      );
+    });
+
+    test('reads back through the deck list parser', () {
+      // What it writes has to be what the importer can read, or the pair is
+      // useless.
+      final lines = readDeckList(
+        writeStapleList(cards, DeckListFormat.standard),
+      );
+
+      expect(lines.map((l) => l.cardNumber), ['BT1-090', 'BT4-111']);
+      expect(lines.map((l) => l.quantity), [1, 1]);
+    });
+
+    test('writes nothing for an empty list', () {
+      expect(writeStapleList(const [], DeckListFormat.standard), isEmpty);
+    });
+  });
+
   group('readDeckList', () {
     test('reads both formats the app writes', () {
       final lines = readDeckList('4 Agumon BT1-010\n3 Koromon (BT1-001)');

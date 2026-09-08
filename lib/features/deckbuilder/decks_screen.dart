@@ -74,12 +74,13 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
       appBar: AppBar(
         title: const Text('Decks'),
         actions: [
-          if (onDecks)
-            IconButton(
-              onPressed: () => context.pushOnce('/decks/import'),
-              icon: const Icon(Icons.file_download_outlined),
-              tooltip: 'Import deck list',
+          IconButton(
+            onPressed: () => context.pushOnce(
+              onDecks ? '/decks/import' : '/decks/staples/import',
             ),
+            icon: const Icon(Icons.file_download_outlined),
+            tooltip: onDecks ? 'Import deck list' : 'Import staple list',
+          ),
         ],
         bottom: TabBar(
           controller: _tabs,

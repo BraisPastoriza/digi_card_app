@@ -11,6 +11,7 @@ import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import 'staple_providers.dart';
 import 'widgets/deck_name_dialog.dart';
+import 'widgets/staple_export_sheet.dart';
 import 'widgets/staples_tab.dart';
 
 /// One staple list: the cards in it, with the two things you do to a list —
@@ -74,6 +75,7 @@ class StapleListScreen extends ConsumerWidget {
             onSelected: (action) => _handle(context, ref, list, action),
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'rename', child: Text('Rename list')),
+              const PopupMenuItem(value: 'export', child: Text('Export list')),
               PopupMenuItem(
                 value: 'delete',
                 child: Text(
@@ -186,6 +188,8 @@ class StapleListScreen extends ConsumerWidget {
         if (name != null) {
           await ref.read(stapleDaoProvider).renameList(list.id, name);
         }
+      case 'export':
+        await showStapleExportSheet(context, list);
       case 'delete':
         if (!context.mounted) return;
         if (await showDeleteStapleListDialog(context, list)) {

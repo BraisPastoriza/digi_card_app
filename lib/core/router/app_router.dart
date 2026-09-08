@@ -8,6 +8,7 @@ import '../../features/deckbuilder/deck_import_screen.dart';
 import '../../features/deckbuilder/deck_screen.dart';
 import '../../features/deckbuilder/decks_screen.dart';
 import '../../features/deckbuilder/staple_card_picker_screen.dart';
+import '../../features/deckbuilder/staple_import_screen.dart';
 import '../../features/deckbuilder/staple_list_screen.dart';
 import '../../features/deckbuilder/test_hand_screen.dart';
 import '../../features/library/attribution_screen.dart';
@@ -90,6 +91,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'import',
                     builder: (_, _) => const DeckImportScreen(),
+                  ),
+                  // Ahead of `staples/:listId` for the same reason as
+                  // `import` above: the id is parsed as a number.
+                  GoRoute(
+                    path: 'staples/import',
+                    builder: (_, _) => const StapleImportScreen(),
                   ),
                   GoRoute(
                     path: 'staples/:listId',
