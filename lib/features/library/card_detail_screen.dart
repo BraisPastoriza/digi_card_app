@@ -567,46 +567,106 @@ class _DigivolveSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final requirements = card.digivolutionRequirements;
+    final alternatives = requirements.where((r) => r.isAlternative).length;
+
     return _SectionCard(
       title: 'Digivolution requirements',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final requirement in card.digivolutionRequirements)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: BoxDecoration(
-                color: AppSurfaces.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppSurfaces.outline),
-              ),
-              child: Row(
-                children: [
-                  if (requirement.colors.isNotEmpty) ...[
-                    ColorDots(colors: requirement.colors, size: 9),
-                    const SizedBox(width: 10),
-                  ],
-                  Expanded(
-                    child: Text(
-                      requirement.describe(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  if (requirement.cost != null)
-                    Text(
-                      'Cost ${requirement.cost}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
+          for (final requirement in requirements)
+            _DigivolveRow(requirement: requirement),
+          // The extra conditions are printed in the effect box rather than in
+          // the cost box, and a player checking whether a digivolution is
+          // legal needs to know which is which: the first row is the one on
+          // the corner of the card, the rest are granted by its text.
+          if (alternatives > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, left: 2),
+              child: Text(
+                alternatives == 1
+                    ? 'The last condition is printed in the card’s effect '
+                          'box, not in its cost box.'
+                    : 'The last $alternatives conditions are printed in the '
+                          'card’s effect box, not in its cost box.',
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DigivolveRow extends StatelessWidget {
+  const _DigivolveRow({required this.requirement});
+
+  final DigivolveRequirement requirement;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: AppSurfaces.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: requirement.isAlternative
+              ? scheme.primary.withValues(alpha: 0.35)
+              : AppSurfaces.outline,
+        ),
+      ),
+      // Centred, so the colour dots sit on the text's midline whether the
+      // condition takes one line or three.
+      child: Row(
+        children: [
+          // Seven dots say no more than the words "any colour" already do,
+          // and they crowd out the condition itself.
+          if (requirement.colors.isNotEmpty && !requirement.isAnyColor) ...[
+            ColorDots(colors: requirement.colors, size: 9),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Text(
+              // A cost with no condition attached comes from the preview
+              // source, which does not publish one. Saying so beats "Any",
+              // which claimed the card digivolves from anything. When that
+              // source did publish the colour, the dots to the left are
+              // already showing it and only the level is missing.
+              switch (requirement) {
+                _ when !requirement.isConditionUnpublished =>
+                  requirement.describe(),
+                _ when requirement.colors.isNotEmpty =>
+                  'Level not published yet',
+                _ => 'Condition not published yet',
+              },
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontStyle: requirement.isConditionUnpublished
+                    ? FontStyle.italic
+                    : FontStyle.normal,
+                color: requirement.isConditionUnpublished
+                    ? scheme.onSurfaceVariant
+                    : null,
+              ),
+            ),
+          ),
+          if (requirement.cost != null) ...[
+            const SizedBox(width: 10),
+            Text(
+              'Cost ${requirement.cost}',
+              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );

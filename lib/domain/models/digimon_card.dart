@@ -7,13 +7,22 @@ import 'card_enums.dart';
 class DigivolveRequirement {
   const DigivolveRequirement({
     this.level,
+    this.form,
     this.cost,
     this.category,
     this.colors = const [],
     this.text,
+    this.isAlternative = false,
   });
 
   final int? level;
+
+  /// The Appmon grade a condition names in place of a level, e.g. `ultimate`.
+  ///
+  /// Appmon digivolve by grade rather than by level, so the primary source
+  /// leaves `level` null on those 61 requirements and fills this instead.
+  final String? form;
+
   final int? cost;
   final CardCategory? category;
   final List<CardColor> colors;
@@ -22,10 +31,21 @@ class DigivolveRequirement {
   /// level/colour pair (DNA digivolution, DigiXros, and similar).
   final String? text;
 
+  /// True for a condition printed in the card's effect box rather than in the
+  /// cost box at the top left.
+  ///
+  /// Neither card API models those as data — they are a line of effect text —
+  /// so they are parsed out of it when a card is read. See `DigivolveParser`.
+  /// The card screen labels them, because a player reading a list of
+  /// conditions needs to know which one is the one on the corner of the card.
+  final bool isAlternative;
+
   factory DigivolveRequirement.fromJson(Map<String, dynamic> json) {
     final rawColors = json['color'];
     return DigivolveRequirement(
+      isAlternative: json['alternative'] as bool? ?? false,
       level: json['level'] as int?,
+      form: json['form'] as String?,
       cost: json['cost'] as int?,
       category: CardCategory.tryParse(json['category'] as String?),
       colors: rawColors is List
@@ -40,22 +60,71 @@ class DigivolveRequirement {
 
   Map<String, dynamic> toJson() => {
     if (level != null) 'level': level,
+    if (form != null) 'form': form,
     if (cost != null) 'cost': cost,
     if (category != null) 'category': category!.apiValue,
     if (colors.isNotEmpty) 'color': colors.map((c) => c.apiValue).toList(),
     if (text != null) 'text': text,
+    if (isAlternative) 'alternative': true,
   };
 
+  /// The condition in words, without the cost — the card screen prints that
+  /// alongside, and saying it twice read as though it were two costs.
+  ///
+  /// Says nothing but a colour when the source published no condition; see
+  /// [isConditionUnpublished].
   String describe() {
     if (text != null && text!.isNotEmpty) return text!;
-    final parts = <String>[
+    return [
       if (level != null) 'Lv.$level',
-      if (colors.isNotEmpty) colors.map((c) => c.label).join('/'),
+      if (form != null) _formLabel,
+      if (colors.isNotEmpty) _colorLabel,
       if (category != null && category != CardCategory.digimon) category!.label,
-    ];
-    final requirement = parts.isEmpty ? 'Any' : parts.join(' ');
-    return cost == null ? requirement : '$requirement — cost $cost';
+    ].join(' ');
   }
+
+  /// The Appmon grade spelled out for the card screen.
+  ///
+  /// The grades share their names with the Digimon forms — an `ultimate`
+  /// condition on an Appmon is not the Ultimate level — so the word Appmon is
+  /// what tells a reader which of the two the row means. Every requirement
+  /// that carries a grade is on an Appmon; none carries a level as well.
+  String get _formLabel =>
+      '${form![0].toUpperCase()}${form!.substring(1)} Appmon';
+
+  /// True when the condition lists every colour, which is how the source
+  /// spells "from a Digimon of any colour".
+  ///
+  /// The 93 requirements that do it are the Appmon grades and the handful of
+  /// Digimon that digivolve from anything; naming all seven buried the rest of
+  /// the condition, and the card prints the whole colour wheel rather than a
+  /// list.
+  bool get isAnyColor => colors.length == CardColor.values.length;
+
+  /// Reads as a qualifier on what comes before it — "Lv.2 any colour",
+  /// "Standard Appmon any colour" — so it never opens the description, and no
+  /// requirement with every colour lacks the level or grade that would.
+  String get _colorLabel =>
+      isAnyColor ? 'any colour' : colors.map((c) => c.label).join('/');
+
+  /// True when the source published a digivolution cost, and at most the
+  /// colour to pay it from, without the thing being digivolved from.
+  ///
+  /// Only the preview source does this, and it does it for nearly every card:
+  /// its `evolution_level` column is null throughout and `evolution_color` on
+  /// all but a handful, with the real condition left in the card's text. A row
+  /// like that is still the card's own condition and keeps its row — the card
+  /// screen just says which half of it is missing instead of describing a
+  /// condition the source never published.
+  ///
+  /// A colour on its own is not enough to make it a condition: every printed
+  /// condition names a level, a grade, or a card type to digivolve from, and
+  /// the colour only says which colours it may come from.
+  bool get isConditionUnpublished =>
+      (text == null || text!.isEmpty) &&
+      level == null &&
+      form == null &&
+      (category == null || category == CardCategory.digimon);
 }
 
 /// A question and answer from the official rulings database.

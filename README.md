@@ -66,6 +66,13 @@ Two things the API does not provide are derived at sync time:
 
 - **Keywords** (`Blocker`, `Rush`, `Piercing`, …) are parsed out of the effect
   text, where they appear wrapped in angle brackets. See `KeywordParser`.
+- **Alternative digivolution conditions** — the `[Digivolve]`,
+  `[DNA Digivolve]` and `[Burst Digivolve]` lines a card prints in its effect
+  box, which around 2,200 cards have on top of the single condition the API
+  models as data. See `DigivolveParser`. These are derived when a card is read
+  from the database rather than when it is written, so a change to the parser
+  reaches the user on the next app update instead of costing them a 25 MB
+  re-download.
 - **Expansion grouping** (BT / EX / ST / AD / LM) comes from the release slug,
   because the API's own `genre` field files BT, EX and AD together as
   "Booster Pack".
@@ -143,7 +150,7 @@ dart run tool/inspect_bulk.dart en.json
 
 ```
 lib/
-  core/            theme, router, providers, keyword parsing
+  core/            theme, router, providers, card-text parsing
   domain/models/   cards, releases, decks, filters, deck rules
   data/
     api/           Heroicc API client

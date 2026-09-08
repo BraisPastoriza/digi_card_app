@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import '../../core/utils/digivolve_parser.dart';
 import '../../core/utils/keyword_parser.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/digimon_card.dart';
@@ -147,10 +148,18 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
   final dualEffect = dualMap?['effect'] as String?;
 
   final requirements = _asMapList(attributes['digivolution-requirements']);
-  final requirementCosts = requirements
-      .map((r) => r['cost'])
-      .whereType<int>()
-      .toList();
+
+  // The cost range the library filters on has to cover every way the card can
+  // be digivolved into, including the conditions printed in the effect box
+  // that the API does not model as data. Those are re-derived when a card is
+  // read, so this only feeds the filter — a card whose cheapest route is an
+  // effect-box condition would otherwise be invisible to a search for it.
+  final requirementCosts = [
+    ...requirements.map((r) => r['cost']).whereType<int>(),
+    ...DigivolveParser.alternativesIn(
+      effect,
+    ).map((r) => r.cost).whereType<int>(),
+  ];
 
   final limitations = _asMapList(
     attributes['limitations'],

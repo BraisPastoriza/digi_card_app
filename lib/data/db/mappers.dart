@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../core/utils/digivolve_parser.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../../domain/models/digimon_card.dart';
@@ -36,9 +37,16 @@ extension CardRowMapper on CardRow {
       effect: effect,
       inheritedEffect: inheritedEffect,
       securityEffect: securityEffect,
-      digivolutionRequirements: _decodeJsonList(
-        digivolutionRequirements,
-      ).map(DigivolveRequirement.fromJson).toList(),
+      // The stored list is only what the card prints in its cost box; the
+      // extra conditions in the effect box are prose in both APIs, so they are
+      // parsed here rather than at sync time — which is what lets them appear
+      // without the user re-downloading the card dump.
+      digivolutionRequirements: DigivolveParser.allConditions(
+        printed: _decodeJsonList(
+          digivolutionRequirements,
+        ).map(DigivolveRequirement.fromJson).toList(),
+        effect: effect,
+      ),
       notes: notes,
       faqs: _decodeJsonList(faqs).map(CardFaq.fromJson).toList(),
       errata: errata == null
