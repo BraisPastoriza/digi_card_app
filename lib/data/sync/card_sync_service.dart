@@ -12,6 +12,8 @@ import '../../domain/models/digimon_card.dart';
 import '../api/digimoncard_io_api.dart';
 import '../api/heroi_api.dart';
 import '../db/app_database.dart';
+import '../db/card_data_versions.dart';
+import 'card_derivations.dart';
 import '../db/tables.dart';
 import 'bulk_parser.dart';
 import 'digimoncard_io_parser.dart';
@@ -58,6 +60,19 @@ class CardSyncService {
   final AppDatabase _db;
   final HeroiApi _api;
   final DigimonCardIoApi _secondaryApi;
+
+  late final CardDerivations _derivations = CardDerivations(_db);
+
+  /// Whether the cards already stored were read by an older set of parsers.
+  ///
+  /// True after an update that changed how card text is read: the fix is a
+  /// local pass, not a download. See [rederive].
+  Future<bool> needsRederive() => _derivations.isStale();
+
+  /// Reads the stored cards again under the current parsers. Returns how many
+  /// changed.
+  Future<int> rederive({void Function(int done, int total)? onProgress}) =>
+      _derivations.rederive(onProgress: onProgress);
 
   Future<SyncStateRow?> currentState() =>
       _db.select(_db.syncState).getSingleOrNull();
@@ -157,6 +172,9 @@ class CardSyncService {
               bulkUpdatedAt: Value(bulk.updatedAt),
               syncedAt: Value(DateTime.now()),
               cardCount: Value(cards.length),
+              // Everything just written came through the current parsers, so
+              // there is nothing for a re-derivation to do.
+              derivedVersion: const Value(CardDataVersions.derived),
             ),
           );
 

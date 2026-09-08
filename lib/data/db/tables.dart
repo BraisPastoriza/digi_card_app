@@ -261,6 +261,11 @@ class SyncState extends Table {
   DateTimeColumn get syncedAt => dateTime().nullable()();
   IntColumn get cardCount => integer().withDefault(const Constant(0))();
 
+  /// Version of the parsers the stored cards were last read with. See
+  /// `CardDataVersions`. Zero for a database written before the app tracked
+  /// it, which is what makes those re-derive on the next launch.
+  IntColumn get derivedVersion => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

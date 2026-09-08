@@ -27,6 +27,11 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
   StreamSubscription<SyncProgress>? _subscription;
   SyncProgress _progress = const SyncProgress(SyncStage.checking);
 
+  /// True while the cards already on the device are being read again under
+  /// new parsers. It is a local pass, not a download, and usually over in a
+  /// second or two — but it must finish before anything reads the cards.
+  bool _rederiving = false;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +50,16 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
     ref.read(resyncRequestedProvider.notifier).state = false;
 
     if (!widget.force && !resyncRequested && await service.hasCards()) {
+      // An update that changed how card text is read is settled here, out of
+      // the cards already stored — the alternative used to be throwing them
+      // away and downloading 25 MB again.
+      if (await service.needsRederive()) {
+        if (!mounted) return;
+        setState(() => _rederiving = true);
+        await service.rederive();
+        if (!mounted) return;
+        setState(() => _rederiving = false);
+      }
       // Cards from a previous run are enough to open the app; the update check
       // waits until the user asks for it rather than blocking every launch.
       if (mounted) ref.read(libraryReadyProvider.notifier).markReady();
@@ -88,6 +103,8 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
               Text(
                 failed
                     ? 'Could not download the card database'
+                    : _rederiving
+                    ? 'Updating your cards to the new card rules'
                     : 'Setting up your card library',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
@@ -95,6 +112,21 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
               const SizedBox(height: 40),
               if (failed)
                 _SyncError(error: _progress.error, onRetry: _start)
+              else if (_rederiving)
+                // No download to report on, so no stage list: this is a pass
+                // over cards the device already has.
+                const Column(
+                  children: [
+                    LinearProgressIndicator(),
+                    SizedBox(height: 14),
+                    Text(
+                      'Reading the cards you already have. Nothing is being '
+                      'downloaded.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ],
+                )
               else
                 _SyncProgressView(progress: _progress),
             ],

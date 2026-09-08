@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'card_data_versions.dart';
 import 'daos/card_dao.dart';
 import 'daos/deck_dao.dart';
 import 'daos/release_dao.dart';
@@ -40,7 +41,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -50,13 +51,17 @@ class AppDatabase extends _$AppDatabase {
       await _createIndexes();
       await stapleDao.seed(defaultStapleLists);
     },
-    // Everything on the card side is a cache of the published card list, so an
-    // upgrade throws it away and re-syncs rather than migrating column by
-    // column. That also covers the columns derived at sync time — keywords are
-    // parsed out of effect text, so a change to the parser only reaches the
-    // user through a version bump. Decks and staple lists are the data the
-    // user authored, and they survive: they reference cards by printed number,
-    // not by row. Their own columns do have to be migrated one by one.
+    // The card tables are a cache of the published card list, so when they
+    // really are unusable an upgrade throws them away and re-syncs rather than
+    // migrating column by column. "Really" is the point: that costs the user
+    // 25 MB and 93 requests, and it used to happen on every upgrade, including
+    // ones that added a table the cards know nothing about. It is now gated on
+    // `CardDataVersions.invalidatedAt`, and a change to how stored card text
+    // is read goes through `CardDataVersions.derived` instead, which re-reads
+    // the cards already on the device and downloads nothing.
+    // Decks and staple lists are the data the user authored, and they survive:
+    // they reference cards by printed number, not by row. Their own columns do
+    // have to be migrated one by one.
     // Note on version 8: it once carried a `tile_card_image` column on
     // releases, precomputed at sync time. Working out a release's stand-in
     // card is now done by querying the cards already on the device, so the
@@ -75,7 +80,8 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(stapleEntries);
         await stapleDao.seed(defaultStapleLists);
       }
-      await resetCardData(m);
+      if (from < 12) await m.addColumn(syncState, syncState.derivedVersion);
+      if (CardDataVersions.needsCardReset(from)) await resetCardData(m);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
