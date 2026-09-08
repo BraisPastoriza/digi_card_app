@@ -102,6 +102,28 @@ class AppDatabase extends _$AppDatabase {
     ''');
   }
 
+  /// Re-indexes just [cardIds], dropping the entries of any that are gone.
+  ///
+  /// Refreshing a preview set touches a hundred cards or so out of 7,600, and
+  /// it happens while the user is looking at the set — rebuilding the whole
+  /// index for that would be several seconds of the search box being wrong.
+  Future<void> refreshSearchIndexFor(Set<String> cardIds) async {
+    if (cardIds.isEmpty) return;
+    // FTS5 tables take no parameter placeholders in an `IN` list on every
+    // SQLite build, and card ids are printed card numbers from the API rather
+    // than anything a user types, so they are quoted inline.
+    final list = cardIds.map((id) => "'${id.replaceAll("'", "''")}'").join(',');
+    await customStatement(
+      'DELETE FROM $cardSearchTable WHERE card_id IN ($list)',
+    );
+    await customStatement('''
+      INSERT INTO $cardSearchTable (card_id, name, effect, inherited_effect, security_effect, traits)
+      SELECT id, name, COALESCE(effect, ''), COALESCE(inherited_effect, ''),
+             COALESCE(security_effect, ''), REPLACE(traits, '$listDelimiter', ' ')
+      FROM cards WHERE id IN ($list)
+    ''');
+  }
+
   Future<void> _createSearchIndex() async {
     // `unicode61` with diacritics folded so "Wargreymon" finds "WarGreymon"
     // and accented card names match unaccented queries.
