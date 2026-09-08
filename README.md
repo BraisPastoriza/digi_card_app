@@ -24,8 +24,11 @@ minutes. After that the app works offline.
 **Library** — every English card, browsable by expansion (BT, EX, ST, AD, LM,
 promos and other products) and searchable by name, effect text, trait, colour,
 card type, level, play/use cost, digivolution cost, DP, rarity, attribute,
-form, keyword and expansion. Card pages show the full rules text, digivolution
-requirements, alternate arts, official rulings, errata and restriction status.
+form, keyword and expansion. Colours, traits and keywords can be asked for
+either way round — any of the ones picked, or all of them at once, which is
+how you find the card that is both Dragon and Vaccine. Card pages show the
+full rules text, digivolution requirements, alternate arts, official rulings,
+errata and restriction status.
 
 **Deck builder** — decks of 50 main-deck cards plus up to 5 Digi-Eggs, checked
 against the official rules and the current restriction list as you build.
@@ -153,7 +156,7 @@ than crash.
 Useful when the API changes shape:
 
 ```bash
-curl -H "User-Agent: DigiCardApp/1.1.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
+curl -H "User-Agent: DigiCardApp/1.2.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
 curl -o en.json <the English download link from that response>
 dart run tool/inspect_bulk.dart en.json
 ```
@@ -210,18 +213,15 @@ card data and artwork belong to the parties above and are not licensed by it.
 
 ## Roadmap
 
-1.1.0 covers the library, the deck builder with revisions, deck import and
-export, and the preview sets.
+1.2.0 covers the library, the deck builder with revisions, deck import and
+export, the preview sets, staple lists and test hands.
 
 Planned next:
 
-- **API courtesy** — a User-Agent that identifies the project rather than a
-  bare name, and fewer requests per sync: a first run currently makes one call
-  per expansion on top of the bulk download.
+- **Fewer requests per sync** — a first run still makes one call per expansion
+  on top of the bulk download.
 
 - **Suggestions** — cards an algorithm rates as a fit for the deck being built,
   by shared traits, name families and other heuristics.
-- **Staples** — a curated list of generic staples, plus a personal
-  "My Staples" list the user fills from the library.
 - **Accounts** — publishing and sharing decks, and tracking a physical
   collection.

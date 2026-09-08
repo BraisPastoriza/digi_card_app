@@ -10,8 +10,8 @@ abstract final class AppInfo {
 
   /// Kept in step with `version` in pubspec.yaml by hand. It is one line in
   /// the release checklist, and it buys a server operator the ability to say
-  /// "the 1.1.0 client is the one hammering me".
-  static const version = '1.1.0';
+  /// "the 1.2.0 client is the one hammering me".
+  static const version = '1.2.0';
 
   static const repositoryUrl =
       'https://github.com/BraisPastoriza/digi_card_app';
