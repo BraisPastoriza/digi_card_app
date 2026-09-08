@@ -93,6 +93,17 @@ class RangeFilter {
   int get hashCode => Object.hash(min, max);
 }
 
+/// One active facet as the results header shows it: what it says, and the
+/// filter that remains once the user takes it off.
+class FacetChip {
+  const FacetChip(this.label, this.removed);
+
+  final String label;
+
+  /// The filter with this facet cleared, ready to be applied as-is.
+  final CardFilter removed;
+}
+
 /// Every search option the library exposes. Built up by the filter sheet and
 /// translated into SQL by `CardDao`.
 class CardFilter {
@@ -221,26 +232,68 @@ class CardFilter {
     tokens != TokenMode.include,
   ].where((active) => active).length;
 
-  /// Short labels for the active facets, rendered as removable chips.
-  List<String> describeFacets() => [
+  /// The active facets, each paired with the filter left behind when it is
+  /// taken off, so a chip in the results header can remove its own facet.
+  ///
+  /// Facets a card holds several of at once come off one value at a time —
+  /// two traits are two chips — while the ones that read as a single
+  /// condition come off whole: the colours, an "all of" set, a level list, a
+  /// numeric range.
+  ///
+  /// Expansions are the one active facet with no chip, as they were before
+  /// the chips could be removed: they are picked by name on a page of their
+  /// own, and their ids do not read as anything here.
+  List<FacetChip> activeFacets() => [
     if (colors.isNotEmpty)
-      '${colorMatchMode.label} ${colors.map((c) => c.label).join(', ')}',
-    ...categories.map((c) => c.label),
+      FacetChip(
+        '${colorMatchMode.label} ${colors.map((c) => c.label).join(', ')}',
+        copyWith(colors: const {}),
+      ),
+    for (final category in categories)
+      FacetChip(
+        category.label,
+        copyWith(categories: _without(categories, category)),
+      ),
     if (levels.isNotEmpty)
-      'Lv. ${levels.sorted((a, b) => a.compareTo(b)).join(', ')}',
-    ...rarities,
-    ...traits,
-    ...keywords,
-    ...forms,
-    ...attributes,
-    if (!playCost.isEmpty) playCost.describe('Cost'),
-    if (!digivolveCost.isEmpty) digivolveCost.describe('Digivolve'),
-    if (!dp.isEmpty) dp.describe('DP'),
-    if (aceOnly) 'ACE',
-    if (dualOnly) 'Dual Card',
-    if (tokens == TokenMode.only) 'Token',
-    if (includeAlternateArts) 'Alternate arts',
-    if (restrictedOnly) 'Restricted',
+      FacetChip(
+        'Lv. ${levels.sorted((a, b) => a.compareTo(b)).join(', ')}',
+        copyWith(levels: const {}),
+      ),
+    for (final rarity in rarities)
+      FacetChip(rarity, copyWith(rarities: _without(rarities, rarity))),
+    ..._valueFacets(traits, traitMatchMode, (next) => copyWith(traits: next)),
+    ..._valueFacets(
+      keywords,
+      keywordMatchMode,
+      (next) => copyWith(keywords: next),
+    ),
+    for (final form in forms)
+      FacetChip(form, copyWith(forms: _without(forms, form))),
+    for (final attribute in attributes)
+      FacetChip(
+        attribute,
+        copyWith(attributes: _without(attributes, attribute)),
+      ),
+    if (!playCost.isEmpty)
+      FacetChip(
+        playCost.describe('Cost'),
+        copyWith(playCost: const RangeFilter()),
+      ),
+    if (!digivolveCost.isEmpty)
+      FacetChip(
+        digivolveCost.describe('Digivolve'),
+        copyWith(digivolveCost: const RangeFilter()),
+      ),
+    if (!dp.isEmpty)
+      FacetChip(dp.describe('DP'), copyWith(dp: const RangeFilter())),
+    if (aceOnly) FacetChip('ACE', copyWith(aceOnly: false)),
+    if (dualOnly) FacetChip('Dual Card', copyWith(dualOnly: false)),
+    if (tokens == TokenMode.only)
+      FacetChip('Token', copyWith(tokens: TokenMode.include)),
+    if (includeAlternateArts)
+      FacetChip('Alternate arts', copyWith(includeAlternateArts: false)),
+    if (restrictedOnly)
+      FacetChip('Restricted', copyWith(restrictedOnly: false)),
   ];
 
   CardFilter copyWith({

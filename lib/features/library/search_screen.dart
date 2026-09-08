@@ -133,6 +133,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           _ResultsHeader(
             filter: filter,
             total: results.valueOrNull?.total,
+            onRemoveFacet: (without) => ref
+                .read(cardFilterProvider(CardSearchScope.library).notifier)
+                .update(without),
             onClearFacets: () => ref
                 .read(cardFilterProvider(CardSearchScope.library).notifier)
                 .clearFacets(),
@@ -269,19 +272,24 @@ class _ResultsHeader extends StatelessWidget {
   const _ResultsHeader({
     required this.filter,
     required this.total,
+    required this.onRemoveFacet,
     required this.onClearFacets,
     required this.onSortChanged,
   });
 
   final CardFilter filter;
   final int? total;
+
+  /// Takes one facet off, given the filter left without it.
+  final void Function(CardFilter) onRemoveFacet;
+
   final VoidCallback onClearFacets;
   final void Function(CardSort) onSortChanged;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final facets = filter.describeFacets();
+    final facets = filter.activeFacets();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,11 +353,14 @@ class _ResultsHeader extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               children: [
+                // Tapping a chip — anywhere on it, not only the cross —
+                // takes that facet off, which is where the hand goes when a
+                // search turns out too narrow.
                 for (final facet in facets)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
-                    child: Chip(
-                      label: Text(facet),
+                    child: InputChip(
+                      label: Text(facet.label),
                       visualDensity: VisualDensity.compact,
                       labelStyle: TextStyle(
                         fontSize: 12,
@@ -360,6 +371,14 @@ class _ResultsHeader extends StatelessWidget {
                       side: BorderSide(
                         color: scheme.primary.withValues(alpha: 0.4),
                       ),
+                      onPressed: () => onRemoveFacet(facet.removed),
+                      onDeleted: () => onRemoveFacet(facet.removed),
+                      deleteIcon: Icon(
+                        Icons.close,
+                        size: 14,
+                        color: scheme.primary,
+                      ),
+                      tooltip: 'Remove ${facet.label}',
                     ),
                   ),
                 ActionChip(
