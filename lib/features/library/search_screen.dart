@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
@@ -175,7 +174,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         SliverCardGrid(
                           cards: state.cards,
                           onCardTap: (card) =>
-                              context.push('/card/${card.number}'),
+                              context.pushOnce('/card/${card.number}'),
                         ),
                         if (state.hasMore)
                           const SliverToBoxAdapter(

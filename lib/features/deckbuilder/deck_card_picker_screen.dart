@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
+import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck.dart';
 import '../../domain/models/digimon_card.dart';
@@ -247,7 +248,7 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                                   onTap: () => _onCardTap(card),
                                   onAdjust: (delta) => _adjust(card, delta),
                                   onInfo: () =>
-                                      context.push('/card/${card.number}'),
+                                      context.pushOnce('/card/${card.number}'),
                                 );
                               }, childCount: state.cards.length),
                             ),

@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
+import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/db/daos/release_dao.dart';
 import '../../domain/models/card_enums.dart';
@@ -110,8 +112,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                           return ReleaseTile(
                             release: release,
                             cardImage: cardArt[release.id],
-                            onTap: () =>
-                                context.push('/library/release/${release.id}'),
+                            onTap: () => context.pushOnce(
+                              '/library/release/${release.id}',
+                            ),
                           );
                         }, childCount: section.releases.length),
                       ),
@@ -119,7 +122,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                 ],
                 SliverToBoxAdapter(
                   child: AttributionFooter(
-                    onTap: () => context.push('/library/credits'),
+                    onTap: () => context.pushOnce('/library/credits'),
                   ),
                 ),
               ],
@@ -149,7 +152,7 @@ class _SearchBarButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: InkWell(
-        onTap: () => context.push('/library/search'),
+        onTap: () => context.pushOnce('/library/search'),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -267,7 +270,7 @@ class _DatabaseInfoSheet extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                context.push('/library/credits');
+                context.pushOnce('/library/credits');
               },
               style: TextButton.styleFrom(padding: EdgeInsets.zero),
               child: const Text('Data sources & credits'),

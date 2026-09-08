@@ -168,7 +168,7 @@ class _DeckViewState extends ConsumerState<_DeckView>
   }
 
   void _openPicker(BuildContext context, int revisionId) {
-    context.push('/decks/${deck.id}/add/$revisionId');
+    context.pushOnce('/decks/${deck.id}/add/$revisionId');
   }
 
   Future<void> _handle(BuildContext context, String action) async {
@@ -193,7 +193,7 @@ class _DeckViewState extends ConsumerState<_DeckView>
       case 'export':
         final revisionId = deck.activeRevision?.id;
         if (revisionId == null || !context.mounted) return;
-        context.push('/decks/${deck.id}/export/$revisionId');
+        context.pushOnce('/decks/${deck.id}/export/$revisionId');
       case 'clear':
         final revisionId = deck.activeRevision?.id;
         if (revisionId == null || !context.mounted) return;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
+import '../../../core/router/navigation.dart';
 import '../../../domain/models/deck.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 import '../../../shared/widgets/common.dart';
@@ -101,7 +101,8 @@ class _DeckCardsTabState extends ConsumerState<DeckCardsTab> {
                               : entry.cardNumber,
                         ),
                         onAdjust: (delta) => _adjust(entry, delta),
-                        onInfo: () => context.push('/card/${entry.cardNumber}'),
+                        onInfo: () =>
+                            context.pushOnce('/card/${entry.cardNumber}'),
                       );
                     }, childCount: section.entries.length),
                   ),
