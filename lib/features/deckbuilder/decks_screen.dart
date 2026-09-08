@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
+import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/digimon_colors.dart';
 import '../../domain/models/card_enums.dart';
@@ -13,11 +13,46 @@ import 'deck_providers.dart';
 import 'widgets/deck_name_dialog.dart';
 
 /// The deck list — every deck the user has built.
-class DecksScreen extends ConsumerWidget {
+class DecksScreen extends ConsumerStatefulWidget {
   const DecksScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DecksScreen> createState() => _DecksScreenState();
+}
+
+class _DecksScreenState extends ConsumerState<DecksScreen> {
+  final _controller = TextEditingController();
+  String _query = '';
+
+  /// A search box only earns its space once the shelf is long enough that a
+  /// deck can be off screen.
+  static const _searchFrom = 4;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Decks whose own name or one of their revision names contains the query.
+  ///
+  /// Revisions count because that is where a deck's variants are named — a
+  /// list called "Blue Flare" with a revision called "post-BT25" is what the
+  /// user is looking for when they type either.
+  List<Deck> _matching(List<Deck> decks) {
+    final needle = _query.trim().toLowerCase();
+    if (needle.isEmpty) return decks;
+    return decks
+        .where(
+          (deck) =>
+              deck.name.toLowerCase().contains(needle) ||
+              deck.revisions.any((r) => r.name.toLowerCase().contains(needle)),
+        )
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final decks = ref.watch(decksProvider);
 
     return Scaffold(
@@ -25,7 +60,7 @@ class DecksScreen extends ConsumerWidget {
         title: const Text('Decks'),
         actions: [
           IconButton(
-            onPressed: () => context.push('/decks/import'),
+            onPressed: () => context.pushOnce('/decks/import'),
             icon: const Icon(Icons.file_download_outlined),
             tooltip: 'Import deck list',
           ),
@@ -45,26 +80,71 @@ class DecksScreen extends ConsumerWidget {
           title: 'Could not load decks',
           message: '$error',
         ),
-        data: (decks) => decks.isEmpty
-            ? EmptyState(
-                icon: Icons.layers_outlined,
-                title: 'No decks yet',
-                message:
-                    'Build a deck of 50 cards plus up to 5 Digi-Eggs. Every '
-                    'deck keeps its own revisions, so you can try changes '
-                    'without losing what worked.',
-                action: FilledButton.icon(
-                  onPressed: () => _createDeck(context, ref),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Create your first deck'),
-                ),
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                itemCount: decks.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) => _DeckCard(deck: decks[index]),
+        data: (decks) {
+          if (decks.isEmpty) {
+            return EmptyState(
+              icon: Icons.layers_outlined,
+              title: 'No decks yet',
+              message:
+                  'Build a deck of 50 cards plus up to 5 Digi-Eggs. Every '
+                  'deck keeps its own revisions, so you can try changes '
+                  'without losing what worked.',
+              action: FilledButton.icon(
+                onPressed: () => _createDeck(context, ref),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Create your first deck'),
               ),
+            );
+          }
+
+          final visible = _matching(decks);
+          return Column(
+            children: [
+              if (decks.length >= _searchFrom)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: TextField(
+                    controller: _controller,
+                    onChanged: (value) => setState(() => _query = value),
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: 'Search decks',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _query.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () {
+                                _controller.clear();
+                                setState(() => _query = '');
+                              },
+                            ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: visible.isEmpty
+                    ? EmptyState(
+                        icon: Icons.search_off,
+                        title: 'No decks match',
+                        message: 'Nothing here is called "${_query.trim()}".',
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                        itemCount: visible.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) =>
+                            _DeckCard(deck: visible[index]),
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -76,7 +156,7 @@ class DecksScreen extends ConsumerWidget {
   /// rename it in place.
   Future<void> _createDeck(BuildContext context, WidgetRef ref) async {
     final deckId = await ref.read(deckDaoProvider).createDeck();
-    if (context.mounted) context.push('/decks/$deckId');
+    if (context.mounted) context.pushOnce('/decks/$deckId');
   }
 }
 
@@ -186,7 +266,7 @@ class _DeckCard extends ConsumerWidget {
       color: AppSurfaces.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: () => context.push('/decks/${deck.id}'),
+        onTap: () => context.pushOnce('/decks/${deck.id}'),
         onLongPress: () => showDeckActionsSheet(context, ref, deck),
         borderRadius: BorderRadius.circular(14),
         child: Container(
