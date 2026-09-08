@@ -298,20 +298,24 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     if (filter.traits.isNotEmpty) {
       predicate =
           predicate &
-          cards.id.isInQuery(
-            selectOnly(cardTraits)
+          _linked(
+            filter.traits,
+            filter.traitMatchMode,
+            (values) => selectOnly(cardTraits)
               ..addColumns([cardTraits.cardId])
-              ..where(cardTraits.trait.isIn(filter.traits)),
+              ..where(cardTraits.trait.isIn(values)),
           );
     }
 
     if (filter.keywords.isNotEmpty) {
       predicate =
           predicate &
-          cards.id.isInQuery(
-            selectOnly(cardKeywords)
+          _linked(
+            filter.keywords,
+            filter.keywordMatchMode,
+            (values) => selectOnly(cardKeywords)
               ..addColumns([cardKeywords.cardId])
-              ..where(cardKeywords.keyword.isIn(filter.keywords)),
+              ..where(cardKeywords.keyword.isIn(values)),
           );
     }
 

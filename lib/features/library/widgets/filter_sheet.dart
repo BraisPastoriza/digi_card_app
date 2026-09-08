@@ -274,6 +274,9 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 onSelect: (keyword) => _edit(
                   (f) => f.copyWith(keywords: _toggled(f.keywords, keyword)),
                 ),
+                matchMode: _draft.keywordMatchMode,
+                onMatchModeChanged: (mode) =>
+                    _edit((f) => f.copyWith(keywordMatchMode: mode)),
               ),
               _AsyncChipSection(
                 title: 'Rarity',
@@ -327,6 +330,9 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                   if (picked != null) _edit((f) => f.copyWith(traits: picked));
                 },
                 onClear: () => _edit((f) => f.copyWith(traits: const {})),
+                matchMode: _draft.traitMatchMode,
+                onMatchModeChanged: (mode) =>
+                    _edit((f) => f.copyWith(traitMatchMode: mode)),
               ),
               _PickerSection(
                 title: 'Expansion',
@@ -575,6 +581,8 @@ class _AsyncChipSection extends StatefulWidget {
     required this.onToggle,
     required this.onSelect,
     this.searchable = false,
+    this.matchMode,
+    this.onMatchModeChanged,
   });
 
   final String title;
@@ -584,6 +592,11 @@ class _AsyncChipSection extends StatefulWidget {
   final VoidCallback onToggle;
   final void Function(String) onSelect;
   final bool searchable;
+
+  /// Set on the facets a card can hold several of at once, where two chips
+  /// can mean either "one of these" or "both of these".
+  final MatchMode? matchMode;
+  final void Function(MatchMode)? onMatchModeChanged;
 
   @override
   State<_AsyncChipSection> createState() => _AsyncChipSectionState();
@@ -650,6 +663,13 @@ class _AsyncChipSectionState extends State<_AsyncChipSection> {
                   selected: widget.selected,
                   onToggle: widget.onSelect,
                 ),
+              if (widget.matchMode != null && widget.selected.length > 1) ...[
+                const SizedBox(height: 12),
+                _MatchModeToggle(
+                  mode: widget.matchMode!,
+                  onChanged: widget.onMatchModeChanged!,
+                ),
+              ],
             ],
           );
         },
@@ -802,6 +822,8 @@ class _PickerSection extends StatelessWidget {
     required this.onOpen,
     required this.onClear,
     this.labelOf,
+    this.matchMode,
+    this.onMatchModeChanged,
   });
 
   final String title;
@@ -809,6 +831,10 @@ class _PickerSection extends StatelessWidget {
   final Future<void> Function() onOpen;
   final VoidCallback onClear;
   final String Function(String)? labelOf;
+
+  /// See [_AsyncChipSection.matchMode].
+  final MatchMode? matchMode;
+  final void Function(MatchMode)? onMatchModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -853,8 +879,47 @@ class _PickerSection extends StatelessWidget {
             ],
           ),
         ),
+        if (matchMode != null && selected.length > 1)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _MatchModeToggle(
+                mode: matchMode!,
+                onChanged: onMatchModeChanged!,
+              ),
+            ),
+          ),
         const Divider(height: 1),
       ],
+    );
+  }
+}
+
+/// Whether the values picked in a facet are read as "either" or "both".
+///
+/// Only shown once two values are selected, because with one of them the
+/// question does not arise.
+class _MatchModeToggle extends StatelessWidget {
+  const _MatchModeToggle({required this.mode, required this.onChanged});
+
+  final MatchMode mode;
+  final void Function(MatchMode) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<MatchMode>(
+      segments: [
+        for (final value in MatchMode.values)
+          ButtonSegment(value: value, label: Text(value.label)),
+      ],
+      selected: {mode},
+      showSelectedIcon: false,
+      style: const ButtonStyle(
+        visualDensity: VisualDensity.compact,
+        textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+      ),
+      onSelectionChanged: (selection) => onChanged(selection.first),
     );
   }
 }

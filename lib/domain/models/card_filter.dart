@@ -27,6 +27,21 @@ enum ColorMatchMode {
   final String label;
 }
 
+/// Whether a card must carry every selected value of a facet or just one of
+/// them.
+///
+/// Colours keep their own [ColorMatchMode] because a card can also be printed
+/// in *exactly* the colours asked for, which a card's traits and keywords —
+/// open-ended lists — have no equivalent of.
+enum MatchMode {
+  any('Any of'),
+  all('All of');
+
+  const MatchMode(this.label);
+
+  final String label;
+}
+
 /// How a search treats token cards.
 ///
 /// Tokens belong in the library — they are printed with the sets and players
@@ -89,10 +104,13 @@ class CardFilter {
     this.levels = const {},
     this.rarities = const {},
     this.traits = const {},
+    this.traitMatchMode = MatchMode.any,
     this.keywords = const {},
+    this.keywordMatchMode = MatchMode.any,
     this.forms = const {},
     this.attributes = const {},
     this.releaseIds = const {},
+    this.cardNumbers = const {},
     this.playCost = const RangeFilter(),
     this.digivolveCost = const RangeFilter(),
     this.dp = const RangeFilter(),
@@ -113,10 +131,27 @@ class CardFilter {
   final Set<int> levels;
   final Set<String> rarities;
   final Set<String> traits;
+
+  /// Whether a card needs all the selected traits or any one of them. A deck
+  /// is built out of cards that are, say, both Dragon *and* Vaccine, which an
+  /// "any of" search buries under everything that is only one of the two.
+  final MatchMode traitMatchMode;
+
   final Set<String> keywords;
+  final MatchMode keywordMatchMode;
   final Set<String> forms;
   final Set<String> attributes;
   final Set<String> releaseIds;
+
+  /// Restricts the search to these printed card numbers, or the whole library
+  /// when empty.
+  ///
+  /// This is the *source* being searched rather than a facet the user picked:
+  /// it is how the deck builder narrows a search to one staple list, so it
+  /// carries no chip, does not count towards [activeFacetCount], and survives
+  /// [clearedFacets] — clearing the filters inside a list should leave you in
+  /// the list.
+  final Set<String> cardNumbers;
 
   /// Play cost for Digimon and Tamers, use cost for Options.
   final RangeFilter playCost;
@@ -155,6 +190,7 @@ class CardFilter {
       forms.isEmpty &&
       attributes.isEmpty &&
       releaseIds.isEmpty &&
+      cardNumbers.isEmpty &&
       playCost.isEmpty &&
       digivolveCost.isEmpty &&
       dp.isEmpty &&
@@ -215,10 +251,13 @@ class CardFilter {
     Set<int>? levels,
     Set<String>? rarities,
     Set<String>? traits,
+    MatchMode? traitMatchMode,
     Set<String>? keywords,
+    MatchMode? keywordMatchMode,
     Set<String>? forms,
     Set<String>? attributes,
     Set<String>? releaseIds,
+    Set<String>? cardNumbers,
     RangeFilter? playCost,
     RangeFilter? digivolveCost,
     RangeFilter? dp,
@@ -236,10 +275,13 @@ class CardFilter {
     levels: levels ?? this.levels,
     rarities: rarities ?? this.rarities,
     traits: traits ?? this.traits,
+    traitMatchMode: traitMatchMode ?? this.traitMatchMode,
     keywords: keywords ?? this.keywords,
+    keywordMatchMode: keywordMatchMode ?? this.keywordMatchMode,
     forms: forms ?? this.forms,
     attributes: attributes ?? this.attributes,
     releaseIds: releaseIds ?? this.releaseIds,
+    cardNumbers: cardNumbers ?? this.cardNumbers,
     playCost: playCost ?? this.playCost,
     digivolveCost: digivolveCost ?? this.digivolveCost,
     dp: dp ?? this.dp,
@@ -252,8 +294,27 @@ class CardFilter {
   );
 
   /// Clears every facet but keeps the text query and sort, which the search
-  /// bar owns.
-  CardFilter clearedFacets() => CardFilter(query: query, sort: sort);
+  /// bar owns, and the card numbers being searched, which are the source
+  /// rather than a filter.
+  CardFilter clearedFacets() =>
+      CardFilter(query: query, sort: sort, cardNumbers: cardNumbers);
+
+  /// One chip per value when any of them will do, and a single chip naming
+  /// the mode when every one of them is required — "All of Dragon, Vaccine"
+  /// reads as the one condition it is, so it comes off as one.
+  List<FacetChip> _valueFacets(
+    Set<String> values,
+    MatchMode mode,
+    CardFilter Function(Set<String>) replaced,
+  ) => mode == MatchMode.all && values.length > 1
+      ? [FacetChip('${mode.label} ${values.join(', ')}', replaced(const {}))]
+      : [
+          for (final value in values)
+            FacetChip(value, replaced(_without(values, value))),
+        ];
+
+  static Set<T> _without<T>(Set<T> values, T value) =>
+      values.where((v) => v != value).toSet();
 
   // Structural equality, so a filter can key a provider family without a new
   // provider being created on every rebuild.
@@ -264,6 +325,8 @@ class CardFilter {
       other is CardFilter &&
       other.query == query &&
       other.colorMatchMode == colorMatchMode &&
+      other.traitMatchMode == traitMatchMode &&
+      other.keywordMatchMode == keywordMatchMode &&
       other.playCost == playCost &&
       other.digivolveCost == digivolveCost &&
       other.dp == dp &&
@@ -281,12 +344,16 @@ class CardFilter {
       _sets.equals(other.keywords, keywords) &&
       _sets.equals(other.forms, forms) &&
       _sets.equals(other.attributes, attributes) &&
-      _sets.equals(other.releaseIds, releaseIds);
+      _sets.equals(other.releaseIds, releaseIds) &&
+      _sets.equals(other.cardNumbers, cardNumbers);
 
   @override
-  int get hashCode => Object.hash(
+  // `hashAll` rather than `hash`, which takes at most 20 values.
+  int get hashCode => Object.hashAll([
     query,
     colorMatchMode,
+    traitMatchMode,
+    keywordMatchMode,
     playCost,
     digivolveCost,
     dp,
@@ -305,5 +372,6 @@ class CardFilter {
     _sets.hash(forms),
     _sets.hash(attributes),
     _sets.hash(releaseIds),
-  );
+    _sets.hash(cardNumbers),
+  ]);
 }
