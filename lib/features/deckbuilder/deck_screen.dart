@@ -115,6 +115,7 @@ class _DeckViewState extends ConsumerState<_DeckView>
                   value: 'thumbnail',
                   child: Text('Deck thumbnail'),
                 ),
+                const PopupMenuItem(value: 'hand', child: Text('Test hand')),
                 const PopupMenuItem(value: 'export', child: Text('Export')),
                 PopupMenuItem(
                   value: 'clear',
@@ -190,6 +191,13 @@ class _DeckViewState extends ConsumerState<_DeckView>
           deck: deck,
           revisionId: revisionId,
         );
+      case 'hand':
+        // Offered whatever state the deck is in: a deck that cannot be dealt
+        // from says so on the screen itself, which is a better answer than a
+        // menu entry greyed out for reasons it cannot give.
+        final revisionId = deck.activeRevision?.id;
+        if (revisionId == null || !context.mounted) return;
+        context.pushOnce('/decks/${deck.id}/hand/$revisionId');
       case 'export':
         final revisionId = deck.activeRevision?.id;
         if (revisionId == null || !context.mounted) return;

@@ -31,7 +31,10 @@ requirements, alternate arts, official rulings, errata and restriction status.
 against the official rules and the current restriction list as you build.
 Every deck holds named **revisions**: one is active and takes your edits, and
 you can branch a new one from it to try a change without losing the list that
-was working.
+was working. A finished deck can be dealt as a **test hand** — five cards and
+five security off a shuffled main deck, redealt as often as you like — which
+is the only way to see how often the list actually opens the way it is meant
+to.
 
 Everything runs offline. The card database is downloaded once and stored
 locally; card images are cached as you view them.

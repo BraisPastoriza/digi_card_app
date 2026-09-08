@@ -112,6 +112,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                           ),
                         ),
                       ),
+                      GoRoute(
+                        path: 'hand/:revisionId',
+                        builder: (_, state) => TestHandScreen(
+                          deckId: int.parse(state.pathParameters['deckId']!),
+                          revisionId: int.parse(
+                            state.pathParameters['revisionId']!,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
