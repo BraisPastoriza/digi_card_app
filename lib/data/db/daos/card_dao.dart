@@ -372,6 +372,22 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     return predicate;
   }
 
+  /// Cards joined to [values] in a link table, as [mode] reads them.
+  ///
+  /// An `IN` list can only ever mean "or", so requiring every value takes one
+  /// subquery per value: a card carrying both traits is in all of them.
+  Expression<bool> _linked(
+    Set<String> values,
+    MatchMode mode,
+    BaseSelectStatement Function(Set<String>) cardIdsWith,
+  ) => switch (mode) {
+    MatchMode.any => cards.id.isInQuery(cardIdsWith(values)),
+    MatchMode.all =>
+      values
+          .map((value) => cards.id.isInQuery(cardIdsWith({value})))
+          .reduce((a, b) => a & b),
+  };
+
   /// Matches the token printings.
   ///
   /// Nothing in the card data marks a token, so this mirrors
