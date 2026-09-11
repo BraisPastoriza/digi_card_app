@@ -18,6 +18,7 @@ class CardThumbnail extends StatelessWidget {
     required this.card,
     this.borderRadius = 10,
     this.showColorEdge = true,
+    this.showRestriction = true,
     this.fit = BoxFit.cover,
   });
 
@@ -28,6 +29,14 @@ class CardThumbnail extends StatelessWidget {
   /// the colour readable when the art itself is dark.
   final bool showColorEdge;
 
+  /// Marks the card when the restriction list limits it.
+  ///
+  /// It belongs on the picture rather than on any one screen: how many copies
+  /// a card may run is a property of the card, and it is needed wherever cards
+  /// are being looked at — in the library, in a deck, in a staple list. Turned
+  /// off where something else already says it in words.
+  final bool showRestriction;
+
   /// `cover` in grids, where every tile is already the card's aspect ratio.
   /// Anywhere the box is a different shape this must be `contain`, or the
   /// card's own borders and its number get cropped away.
@@ -36,6 +45,26 @@ class CardThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(borderRadius);
+    final limitation = card.activeLimitation;
+    // The badge sizes itself against the tile, so the measurement has to be
+    // taken here: inside the Stack a positioned child is handed unbounded
+    // width and would always look like the biggest case.
+    return LayoutBuilder(
+      builder: (context, constraints) => _build(
+        context,
+        radius,
+        limitation,
+        compact: constraints.maxWidth < 130,
+      ),
+    );
+  }
+
+  Widget _build(
+    BuildContext context,
+    BorderRadius radius,
+    CardLimitation? limitation, {
+    required bool compact,
+  }) {
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
@@ -61,7 +90,67 @@ class CardThumbnail extends StatelessWidget {
                 ),
               ),
             ),
+          if (showRestriction && limitation != null)
+            Positioned(
+              // Bottom left is the one corner free across every grid in the
+              // app: copy counts and selection ticks sit at the top, and the
+              // colour edge takes the last three pixels of the bottom.
+              left: 4,
+              bottom: showColorEdge ? 7 : 4,
+              child: _RestrictionBadge(
+                limitation: limitation,
+                compact: compact,
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+/// Says what the restriction list allows of a card, in the space a thumbnail
+/// has: banned cards are called out as such, and a limited card carries the
+/// number it is limited to.
+class _RestrictionBadge extends StatelessWidget {
+  const _RestrictionBadge({required this.limitation, required this.compact});
+
+  final CardLimitation limitation;
+
+  /// Set on the smaller thumbnails — a dealt hand, the strip of art on a
+  /// staple list — where a full-size badge covers the card's own name rather
+  /// than sitting beside it. A grid tile is around 150 wide and takes the
+  /// full size; the strips are around 110.
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final banned = limitation.effectiveAllowance == 0;
+    final background = banned ? scheme.error : DigimonColors.yellow;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 3 : 5,
+        vertical: compact ? 1 : 2,
+      ),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: AppSurfaces.background.withValues(alpha: 0.7),
+        ),
+      ),
+      child: Text(
+        banned ? 'BAN' : '×${limitation.effectiveAllowance}',
+        style: TextStyle(
+          fontSize: compact ? 8 : 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.2,
+          height: 1.1,
+          // Black on yellow, white on red: both are the readable pairing, and
+          // the badge has to work over whatever art is behind it.
+          color: banned ? scheme.onError : Colors.black,
+        ),
       ),
     );
   }

@@ -477,6 +477,9 @@ class _DeckArt extends StatelessWidget {
               card: entry.card,
               borderRadius: 8,
               showColorEdge: false,
+              // Here the art stands in for the deck rather than for the card,
+              // so what the restriction list says about it is beside the point.
+              showRestriction: false,
             ),
     );
   }

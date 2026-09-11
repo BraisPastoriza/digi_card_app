@@ -120,6 +120,9 @@ class _CardDetailViewState extends State<_CardDetailView> {
                           card: widget.printings[index],
                           borderRadius: 14,
                           showColorEdge: false,
+                          // The banner below spells the restriction out; a
+                          // badge over the art as well would be shouting.
+                          showRestriction: false,
                           // The page slot is not the card's aspect ratio, so
                           // covering would crop the top and bottom off the art.
                           fit: BoxFit.contain,
