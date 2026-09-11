@@ -396,10 +396,16 @@ class _DeckCounter extends StatelessWidget {
             total: DeckRules.maxEggDeckSize,
             complete: eggs <= DeckRules.maxEggDeckSize,
           ),
-          const Spacer(),
-          Text(
-            context.l10n.pickerTapHint,
-            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+          // The hint takes what the counters leave rather than pushing off the
+          // end of the row: how long it runs depends on the language.
+          Expanded(
+            child: Text(
+              context.l10n.pickerTapHint,
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+            ),
           ),
         ],
       ),

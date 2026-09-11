@@ -148,19 +148,26 @@ class _StapleCardPickerScreenState
             color: AppSurfaces.surface,
             child: Row(
               children: [
-                Text(
-                  list == null
-                      ? ''
-                      : context.l10n.staplePickerSummary(
-                          list.name,
-                          list.count,
-                        ),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                // The list is named by the user and the hint by the
+                // translation, so neither can be given a fixed share: the name
+                // gives way first, being the one the reader already knows.
+                Expanded(
+                  child: Text(
+                    list == null
+                        ? ''
+                        : context.l10n.staplePickerSummary(
+                            list.name,
+                            list.count,
+                          ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Text(
                   context.l10n.staplePickerTapHint,
                   style: TextStyle(

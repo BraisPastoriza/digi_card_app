@@ -116,12 +116,16 @@ class _LegalityCard extends StatelessWidget {
                 color: accent,
               ),
               const SizedBox(width: 8),
-              Text(
-                legal ? context.l10n.statsLegal : context.l10n.statsNotLegal,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: accent,
+              Flexible(
+                child: Text(
+                  legal ? context.l10n.statsLegal : context.l10n.statsNotLegal,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
                 ),
               ),
               const Spacer(),

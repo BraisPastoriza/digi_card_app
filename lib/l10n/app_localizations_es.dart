@@ -1170,13 +1170,13 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get pickerMainDeck => 'Mazo principal';
+  String get pickerMainDeck => 'Principal';
 
   @override
-  String get pickerEggDeck => 'Mazo de huevos';
+  String get pickerEggDeck => 'Huevos';
 
   @override
-  String get pickerTapHint => 'Toca una carta para ajustar las copias';
+  String get pickerTapHint => 'Toca para ajustar las copias';
 
   @override
   String get addToDeckTokenBlocked =>
