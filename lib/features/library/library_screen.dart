@@ -14,6 +14,7 @@ import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
 import 'attribution_screen.dart';
 import 'library_providers.dart';
+import 'widgets/language_sheet.dart';
 import 'preview_providers.dart';
 import 'widgets/release_tile.dart';
 
@@ -74,6 +75,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
               snap: true,
               title: Text(context.l10n.libraryTitle),
               actions: [
+                IconButton(
+                  onPressed: () => showLanguageSheet(context),
+                  icon: const Icon(Icons.translate),
+                  tooltip: context.l10n.languageTitle,
+                ),
                 IconButton(
                   onPressed: () => _showDatabaseInfo(context),
                   icon: const Icon(Icons.info_outline),

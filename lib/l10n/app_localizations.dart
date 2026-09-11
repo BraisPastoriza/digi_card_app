@@ -2489,6 +2489,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import'**
   String get importAction;
+
+  /// No description provided for @languageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageTitle;
+
+  /// No description provided for @languageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Card names and card text stay in English, which is the language the cards are printed in.'**
+  String get languageSubtitle;
+
+  /// No description provided for @languageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Match my device'**
+  String get languageSystem;
+
+  /// Which language following the device currently works out to.
+  ///
+  /// In en, this message translates to:
+  /// **'Now: {language}'**
+  String languageSystemDetail(String language);
 }
 
 class _AppLocalizationsDelegate

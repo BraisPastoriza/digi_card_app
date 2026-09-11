@@ -1560,4 +1560,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importAction => 'Import';
+
+  @override
+  String get languageTitle => 'Language';
+
+  @override
+  String get languageSubtitle =>
+      'Card names and card text stay in English, which is the language the cards are printed in.';
+
+  @override
+  String get languageSystem => 'Match my device';
+
+  @override
+  String languageSystemDetail(String language) {
+    return 'Now: $language';
+  }
 }

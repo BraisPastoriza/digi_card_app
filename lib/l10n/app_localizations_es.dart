@@ -1571,4 +1571,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get importAction => 'Importar';
+
+  @override
+  String get languageTitle => 'Idioma';
+
+  @override
+  String get languageSubtitle =>
+      'Los nombres y los textos de las cartas se quedan en inglés, que es el idioma en el que están impresas.';
+
+  @override
+  String get languageSystem => 'El del dispositivo';
+
+  @override
+  String languageSystemDetail(String language) {
+    return 'Ahora: $language';
+  }
 }

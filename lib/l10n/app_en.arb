@@ -1264,5 +1264,17 @@
     "description": "Name a deck is created with when the user does not supply one. Stored as typed, and renameable afterwards."
   },
   "importImporting": "Importing…",
-  "importAction": "Import"
+  "importAction": "Import",
+  "languageTitle": "Language",
+  "languageSubtitle": "Card names and card text stay in English, which is the language the cards are printed in.",
+  "languageSystem": "Match my device",
+  "languageSystemDetail": "Now: {language}",
+  "@languageSystemDetail": {
+    "description": "Which language following the device currently works out to.",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  }
 }

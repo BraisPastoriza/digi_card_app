@@ -395,5 +395,9 @@
   "stapleImportAndMore": "y {count} más",
   "defaultDeckName": "Mazo nuevo",
   "importImporting": "Importando…",
-  "importAction": "Importar"
+  "importAction": "Importar",
+  "languageTitle": "Idioma",
+  "languageSubtitle": "Los nombres y los textos de las cartas se quedan en inglés, que es el idioma en el que están impresas.",
+  "languageSystem": "El del dispositivo",
+  "languageSystemDetail": "Ahora: {language}"
 }
