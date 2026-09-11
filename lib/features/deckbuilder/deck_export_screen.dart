@@ -13,6 +13,8 @@ import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck.dart';
 import '../../domain/models/deck_list.dart';
+import '../../l10n/l10n.dart';
+import '../../l10n/labels.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
 import 'widgets/deck_sheet.dart';
@@ -47,11 +49,11 @@ class DeckExportScreen extends ConsumerWidget {
             onPressed: () => context.goBack('/decks/$deckId'),
             icon: const Icon(Icons.arrow_back),
           ),
-          title: const Text('Export'),
-          bottom: const TabBar(
+          title: Text(context.l10n.exportTitle),
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Image'),
-              Tab(text: 'Text'),
+              Tab(text: context.l10n.exportTabImage),
+              Tab(text: context.l10n.exportTabText),
             ],
           ),
         ),
@@ -59,21 +61,21 @@ class DeckExportScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => EmptyState(
             icon: Icons.error_outline,
-            title: 'Could not load this revision',
+            title: context.l10n.revisionLoadError,
             message: '$error',
           ),
           data: (composition) {
             if (composition.allEntries.isEmpty) {
-              return const EmptyState(
+              return EmptyState(
                 icon: Icons.add_card,
-                title: 'Nothing to export',
-                message: 'This revision has no cards in it yet.',
+                title: context.l10n.exportNothingTitle,
+                message: context.l10n.exportNothingMessage,
               );
             }
             return TabBarView(
               children: [
                 _ImageExportTab(
-                  deckName: deck?.name ?? 'Deck',
+                  deckName: deck?.name ?? context.l10n.exportFallbackDeckName,
                   revisionName: revision?.name ?? '',
                   composition: composition,
                 ),
@@ -157,19 +159,22 @@ class _ImageExportTabState extends State<_ImageExportTab> {
   }
 
   Future<void> _saveToGallery() async {
+    // Read before the first await: the strings are needed after it, and by
+    // then the context may no longer be worth asking.
+    final l10n = context.l10n;
     setState(() => _saving = true);
     try {
       final bytes = await _capture();
       if (bytes == null) {
-        _report('Could not render the deck image.');
+        _report(l10n.exportRenderFailed);
         return;
       }
       if (!await Gal.requestAccess()) {
-        _report('DigiCard needs permission to save to your gallery.');
+        _report(l10n.exportNeedsPermission);
         return;
       }
       await Gal.putImageBytes(bytes, name: _fileName());
-      _report('Saved to your gallery.');
+      _report(l10n.exportSaved);
     } on GalException catch (error) {
       _report(error.type.message);
     } finally {
@@ -202,13 +207,13 @@ class _ImageExportTabState extends State<_ImageExportTab> {
       future: _artwork,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Loading card art…'),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(context.l10n.exportLoadingArt),
               ],
             ),
           );
@@ -223,7 +228,10 @@ class _ImageExportTabState extends State<_ImageExportTab> {
                 child: SegmentedButton<DeckSheetLayout>(
                   segments: [
                     for (final layout in DeckSheetLayout.values)
-                      ButtonSegment(value: layout, label: Text(layout.label)),
+                      ButtonSegment(
+                        value: layout,
+                        label: Text(layout.name(context.l10n)),
+                      ),
                   ],
                   selected: {_layout},
                   showSelectedIcon: false,
@@ -261,8 +269,9 @@ class _ImageExportTabState extends State<_ImageExportTab> {
                 child: Column(
                   children: [
                     Text(
-                      '${_layout.description}. Pinch to look closer — the '
-                      'saved image is full size.',
+                      context.l10n.exportLayoutHint(
+                        _layout.summary(context.l10n),
+                      ),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -283,7 +292,11 @@ class _ImageExportTabState extends State<_ImageExportTab> {
                                 ),
                               )
                             : const Icon(Icons.download, size: 18),
-                        label: Text(_saving ? 'Saving…' : 'Save to gallery'),
+                        label: Text(
+                          _saving
+                              ? context.l10n.exportSaving
+                              : context.l10n.exportSaveToGallery,
+                        ),
                       ),
                     ),
                   ],
@@ -315,7 +328,13 @@ class _TextExportTabState extends State<_TextExportTab> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('${_format.label} list copied.')));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.exportListCopied(_format.name(context.l10n)),
+          ),
+        ),
+      );
   }
 
   @override
@@ -332,7 +351,10 @@ class _TextExportTabState extends State<_TextExportTab> {
             child: SegmentedButton<DeckListFormat>(
               segments: [
                 for (final format in DeckListFormat.values)
-                  ButtonSegment(value: format, label: Text(format.label)),
+                  ButtonSegment(
+                    value: format,
+                    label: Text(format.name(context.l10n)),
+                  ),
               ],
               selected: {_format},
               showSelectedIcon: false,
@@ -383,7 +405,7 @@ class _TextExportTabState extends State<_TextExportTab> {
               child: FilledButton.icon(
                 onPressed: () => _copy(text),
                 icon: const Icon(Icons.copy_all, size: 18),
-                label: const Text('Copy to clipboard'),
+                label: Text(context.l10n.exportCopyToClipboard),
               ),
             ),
           ),

@@ -11,6 +11,7 @@ import '../../domain/models/digimon_card.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import '../library/library_providers.dart';
+import '../../l10n/l10n.dart';
 import '../library/widgets/filter_sheet.dart';
 import 'staple_providers.dart';
 
@@ -78,7 +79,7 @@ class _StapleCardPickerScreenState
         ..removeCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text('Removed ${card.name}'),
+            content: Text(context.l10n.stapleRemoved(card.name)),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -111,8 +112,8 @@ class _StapleCardPickerScreenState
                       controller: _controller,
                       textInputAction: TextInputAction.search,
                       onChanged: _onQueryChanged,
-                      decoration: const InputDecoration(
-                        hintText: 'Add cards to the list…',
+                      decoration: InputDecoration(
+                        hintText: context.l10n.staplePickerHint,
                         prefixIcon: Icon(Icons.search, size: 20),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -150,8 +151,10 @@ class _StapleCardPickerScreenState
                 Text(
                   list == null
                       ? ''
-                      : '${list.name} · ${list.count} '
-                            '${list.count == 1 ? 'card' : 'cards'}',
+                      : context.l10n.staplePickerSummary(
+                          list.name,
+                          list.count,
+                        ),
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -159,7 +162,7 @@ class _StapleCardPickerScreenState
                 ),
                 const Spacer(),
                 Text(
-                  'Tap to add or remove',
+                  context.l10n.staplePickerTapHint,
                   style: TextStyle(
                     fontSize: 11,
                     color: scheme.onSurfaceVariant,
@@ -173,14 +176,14 @@ class _StapleCardPickerScreenState
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => EmptyState(
                 icon: Icons.error_outline,
-                title: 'Search failed',
+                title: context.l10n.searchFailed,
                 message: '$error',
               ),
               data: (state) => state.cards.isEmpty
-                  ? const EmptyState(
+                  ? EmptyState(
                       icon: Icons.search_off,
-                      title: 'No cards found',
-                      message: 'Try a different search or clear the filters.',
+                      title: context.l10n.searchNoCards,
+                      message: context.l10n.pickerNoCardsFiltered,
                     )
                   : CustomScrollView(
                       controller: _scrollController,

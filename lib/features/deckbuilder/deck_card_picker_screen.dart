@@ -11,6 +11,8 @@ import '../../domain/models/deck.dart';
 import '../../domain/models/digimon_card.dart';
 import '../../shared/widgets/common.dart';
 import '../library/library_providers.dart';
+import '../../l10n/l10n.dart';
+import '../../l10n/labels.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../library/widgets/filter_sheet.dart';
 import 'widgets/deck_card_tile.dart';
@@ -123,9 +125,11 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
       final limitedBy = card.activeLimitation;
       if (limitedBy != null) {
         _say(
-          '${card.name} is ${limitedBy.type.label.toLowerCase()} to '
-          '${card.copyLimit} '
-          '${card.copyLimit == 1 ? 'copy' : 'copies'}.',
+          context.l10n.pickerCopyCapped(
+            card.name,
+            limitedBy.type.name(context.l10n).toLowerCase(),
+            card.copyLimit,
+          ),
         );
       }
       return;
@@ -147,9 +151,10 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
     if (conflicts.isEmpty) return;
 
     _say(
-      '${card.name} is a banned pair with '
-      '${conflicts.map((e) => e.card.name).join(', ')}. '
-      'A deck may run either, not both.',
+      context.l10n.pickerBannedPairWarning(
+        card.name,
+        conflicts.map((e) => e.card.name).join(', '),
+      ),
     );
   }
 
@@ -186,10 +191,10 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                       controller: _controller,
                       textInputAction: TextInputAction.search,
                       onChanged: _onQueryChanged,
-                      decoration: const InputDecoration(
-                        hintText: 'Add cards…',
-                        prefixIcon: Icon(Icons.search, size: 20),
-                        contentPadding: EdgeInsets.symmetric(
+                      decoration: InputDecoration(
+                        hintText: context.l10n.pickerSearchHint,
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 10,
                         ),
@@ -232,17 +237,16 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => EmptyState(
                 icon: Icons.error_outline,
-                title: 'Search failed',
+                title: context.l10n.searchFailed,
                 message: '$error',
               ),
               data: (state) => state.cards.isEmpty
                   ? EmptyState(
                       icon: Icons.search_off,
-                      title: 'No cards found',
+                      title: context.l10n.searchNoCards,
                       message: filter.cardNumbers.isEmpty
-                          ? 'Try a different search or clear the filters.'
-                          : 'Nothing in this list matches. Try another '
-                                'source, search or filter.',
+                          ? context.l10n.pickerNoCardsFiltered
+                          : context.l10n.pickerNoCardsInList,
                       action: filter.activeFacetCount == 0
                           ? null
                           : OutlinedButton(
@@ -253,7 +257,7 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
                                     ).notifier,
                                   )
                                   .clearFacets(),
-                              child: const Text('Clear filters'),
+                              child: Text(context.l10n.searchClearFilters),
                             ),
                     )
                   : GestureDetector(
@@ -327,7 +331,7 @@ class _StapleSources extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 6),
             child: ChoiceChip(
-              label: const Text('All cards'),
+              label: Text(context.l10n.pickerAllCards),
               selected: selected.isEmpty,
               visualDensity: VisualDensity.compact,
               labelStyle: const TextStyle(fontSize: 12),
@@ -338,7 +342,9 @@ class _StapleSources extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: ChoiceChip(
-                label: Text('${list.name} · ${list.count}'),
+                label: Text(
+                  context.l10n.pickerListChip(list.name, list.count),
+                ),
                 // A list is the source when the search is scoped to exactly
                 // its cards; comparing the sets keeps two lists that happen
                 // to overlap from both looking selected.
@@ -378,21 +384,21 @@ class _DeckCounter extends StatelessWidget {
       child: Row(
         children: [
           _Counter(
-            label: 'Main deck',
+            label: context.l10n.pickerMainDeck,
             current: main,
             total: DeckRules.mainDeckSize,
             complete: main == DeckRules.mainDeckSize,
           ),
           const SizedBox(width: 20),
           _Counter(
-            label: 'Egg deck',
+            label: context.l10n.pickerEggDeck,
             current: eggs,
             total: DeckRules.maxEggDeckSize,
             complete: eggs <= DeckRules.maxEggDeckSize,
           ),
           const Spacer(),
           Text(
-            'Tap a card to set copies',
+            context.l10n.pickerTapHint,
             style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
           ),
         ],

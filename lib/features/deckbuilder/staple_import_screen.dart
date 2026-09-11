@@ -7,6 +7,7 @@ import '../../core/providers.dart';
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck_list.dart';
+import '../../l10n/l10n.dart';
 import '../../domain/models/staple_list.dart';
 import 'staple_providers.dart';
 
@@ -59,10 +60,11 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
       _matches?.where((m) => !m.isResolved).toList() ?? const [];
 
   Future<void> _paste() async {
+    final l10n = context.l10n;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
     if (text == null || text.trim().isEmpty) {
-      _report('The clipboard has no text in it.');
+      _report(l10n.importClipboardEmpty);
       return;
     }
     setState(() {
@@ -131,14 +133,13 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
           onPressed: () => context.goBack('/decks'),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('Import a staple list'),
+        title: Text(context.l10n.stapleImportTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           Text(
-            'Paste a list of cards — the export from this app, or any deck '
-            'list. Copies are ignored: a staple list holds each card once.',
+            context.l10n.stapleImportExplainer,
             style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
@@ -151,7 +152,7 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
               hintText: '1 Gravity Crush BT1-090\n1 Jack Raid BT4-111',
               alignLabelWithHint: true,
               suffixIcon: IconButton(
-                tooltip: 'Paste',
+                tooltip: context.l10n.importPaste,
                 onPressed: _paste,
                 icon: const Icon(Icons.content_paste, size: 20),
               ),
@@ -162,26 +163,30 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
             onPressed: _listController.text.trim().isEmpty || _reading
                 ? null
                 : _read,
-            child: Text(_reading ? 'Reading…' : 'Read the list'),
+            child: Text(
+              _reading
+                  ? context.l10n.importReading
+                  : context.l10n.importReadList,
+            ),
           ),
           if (matches != null) ...[
             const SizedBox(height: 20),
             _Summary(resolved: _resolved.length, unresolved: _unresolved),
             const SizedBox(height: 16),
             Text(
-              'Where it goes',
+              context.l10n.stapleImportDestination,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             SegmentedButton<_Destination>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: _Destination.newList,
-                  label: Text('New list'),
+                  label: Text(context.l10n.stapleImportNewList),
                 ),
                 ButtonSegment(
                   value: _Destination.existingList,
-                  label: Text('Add to a list'),
+                  label: Text(context.l10n.stapleImportAddToList),
                 ),
               ],
               selected: {_destination},
@@ -193,26 +198,31 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
             if (_destination == _Destination.newList)
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'List name',
-                  hintText: 'Blue tech',
+                decoration: InputDecoration(
+                  labelText: context.l10n.stapleNameLabel,
+                  hintText: context.l10n.stapleImportNameHint,
                 ),
               )
             else if (lists.isEmpty)
               Text(
-                'You have no lists to add to yet.',
+                context.l10n.stapleImportNoLists,
                 style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
               )
             else
               DropdownButtonFormField<int>(
                 initialValue: _targetListId ?? lists.first.id,
-                decoration: const InputDecoration(labelText: 'List'),
+                decoration: InputDecoration(
+                  labelText: context.l10n.stapleImportListField,
+                ),
                 items: [
                   for (final list in lists)
                     DropdownMenuItem(
                       value: list.id,
                       child: Text(
-                        '${list.name} · ${list.count}',
+                        context.l10n.stapleImportListOption(
+                          list.name,
+                          list.count,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -222,7 +232,9 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _canImport(lists) ? _import : null,
-              child: Text(_importing ? 'Importing…' : _importLabel()),
+              child: Text(
+                _importing ? context.l10n.importImporting : _importLabel(),
+              ),
             ),
           ],
         ],
@@ -238,7 +250,7 @@ class _StapleImportScreenState extends ConsumerState<StapleImportScreen> {
 
   String _importLabel() {
     final count = _resolved.length;
-    return count == 1 ? 'Import 1 card' : 'Import $count cards';
+    return context.l10n.stapleImportButton(count);
   }
 }
 
@@ -264,16 +276,15 @@ class _Summary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            resolved == 1 ? '1 card found' : '$resolved cards found',
+            context.l10n.stapleImportFound(resolved),
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           if (unresolved.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               unresolved.length == 1
-                  ? '1 line matched no card and is left out:'
-                  : '${unresolved.length} lines matched no card and are left '
-                        'out:',
+                  ? context.l10n.stapleImportUnmatched(1)
+                  : context.l10n.stapleImportUnmatched(unresolved.length),
               style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 6),
@@ -286,7 +297,7 @@ class _Summary extends StatelessWidget {
               ),
             if (unresolved.length > 6)
               Text(
-                'and ${unresolved.length - 6} more',
+                context.l10n.stapleImportAndMore(unresolved.length - 6),
                 style: TextStyle(
                   fontSize: 12.5,
                   color: scheme.onSurfaceVariant,

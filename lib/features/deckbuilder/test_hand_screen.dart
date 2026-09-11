@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck.dart';
+import '../../l10n/l10n.dart';
 import '../../domain/models/digimon_card.dart';
 import '../../domain/models/test_hand.dart';
 import '../../shared/widgets/card_thumbnail.dart';
@@ -61,7 +62,7 @@ class _TestHandScreenState extends ConsumerState<TestHandScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Test hand'),
+            Text(context.l10n.handTitle),
             if (revision != null)
               Text(
                 revision.name,
@@ -79,7 +80,7 @@ class _TestHandScreenState extends ConsumerState<TestHandScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => EmptyState(
           icon: Icons.error_outline,
-          title: 'Could not load this revision',
+          title: context.l10n.revisionLoadError,
           message: '$error',
         ),
         data: (composition) {
@@ -87,18 +88,18 @@ class _TestHandScreenState extends ConsumerState<TestHandScreen> {
           if (hand == null) {
             return EmptyState(
               icon: Icons.style_outlined,
-              title: 'Not a full deck yet',
+              title: context.l10n.handNotFullTitle,
               message:
-                  'A test hand is dealt off the ${DeckRules.mainDeckSize} '
-                  'cards of the main deck, which the Digi-Eggs are not part '
-                  'of. This revision has ${composition.mainDeckCount} of '
-                  '${DeckRules.mainDeckSize}.',
+                  context.l10n.handNotFullMessage(
+                    composition.mainDeckCount,
+                    DeckRules.mainDeckSize,
+                  ),
               action: FilledButton.icon(
                 onPressed: () => context.pushOnce(
                   '/decks/${widget.deckId}/add/${widget.revisionId}',
                 ),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add cards'),
+                label: Text(context.l10n.deckAddCards),
               ),
             );
           }
@@ -109,14 +110,14 @@ class _TestHandScreenState extends ConsumerState<TestHandScreen> {
                 child: ListView(
                   padding: const EdgeInsets.only(bottom: 24),
                   children: [
-                    const SectionHeader(
-                      'Opening hand',
-                      subtitle: 'The 5 cards you draw',
+                    SectionHeader(
+                      context.l10n.handOpeningTitle,
+                      subtitle: context.l10n.handOpeningSubtitle,
                     ),
                     _CardRow(cards: hand.hand),
-                    const SectionHeader(
-                      'Security',
-                      subtitle: 'Top of the stack first',
+                    SectionHeader(
+                      context.l10n.handSecurityTitle,
+                      subtitle: context.l10n.handSecuritySubtitle,
                     ),
                     _CardRow(cards: hand.security, numbered: true),
                   ],
@@ -245,7 +246,7 @@ class _DealBar extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: onDeal,
             icon: const Icon(Icons.shuffle, size: 18),
-            label: const Text('Test again'),
+            label: Text(context.l10n.handTestAgain),
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/router/navigation.dart';
+import '../../l10n/l10n.dart';
 import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
 
@@ -20,64 +21,32 @@ class AttributionScreen extends StatelessWidget {
           onPressed: () => context.goBack('/library'),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('Data & credits'),
+        title: Text(context.l10n.creditsTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-        children: const [
+        children: [
           _Section(
-            title: 'Card artwork and card text',
-            body:
-                'All card images, card text and related imagery are the '
-                'intellectual property of © Akiyoshi Hongo, Toei Animation and '
-                '© BANDAI. Their copyrights, trademarks and related rights '
-                'apply.\n\n'
-                'DigiCard App is a fan-made tool. It is not affiliated with, '
-                'endorsed by, or connected to Bandai Namco Entertainment or '
-                'Toei Animation.',
+            title: context.l10n.creditsArtworkTitle,
+            body: context.l10n.creditsArtworkBody,
           ),
           _Section(
-            title: 'Card data — Heroicc',
-            body:
-                'The card database, expansion list and rulings come from the '
-                'Heroicc API.\n\n'
-                'DigiCard App is not affiliated with, endorsed by, or '
-                'connected to Heroicc. Original content provided by Heroicc — '
-                'that is, the parts not owned by Akiyoshi Hongo, Toei '
-                'Animation or BANDAI — is used under the Creative Commons '
-                'Attribution-NonCommercial-ShareAlike 4.0 International '
-                'licence (CC BY-NC-SA 4.0).',
+            title: context.l10n.creditsHeroiTitle,
+            body: context.l10n.creditsHeroiBody,
             link: 'https://api.heroi.cc',
           ),
           _Section(
-            title: 'Preview sets — $secondarySourceName',
-            body:
-                'A set the Heroicc API has not published yet is filled in from '
-                'the digimoncard.io public API so its cards can be searched '
-                'and built with early. Those sets are marked PREVIEW wherever '
-                'they appear.\n\n'
-                'DigiCard App is not affiliated with, endorsed by, or '
-                'connected to digimoncard.io. Preview data is '
-                'community-maintained and still changing: expect gaps and '
-                'corrections, and check anything that matters against the '
-                'printed card.',
+            title: context.l10n.creditsPreviewTitle(secondarySourceName),
+            body: context.l10n.creditsPreviewBody,
             link: 'https://digimoncard.io',
           ),
           _Section(
-            title: 'How this app treats card images',
-            body:
-                'Card images are shown and exported whole. The app does not '
-                'crop or cover the copyright line or the artist name, and adds '
-                'no watermark, stamp or logo of its own to a card image.',
+            title: context.l10n.creditsImagesTitle,
+            body: context.l10n.creditsImagesBody,
           ),
           _Section(
-            title: 'Caching',
-            body:
-                'The full card list is downloaded once and kept on your '
-                'device, so browsing and deck building make no further '
-                'requests. Both APIs ask callers to cache rather than re-fetch, '
-                'and to identify themselves; this app sends its own '
-                'User-Agent on every request.',
+            title: context.l10n.creditsCachingTitle,
+            body: context.l10n.creditsCachingBody,
           ),
         ],
       ),
@@ -155,9 +124,7 @@ class AttributionFooter extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
-            'Card images and text © Akiyoshi Hongo, Toei Animation, © BANDAI. '
-            'Card data from Heroicc and $secondarySourceName. '
-            'DigiCard App is a fan project, not affiliated with any of them.',
+            context.l10n.creditsFooter(secondarySourceName),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11.5,

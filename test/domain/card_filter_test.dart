@@ -72,7 +72,6 @@ void main() {
 
     test('does not count or show as a facet', () {
       expect(scoped.activeFacetCount, 0);
-      expect(scoped.activeFacets(), isEmpty);
     });
 
     test('survives clearing the facets', () {
@@ -96,75 +95,6 @@ void main() {
     test('two scopes with the same numbers are equal', () {
       expect(scoped, const CardFilter(cardNumbers: {'BT1-002', 'BT1-001'}));
       expect(scoped, isNot(const CardFilter(cardNumbers: {'BT1-001'})));
-    });
-  });
-
-  group('CardFilter.activeFacets', () {
-    test('one chip per trait, each removing only itself', () {
-      const filter = CardFilter(traits: {'Dragon', 'Vaccine'});
-      final facets = filter.activeFacets();
-
-      expect(facets.map((f) => f.label), ['Dragon', 'Vaccine']);
-      expect(facets.first.removed.traits, {'Vaccine'});
-      expect(facets.last.removed.traits, {'Dragon'});
-    });
-
-    test('an all-of set is one chip that comes off whole', () {
-      const filter = CardFilter(
-        traits: {'Dragon', 'Vaccine'},
-        traitMatchMode: MatchMode.all,
-      );
-      final facets = filter.activeFacets();
-
-      expect(facets.single.label, 'All of Dragon, Vaccine');
-      expect(facets.single.removed.traits, isEmpty);
-    });
-
-    test('colours and levels read and clear as one condition each', () {
-      const filter = CardFilter(
-        colors: {CardColor.red, CardColor.blue},
-        levels: {4, 3},
-      );
-      final facets = filter.activeFacets();
-
-      expect(facets.map((f) => f.label), ['Any of Red, Blue', 'Lv. 3, 4']);
-      expect(facets.first.removed.colors, isEmpty);
-      expect(
-        facets.first.removed.levels,
-        {3, 4},
-        reason: 'taking the colours off leaves the levels alone',
-      );
-      expect(facets.last.removed.levels, isEmpty);
-    });
-
-    test('a range and a flag clear themselves', () {
-      const filter = CardFilter(
-        dp: RangeFilter(min: 5000),
-        restrictedOnly: true,
-      );
-      final facets = filter.activeFacets();
-
-      expect(facets.map((f) => f.label), ['DP 5000+', 'Restricted']);
-      expect(facets.first.removed.dp.isEmpty, isTrue);
-      expect(facets.first.removed.restrictedOnly, isTrue);
-      expect(facets.last.removed.restrictedOnly, isFalse);
-    });
-
-    test('removing the last facet leaves nothing but the query', () {
-      const filter = CardFilter(query: 'greymon', keywords: {'Blocker'});
-      final removed = filter.activeFacets().single.removed;
-
-      expect(removed.activeFacetCount, 0);
-      expect(removed.query, 'greymon');
-    });
-  });
-
-  group('RangeFilter.describe', () {
-    test('reads as a range, a floor, or a ceiling', () {
-      expect(const RangeFilter(min: 3, max: 6).describe('Cost'), 'Cost 3-6');
-      expect(const RangeFilter(min: 4, max: 4).describe('Cost'), 'Cost 4');
-      expect(const RangeFilter(min: 4).describe('Cost'), 'Cost 4+');
-      expect(const RangeFilter(max: 4).describe('Cost'), 'Cost ≤4');
     });
   });
 

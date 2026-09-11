@@ -9,6 +9,8 @@ import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../../domain/models/digimon_card.dart';
 import '../../domain/models/pair_restrictions.dart';
+import '../../l10n/l10n.dart';
+import '../../l10n/labels.dart';
 import '../../shared/widgets/card_image_viewer.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
@@ -33,14 +35,14 @@ class CardDetailScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => EmptyState(
           icon: Icons.error_outline,
-          title: 'Could not load card',
+          title: context.l10n.cardLoadError,
           message: '$error',
         ),
         data: (printings) => printings.isEmpty
-            ? const EmptyState(
+            ? EmptyState(
                 icon: Icons.help_outline,
-                title: 'Card not found',
-                message: 'It may have been removed in the last card update.',
+                title: context.l10n.cardNotFound,
+                message: context.l10n.cardNotFoundMessage,
               )
             : _CardDetailView(printings: printings),
       ),
@@ -87,7 +89,7 @@ class _CardDetailViewState extends State<_CardDetailView> {
           title: Text(card.name, overflow: TextOverflow.ellipsis),
           actions: [
             IconButton(
-              tooltip: 'Add to deck',
+              tooltip: context.l10n.cardAddToDeck,
               onPressed: () => showAddToDeckSheet(context, _card),
               icon: const Icon(Icons.add_box_outlined),
             ),
@@ -165,17 +167,20 @@ class _CardDetailViewState extends State<_CardDetailView> {
               if (card.digivolutionRequirements.isNotEmpty)
                 _DigivolveSection(card: card),
               if (card.effect != null)
-                _TextSection(title: 'Effect', text: card.effect!),
+                _TextSection(
+                  title: context.l10n.cardEffect,
+                  text: card.effect!,
+                ),
               if (card.securityEffect != null)
                 _TextSection(
-                  title: 'Security effect',
+                  title: context.l10n.cardSecurityEffect,
                   text: card.securityEffect!,
                 ),
               if (card.inheritedEffect != null)
                 _TextSection(
                   title: card.category == CardCategory.digiEgg
-                      ? 'Inherited effect'
-                      : 'Inherited effects',
+                      ? context.l10n.cardInheritedEffect
+                      : context.l10n.cardInheritedEffects,
                   text: card.inheritedEffect!,
                 ),
               if (card.dualFace != null) _DualFaceSection(face: card.dualFace!),
@@ -231,8 +236,9 @@ class _ArtIndicator extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           current.isBasePrinting
-              ? 'Original art'
-              : current.notes ?? 'Alternate art ${current.parallelId}',
+              ? context.l10n.cardOriginalArt
+              : current.notes ??
+                    context.l10n.cardAlternateArt(current.parallelId),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
         ),
@@ -270,11 +276,15 @@ class _Header extends StatelessWidget {
             runSpacing: 6,
             children: [
               MetaBadge(printing.number, color: scheme.primary),
-              MetaBadge(card.category.label),
+              MetaBadge(card.category.name(context.l10n)),
               if (printing.rarity != null) MetaBadge(printing.rarity!),
-              if (card.blockIcon != null) MetaBadge('Block ${card.blockIcon}'),
+              if (card.blockIcon != null)
+                MetaBadge(context.l10n.cardBlock(card.blockIcon!)),
               if (card.isDual)
-                const MetaBadge('Dual card', color: DigimonColors.yellow),
+                MetaBadge(
+                  context.l10n.cardDualBadge,
+                  color: DigimonColors.yellow,
+                ),
             ],
           ),
           if (card.colors.isNotEmpty) ...[
@@ -285,7 +295,7 @@ class _Header extends StatelessWidget {
                 ColorDots(colors: card.colors, size: 10),
                 const SizedBox(width: 8),
                 Text(
-                  card.colors.map((c) => c.label).join(' / '),
+                  card.colors.map((c) => c.name(context.l10n)).join(' / '),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -339,10 +349,13 @@ class _LimitationBanner extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   banned
-                      ? '${limitation.type.label} — not tournament legal'
-                      : '${limitation.type.label} to '
-                            '${limitation.effectiveAllowance} '
-                            '${limitation.effectiveAllowance == 1 ? 'copy' : 'copies'}',
+                      ? context.l10n.cardNotTournamentLegal(
+                          limitation.type.name(context.l10n),
+                        )
+                      : context.l10n.cardLimitedTo(
+                          limitation.type.name(context.l10n),
+                          limitation.effectiveAllowance,
+                        ),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -445,9 +458,9 @@ class _PairBanBanner extends StatelessWidget {
               children: [
                 const Icon(Icons.link_off_rounded, size: 16, color: accent),
                 const SizedBox(width: 8),
-                const Text(
-                  'Banned pair — playable, but not together',
-                  style: TextStyle(
+                Text(
+                  context.l10n.cardPairBanTitle,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: accent,
@@ -468,10 +481,10 @@ class _PairBanBanner extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               ruling.length == 1
-                  ? 'A deck with this card cannot also run '
-                        '${ruling.single.partnerLabel}.'
-                  : 'A deck with this card cannot also run any of '
-                        '${ruling.map((r) => r.partnerLabel).join(', ')}.',
+                  ? context.l10n.cardPairBanOne(ruling.single.partnerLabel)
+                  : context.l10n.cardPairBanMany(
+                      ruling.map((r) => r.partnerLabel).join(', '),
+                    ),
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.45,
@@ -526,7 +539,7 @@ class _CopyLimitBanner extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'A deck may run up to $limit copies of this card.',
+                context.l10n.cardRaisedCopyLimit(limit),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -548,13 +561,14 @@ class _StatGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final stats = <(String, String)>[
-      if (card.level != null) ('Level', '${card.level}'),
-      if (card.playCost != null) ('Play cost', '${card.playCost}'),
-      if (card.useCost != null) ('Use cost', '${card.useCost}'),
-      if (card.dp != null) ('DP', '${card.dp}'),
-      if (card.form != null) ('Form', card.form!),
-      if (card.attribute != null) ('Attribute', card.attribute!),
+      if (card.level != null) (l10n.cardLevel, '${card.level}'),
+      if (card.playCost != null) (l10n.cardPlayCost, '${card.playCost}'),
+      if (card.useCost != null) (l10n.cardUseCost, '${card.useCost}'),
+      if (card.dp != null) (l10n.cardDp, '${card.dp}'),
+      if (card.form != null) (l10n.cardForm, card.form!),
+      if (card.attribute != null) (l10n.cardAttribute, card.attribute!),
     ];
     if (stats.isEmpty) return const SizedBox.shrink();
 
@@ -698,7 +712,7 @@ class _DigivolveSection extends StatelessWidget {
     final alternatives = requirements.where((r) => r.isAlternative).length;
 
     return _SectionCard(
-      title: 'Digivolution requirements',
+      title: context.l10n.cardDigivolveTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -712,11 +726,7 @@ class _DigivolveSection extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 2, left: 2),
               child: Text(
-                alternatives == 1
-                    ? 'The last condition is printed in the card’s effect '
-                          'box, not in its cost box.'
-                    : 'The last $alternatives conditions are printed in the '
-                          'card’s effect box, not in its cost box.',
+                context.l10n.cardDigivolveFromText(alternatives),
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.4,
@@ -769,11 +779,11 @@ class _DigivolveRow extends StatelessWidget {
               // source did publish the colour, the dots to the left are
               // already showing it and only the level is missing.
               switch (requirement) {
-                _ when !requirement.isConditionUnpublished =>
-                  requirement.describe(),
+                _ when !requirement.isConditionUnpublished => requirement
+                    .describeIn(context.l10n),
                 _ when requirement.colors.isNotEmpty =>
-                  'Level not published yet',
-                _ => 'Condition not published yet',
+                  context.l10n.cardLevelUnpublished,
+                _ => context.l10n.cardConditionUnpublished,
               },
               style: TextStyle(
                 fontSize: 14,
@@ -790,7 +800,7 @@ class _DigivolveRow extends StatelessWidget {
           if (requirement.cost != null) ...[
             const SizedBox(width: 10),
             Text(
-              'Cost ${requirement.cost}',
+              context.l10n.cardCostValue(requirement.cost!),
               style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
           ],
@@ -809,7 +819,7 @@ class _DualFaceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
-      title: 'Other face — ${face.category.label}',
+      title: context.l10n.cardOtherFace(face.category.name(context.l10n)),
       icon: Icons.flip_camera_android_outlined,
       child: Container(
         width: double.infinity,
@@ -837,7 +847,7 @@ class _DualFaceSection extends StatelessWidget {
                 ),
                 if (face.cost != null)
                   Text(
-                    'Cost ${face.cost}',
+                    context.l10n.cardCostValue(face.cost!),
                     style: TextStyle(
                       fontSize: 13,
                       color: scheme.onSurfaceVariant,
@@ -865,7 +875,9 @@ class _ErrataSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
-      title: 'Errata${errata.date == null ? '' : ' · ${errata.date}'}',
+      title: errata.date == null
+          ? context.l10n.cardErrata
+          : context.l10n.cardErrataDated(errata.date!),
       icon: Icons.edit_note,
       child: Container(
         width: double.infinity,
@@ -880,7 +892,7 @@ class _ErrataSection extends StatelessWidget {
           children: [
             if (errata.error != null) ...[
               Text(
-                'Printed',
+                context.l10n.cardErrataPrinted,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -901,7 +913,7 @@ class _ErrataSection extends StatelessWidget {
             ],
             if (errata.correction != null) ...[
               Text(
-                'Should read',
+                context.l10n.cardErrataShouldRead,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -950,7 +962,7 @@ class _ReleasesSection extends ConsumerWidget {
     }
 
     return _SectionCard(
-      title: 'Found in',
+      title: context.l10n.cardFoundIn,
       icon: Icons.inventory_2_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -975,7 +987,7 @@ class _FaqSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
-      title: 'Rulings (${faqs.length})',
+      title: context.l10n.cardRulings(faqs.length),
       icon: Icons.help_outline,
       child: Column(
         children: [
@@ -1060,9 +1072,7 @@ class _PreviewCardNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Preview card from a set that is not in the main card database '
-              'yet. Its text is community-sourced and may change, and it has '
-              'no rulings or alternate arts here.',
+              context.l10n.cardPreviewNotice,
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.45,

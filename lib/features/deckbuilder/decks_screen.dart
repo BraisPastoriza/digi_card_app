@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/digimon_colors.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/deck.dart';
+import '../../l10n/l10n.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
@@ -72,21 +73,23 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Decks'),
+        title: Text(context.l10n.decksTitle),
         actions: [
           IconButton(
             onPressed: () => context.pushOnce(
               onDecks ? '/decks/import' : '/decks/staples/import',
             ),
             icon: const Icon(Icons.file_download_outlined),
-            tooltip: onDecks ? 'Import deck list' : 'Import staple list',
+            tooltip: onDecks
+                ? context.l10n.decksImportDeck
+                : context.l10n.decksImportStaples,
           ),
         ],
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: 'Decks'),
-            Tab(text: 'Staples'),
+          tabs: [
+            Tab(text: context.l10n.decksTitle),
+            Tab(text: context.l10n.decksTabStaples),
           ],
         ),
       ),
@@ -96,12 +99,12 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
                 : FloatingActionButton.extended(
                     onPressed: () => _createDeck(context, ref),
                     icon: const Icon(Icons.add),
-                    label: const Text('New deck'),
+                    label: Text(context.l10n.decksNewDeck),
                   ))
           : FloatingActionButton.extended(
               onPressed: () => createStapleList(context, ref),
               icon: const Icon(Icons.add),
-              label: const Text('New list'),
+              label: Text(context.l10n.decksNewList),
             ),
       body: TabBarView(
         controller: _tabs,
@@ -115,22 +118,20 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => EmptyState(
         icon: Icons.error_outline,
-        title: 'Could not load decks',
+        title: context.l10n.decksLoadError,
         message: '$error',
       ),
       data: (decks) {
         if (decks.isEmpty) {
           return EmptyState(
             icon: Icons.layers_outlined,
-            title: 'No decks yet',
+            title: context.l10n.decksEmptyTitle,
             message:
-                'Build a deck of 50 cards plus up to 5 Digi-Eggs. Every '
-                'deck keeps its own revisions, so you can try changes '
-                'without losing what worked.',
+                context.l10n.decksEmptyMessage,
             action: FilledButton.icon(
               onPressed: () => _createDeck(context, ref),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Create your first deck'),
+              label: Text(context.l10n.decksCreateFirst),
             ),
           );
         }
@@ -147,7 +148,7 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: 'Search decks',
+                    hintText: context.l10n.decksSearchHint,
                     prefixIcon: const Icon(Icons.search, size: 20),
                     suffixIcon: _query.isEmpty
                         ? null
@@ -169,8 +170,10 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
               child: visible.isEmpty
                   ? EmptyState(
                       icon: Icons.search_off,
-                      title: 'No decks match',
-                      message: 'Nothing here is called "${_query.trim()}".',
+                      title: context.l10n.decksNoMatchTitle,
+                      message: context.l10n.decksNoMatchMessage(
+                        _query.trim(),
+                      ),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -192,7 +195,10 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
   /// what went into it, and both the editor and a long press on the deck list
   /// rename it in place.
   Future<void> _createDeck(BuildContext context, WidgetRef ref) async {
-    final deckId = await ref.read(deckDaoProvider).createDeck();
+    final dao = ref.read(deckDaoProvider);
+    final deckId = await dao.createDeck(
+      name: await dao.nextDefaultDeckName(base: context.l10n.defaultDeckName),
+    );
     if (context.mounted) context.pushOnce('/decks/$deckId');
   }
 }
@@ -219,21 +225,19 @@ Future<void> showDeckActionsSheet(
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
-              deck.revisions.length == 1
-                  ? '1 revision'
-                  : '${deck.revisions.length} revisions',
+              context.l10n.deckRevisionCount(deck.revisions.length),
             ),
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.drive_file_rename_outline),
-            title: const Text('Rename'),
+            title: Text(context.l10n.actionRename),
             onTap: () async {
               Navigator.of(sheetContext).pop();
               final name = await showDeckNameDialog(
                 context,
-                title: 'Rename deck',
-                label: 'Deck name',
+                title: context.l10n.deckRenameTitle,
+                label: context.l10n.deckNameLabel,
                 initialValue: deck.name,
               );
               if (name != null) {
@@ -243,7 +247,10 @@ Future<void> showDeckActionsSheet(
           ),
           ListTile(
             leading: Icon(Icons.delete_outline, color: scheme.error),
-            title: Text('Delete', style: TextStyle(color: scheme.error)),
+            title: Text(
+              context.l10n.actionDelete,
+              style: TextStyle(color: scheme.error),
+            ),
             onTap: () async {
               Navigator.of(sheetContext).pop();
               final confirmed = await showDeleteDeckDialog(context, deck);
@@ -263,22 +270,21 @@ Future<bool> showDeleteDeckDialog(BuildContext context, Deck deck) async {
   final result = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Delete ${deck.name}?'),
+      title: Text(context.l10n.deckDeleteTitle(deck.name)),
       content: Text(
-        'The deck and all ${deck.revisions.length} of its revisions are '
-        'removed. This cannot be undone.',
+        context.l10n.deckDeleteBody(deck.revisions.length),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: FilledButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
-          child: const Text('Delete'),
+          child: Text(context.l10n.actionDelete),
         ),
       ],
     ),
@@ -355,10 +361,13 @@ class _DeckCard extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             revision == null
-                                ? 'No revisions'
+                                ? context.l10n.deckNoRevisions
                                 : deck.revisions.length == 1
                                 ? revision.name
-                                : '${revision.name} · ${deck.revisions.length} revisions',
+                                : context.l10n.deckRevisionWithCount(
+                                    revision.name,
+                                    deck.revisions.length,
+                                  ),
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 12.5,
@@ -373,17 +382,19 @@ class _DeckCard extends ConsumerWidget {
                       Row(
                         children: [
                           _Count(
-                            label: 'Main',
+                            label: context.l10n.deckCountMain,
                             value: '${composition.mainDeckCount}',
                             total: DeckRules.mainDeckSize,
                             current: composition.mainDeckCount,
+                            exact: true,
                           ),
                           const SizedBox(width: 14),
                           _Count(
-                            label: 'Eggs',
+                            label: context.l10n.deckCountEggs,
                             value: '${composition.eggDeckCount}',
                             total: DeckRules.maxEggDeckSize,
                             current: composition.eggDeckCount,
+                            exact: false,
                           ),
                         ],
                       ),
@@ -407,6 +418,7 @@ class _Count extends StatelessWidget {
     required this.value,
     required this.total,
     required this.current,
+    required this.exact,
   });
 
   final String label;
@@ -414,11 +426,13 @@ class _Count extends StatelessWidget {
   final int total;
   final int current;
 
+  /// Main decks must hit their size exactly; egg decks only have a ceiling.
+  final bool exact;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // Main decks must hit their size exactly; egg decks only have a ceiling.
-    final complete = label == 'Main' ? current == total : current <= total;
+    final complete = exact ? current == total : current <= total;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
@@ -548,7 +562,7 @@ class _LegalityChip extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           Text(
-            legal ? 'Legal' : 'Draft',
+            legal ? context.l10n.deckLegal : context.l10n.deckDraft,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

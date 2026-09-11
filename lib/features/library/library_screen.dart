@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../../l10n/l10n.dart';
+import '../../l10n/labels.dart';
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/db/daos/release_dao.dart';
@@ -70,12 +72,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
               // thing that makes people give up on searching.
               floating: true,
               snap: true,
-              title: const Text('Library'),
+              title: Text(context.l10n.libraryTitle),
               actions: [
                 IconButton(
                   onPressed: () => _showDatabaseInfo(context),
                   icon: const Icon(Icons.info_outline),
-                  tooltip: 'Card database',
+                  tooltip: context.l10n.libraryDatabaseTooltip,
                 ),
               ],
               bottom: const PreferredSize(
@@ -95,7 +97,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                   hasScrollBody: false,
                   child: EmptyState(
                     icon: Icons.error_outline,
-                    title: 'Could not load expansions',
+                    title: context.l10n.libraryReleasesError,
                     message: '$error',
                   ),
                 ),
@@ -187,7 +189,7 @@ class _SearchBarButton extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Search cards, effects, traits',
+                  context.l10n.librarySearchHint,
                   style: TextStyle(
                     fontSize: 15,
                     color: scheme.onSurfaceVariant,
@@ -220,9 +222,11 @@ class _GroupHeader extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: SectionHeader(
-        section.group.label,
-        subtitle:
-            '${section.releases.length} sets · ${section.cardCount} cards',
+        section.group.name(context.l10n),
+        subtitle: context.l10n.librarySectionSubtitle(
+          section.releases.length,
+          section.cardCount,
+        ),
         trailing: AnimatedRotation(
           turns: expanded ? 0.5 : 0,
           duration: const Duration(milliseconds: 180),
@@ -253,9 +257,9 @@ class _DatabaseInfoSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Card database',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            Text(
+              context.l10n.databaseTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             state.when(
@@ -264,12 +268,18 @@ class _DatabaseInfoSheet extends ConsumerWidget {
               data: (row) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _InfoRow('Cards stored', '${row?.cardCount ?? 0}'),
-                  _InfoRow('Data published', row?.bulkUpdatedAt ?? 'unknown'),
                   _InfoRow(
-                    'Last downloaded',
+                    context.l10n.databaseCardsStored,
+                    '${row?.cardCount ?? 0}',
+                  ),
+                  _InfoRow(
+                    context.l10n.databasePublished,
+                    row?.bulkUpdatedAt ?? context.l10n.databaseUnknown,
+                  ),
+                  _InfoRow(
+                    context.l10n.databaseLastDownloaded,
                     row?.syncedAt == null
-                        ? 'never'
+                        ? context.l10n.databaseNever
                         : _formatDate(row!.syncedAt!),
                   ),
                 ],
@@ -277,9 +287,7 @@ class _DatabaseInfoSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Card data comes from the Heroicc API, plus $secondarySourceName '
-              'for sets Heroicc has not published yet. Refreshing re-downloads '
-              'the full card list, which is how new sets show up.',
+              context.l10n.databaseSources(secondarySourceName),
               style: TextStyle(
                 fontSize: 13,
                 height: 1.45,
@@ -293,7 +301,7 @@ class _DatabaseInfoSheet extends ConsumerWidget {
                 context.pushOnce('/library/credits');
               },
               style: TextButton.styleFrom(padding: EdgeInsets.zero),
-              child: const Text('Data sources & credits'),
+              child: Text(context.l10n.databaseCredits),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -307,7 +315,7 @@ class _DatabaseInfoSheet extends ConsumerWidget {
                   ref.read(libraryReadyProvider.notifier).requireSync();
                 },
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Check for updates'),
+                label: Text(context.l10n.databaseCheckUpdates),
               ),
             ),
           ],

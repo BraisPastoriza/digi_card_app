@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/models/digimon_card.dart';
+import '../../../l10n/l10n.dart';
 import '../../../domain/models/staple_list.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 import '../staple_providers.dart';
@@ -35,17 +36,17 @@ class _StapleSourceSheet extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-            child: const Text(
-              'Build from a staple list',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            child: Text(
+              context.l10n.stapleSourceTitle,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
             child: Text(
               lists.isEmpty
-                  ? 'You have no lists yet. Build one under Decks › Staples.'
-                  : 'Opens the card picker showing just that list.',
+                  ? context.l10n.stapleSourceEmpty
+                  : context.l10n.stapleSourceHint,
               style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
           ),
@@ -63,7 +64,7 @@ class _StapleSourceSheet extends ConsumerWidget {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    list.count == 1 ? '1 card' : '${list.count} cards',
+                    context.l10n.cardCount(list.count),
                   ),
                   trailing: _Preview(cards: list.cards),
                 );

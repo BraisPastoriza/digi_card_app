@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/models/digimon_card.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 
 /// A card in a deck-editing context: the art, how many copies the deck runs,
@@ -191,7 +192,10 @@ class _Stepper extends StatelessWidget {
                 foregroundColor: scheme.primary,
               ),
               icon: const Icon(Icons.info_outline, size: 14),
-              label: const Text('Card', style: TextStyle(fontSize: 12)),
+              label: Text(
+                context.l10n.deckCardTileBadge,
+                style: const TextStyle(fontSize: 12),
+              ),
             ),
           ],
         ),

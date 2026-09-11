@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../../domain/models/deck.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
@@ -50,13 +51,16 @@ class _DeckThumbnailSheet extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Deck thumbnail',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                Text(
+                  context.l10n.thumbnailTitle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'The card that stands for this deck in the deck list.',
+                  context.l10n.thumbnailSubtitle,
                   style: TextStyle(
                     fontSize: 13,
                     color: scheme.onSurfaceVariant,
@@ -67,11 +71,11 @@ class _DeckThumbnailSheet extends ConsumerWidget {
           ),
           const Divider(height: 1),
           if (entries.isEmpty)
-            const Expanded(
+            Expanded(
               child: EmptyState(
                 icon: Icons.add_card,
-                title: 'Nothing to pick yet',
-                message: 'Add cards to this revision first.',
+                title: context.l10n.thumbnailEmptyTitle,
+                message: context.l10n.thumbnailEmptyMessage,
               ),
             )
           else
@@ -92,8 +96,10 @@ class _DeckThumbnailSheet extends ConsumerWidget {
                         ),
                         label: Text(
                           automatic == null
-                              ? 'Choose automatically'
-                              : 'Choose automatically (${automatic.card.name})',
+                              ? context.l10n.thumbnailAutomatic
+                              : context.l10n.thumbnailAutomaticNamed(
+                                  automatic.card.name,
+                                ),
                         ),
                       ),
                     ),

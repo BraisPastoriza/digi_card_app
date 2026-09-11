@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/models/card_release.dart';
+import '../../../l10n/l10n.dart';
 
 /// Aspect ratio of the product artwork the API serves for a release. Every
 /// release has a 360x240 thumbnail, so the grid can rely on one shape.
@@ -252,9 +253,9 @@ class PreviewBadge extends StatelessWidget {
         color: AppTheme.seed,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Text(
-        'PREVIEW',
-        style: TextStyle(
+      child: Text(
+        context.l10n.releasePreviewBadge,
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.6,

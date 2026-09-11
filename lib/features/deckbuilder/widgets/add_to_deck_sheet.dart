@@ -5,6 +5,7 @@ import '../../../core/providers.dart';
 import '../../../domain/models/deck.dart';
 import '../../../domain/models/digimon_card.dart';
 import '../../../domain/models/pair_restrictions.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
 
@@ -14,11 +15,7 @@ Future<void> showAddToDeckSheet(BuildContext context, DigimonCard card) {
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Tokens are created during play and cannot go in a deck.',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.addToDeckTokenBlocked)),
       );
     return Future.value();
   }
@@ -51,13 +48,16 @@ class _AddToDeckSheet extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Add to deck',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                Text(
+                  context.l10n.addToDeckTitle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${card.name} · ${card.number}',
+                  context.l10n.addToDeckCardLine(card.name, card.number),
                   style: TextStyle(
                     fontSize: 13,
                     color: scheme.onSurfaceVariant,
@@ -72,18 +72,18 @@ class _AddToDeckSheet extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => EmptyState(
                 icon: Icons.error_outline,
-                title: 'Could not load decks',
+                title: context.l10n.decksLoadError,
                 message: '$error',
               ),
               data: (decks) => decks.isEmpty
                   ? EmptyState(
                       icon: Icons.layers_outlined,
-                      title: 'No decks yet',
-                      message: 'Create a deck to start adding cards to it.',
+                      title: context.l10n.decksEmptyTitle,
+                      message: context.l10n.addToDeckEmptyMessage,
                       action: FilledButton.icon(
                         onPressed: () => _createDeckWithCard(context, ref),
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('New deck'),
+                        label: Text(context.l10n.decksNewDeck),
                       ),
                     )
                   : ListView(
@@ -99,8 +99,8 @@ class _AddToDeckSheet extends ConsumerWidget {
                             backgroundColor: scheme.primaryContainer,
                             child: Icon(Icons.add, color: scheme.primary),
                           ),
-                          title: const Text('New deck'),
-                          subtitle: const Text('Start a deck with this card'),
+                          title: Text(context.l10n.decksNewDeck),
+                          subtitle: Text(context.l10n.addToDeckNewSubtitle),
                         ),
                       ],
                     ),
@@ -114,7 +114,9 @@ class _AddToDeckSheet extends ConsumerWidget {
   Future<void> _createDeckWithCard(BuildContext context, WidgetRef ref) async {
     final dao = ref.read(deckDaoProvider);
     // No name is asked for here either; the deck list renames in place.
-    final name = await dao.nextDefaultDeckName();
+    final name = await dao.nextDefaultDeckName(
+      base: context.l10n.defaultDeckName,
+    );
     final deckId = await dao.createDeck(name: name);
     // Read the revision from the database rather than a provider: nothing is
     // listening to the new deck yet, so an auto-disposing provider would be
@@ -125,9 +127,9 @@ class _AddToDeckSheet extends ConsumerWidget {
     }
     if (context.mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Added ${card.name} to $name')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.addToDeckAdded(card.name, name))),
+      );
     }
   }
 }
@@ -152,9 +154,10 @@ class _DeckRow extends ConsumerWidget {
     // knows about the pairing when the ruling happens to be written on it.
     final clashes = [
       for (final restriction
-          in ref.watch(pairRestrictionsProvider).valueOrNull?.forNumber(
-                card.number,
-              ) ??
+          in ref
+                  .watch(pairRestrictionsProvider)
+                  .valueOrNull
+                  ?.forNumber(card.number) ??
               const <PairRestriction>[])
         if ((quantities[restriction.partnerNumber] ?? 0) > 0) restriction,
     ];
@@ -164,7 +167,10 @@ class _DeckRow extends ConsumerWidget {
       title: Text(deck.name),
       subtitle: Text(
         deck.revisions.length > 1
-            ? '${revision.name} · ${deck.revisions.length} revisions'
+            ? context.l10n.deckRevisionWithCount(
+                revision.name,
+                deck.revisions.length,
+              )
             : revision.name,
       ),
       trailing: Row(
@@ -210,12 +216,18 @@ class _DeckRow extends ConsumerWidget {
     Navigator.of(context).pop();
     // The card goes in either way; the deck screen holds the error. Saying it
     // here is what stops the clash being discovered at the end of a build.
-    final warning = clashes.isEmpty
-        ? ''
-        : ' — banned pair with '
-              '${clashes.map((c) => c.partnerLabel).join(', ')}';
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added ${card.name} to ${deck.name}$warning')),
+      SnackBar(
+        content: Text(
+          clashes.isEmpty
+              ? context.l10n.addToDeckAdded(card.name, deck.name)
+              : context.l10n.addToDeckAddedWithPair(
+                  card.name,
+                  deck.name,
+                  clashes.map((c) => c.partnerLabel).join(', '),
+                ),
+        ),
+      ),
     );
   }
 }

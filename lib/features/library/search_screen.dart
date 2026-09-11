@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/router/navigation.dart';
+import '../../l10n/l10n.dart';
+import '../../l10n/labels.dart';
+import 'facets.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/card_filter.dart';
 import '../../shared/widgets/common.dart';
@@ -102,7 +105,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       textInputAction: TextInputAction.search,
                       onChanged: _onQueryChanged,
                       decoration: InputDecoration(
-                        hintText: 'Name, effect, trait…',
+                        hintText: context.l10n.searchHint,
                         prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: _controller.text.isEmpty
                             ? null
@@ -148,16 +151,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => EmptyState(
                 icon: Icons.error_outline,
-                title: 'Search failed',
+                title: context.l10n.searchFailed,
                 message: '$error',
               ),
               data: (state) => state.cards.isEmpty
                   ? EmptyState(
                       icon: Icons.search_off,
-                      title: 'No cards found',
+                      title: context.l10n.searchNoCards,
                       message: filter.activeFacetCount > 0
-                          ? 'Try removing a filter or two.'
-                          : 'Nothing matches that search.',
+                          ? context.l10n.searchNoCardsFiltered
+                          : context.l10n.searchNoCardsPlain,
                       action: filter.activeFacetCount == 0
                           ? null
                           : OutlinedButton(
@@ -168,7 +171,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                     ).notifier,
                                   )
                                   .clearFacets(),
-                              child: const Text('Clear filters'),
+                              child: Text(context.l10n.searchClearFilters),
                             ),
                     )
                   : CustomScrollView(
@@ -200,7 +203,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                               child: Center(
                                 child: Text(
-                                  'End of results',
+                                  context.l10n.searchEndOfResults,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: scheme.onSurfaceVariant,
@@ -289,7 +292,7 @@ class _ResultsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final facets = filter.activeFacets();
+    final facets = activeFacets(filter, context.l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,8 +304,8 @@ class _ResultsHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   total == null
-                      ? 'Searching…'
-                      : '$total ${total == 1 ? 'card' : 'cards'}',
+                      ? context.l10n.searchSearching
+                      : context.l10n.searchResultCount(total!),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -313,10 +316,13 @@ class _ResultsHeader extends StatelessWidget {
               PopupMenuButton<CardSort>(
                 initialValue: filter.sort,
                 onSelected: onSortChanged,
-                tooltip: 'Sort',
+                tooltip: context.l10n.searchSortTooltip,
                 itemBuilder: (context) => [
                   for (final sort in CardSort.values)
-                    PopupMenuItem(value: sort, child: Text(sort.label)),
+                    PopupMenuItem(
+                      value: sort,
+                      child: Text(sort.name(context.l10n)),
+                    ),
                 ],
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -333,7 +339,7 @@ class _ResultsHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        filter.sort.label,
+                        filter.sort.name(context.l10n),
                         style: TextStyle(
                           fontSize: 13,
                           color: scheme.onSurfaceVariant,
@@ -378,11 +384,11 @@ class _ResultsHeader extends StatelessWidget {
                         size: 14,
                         color: scheme.primary,
                       ),
-                      tooltip: 'Remove ${facet.label}',
+                      tooltip: context.l10n.searchRemoveFacet(facet.label),
                     ),
                   ),
                 ActionChip(
-                  label: const Text('Clear all'),
+                  label: Text(context.l10n.searchClearAll),
                   visualDensity: VisualDensity.compact,
                   labelStyle: const TextStyle(fontSize: 12),
                   avatar: const Icon(Icons.close, size: 14),

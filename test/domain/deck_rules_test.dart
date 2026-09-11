@@ -91,7 +91,10 @@ void main() {
       final composition = DeckComposition([_entry(_card(), 4)]);
 
       expect(composition.isLegal, isFalse);
-      expect(composition.issues.first.message, contains('needs 46 more cards'));
+      expect(
+        composition.issues.first,
+        isA<MainDeckSizeIssue>().having((i) => i.difference, 'short by', 46),
+      );
     });
 
     test('reports an oversized main deck', () {
@@ -101,10 +104,8 @@ void main() {
       ]);
 
       expect(
-        composition.issues
-            .where((i) => i.severity == DeckIssueSeverity.error)
-            .map((i) => i.message),
-        contains(contains('over by 3 cards')),
+        composition.issues.whereType<MainDeckSizeIssue>().single.difference,
+        -3,
       );
     });
 
@@ -117,8 +118,8 @@ void main() {
 
       expect(composition.isLegal, isFalse);
       expect(
-        composition.issues.map((i) => i.message),
-        contains(contains('Egg deck is over by 1')),
+        composition.issues.whereType<EggDeckSizeIssue>().single.excess,
+        1,
       );
     });
 
@@ -135,8 +136,10 @@ void main() {
       ]);
 
       expect(
-        composition.issues.map((i) => i.message),
-        contains(contains('max 4')),
+        composition.issues.whereType<CopyLimitIssue>().single,
+        isA<CopyLimitIssue>()
+            .having((i) => i.limit, 'limit', 4)
+            .having((i) => i.limitation, 'restriction list entry', isNull),
       );
     });
 
@@ -157,8 +160,14 @@ void main() {
       expect(restricted.copyLimit, 1);
       final composition = DeckComposition([_entry(restricted, 2)]);
       expect(
-        composition.issues.map((i) => i.message),
-        contains(contains('restricted to 1 copy')),
+        composition.issues.whereType<CopyLimitIssue>().single,
+        isA<CopyLimitIssue>()
+            .having((i) => i.limit, 'limit', 1)
+            .having(
+              (i) => i.limitation?.type,
+              'restricted by',
+              LimitationType.restrict,
+            ),
       );
     });
   });
@@ -228,12 +237,7 @@ void main() {
       expect(vemmon.hasRaisedCopyLimit, isTrue);
 
       final composition = DeckComposition([_entry(vemmon, 50)]);
-      expect(
-        composition.issues
-            .where((i) => i.severity == DeckIssueSeverity.error)
-            .map((i) => i.message),
-        isNot(contains(contains('max'))),
-      );
+      expect(composition.issues.whereType<CopyLimitIssue>(), isEmpty);
     });
 
     test('still rejects going past the raised cap', () {
@@ -242,8 +246,8 @@ void main() {
       ]);
 
       expect(
-        composition.issues.map((i) => i.message),
-        contains(contains('max 50')),
+        composition.issues.whereType<CopyLimitIssue>().single.limit,
+        50,
       );
     });
   });
@@ -324,9 +328,11 @@ void main() {
 
       expect(card.copyLimit, 4);
       expect(card.activeLimitation, isNull);
+      // Illegal only for being a four-card deck, not for the card itself.
+      expect(DeckComposition([_entry(card, 4)]).isLegal, isFalse);
       expect(
-        DeckComposition([_entry(card, 4)]).issues.map((i) => i.message),
-        isNot(contains(contains('Mother D-Reaper'))),
+        DeckComposition([_entry(card, 4)]).issues.whereType<CopyLimitIssue>(),
+        isEmpty,
       );
     });
 
@@ -371,10 +377,10 @@ void main() {
       ];
 
       expect(CardLimitation.pairBansIn(limitations), hasLength(2));
-      expect(_card(limitations: limitations).bannedWith, {
-        'EX7-064',
-        'BT1-042',
-      });
+      expect(
+        _card(limitations: limitations).bannedWith,
+        {'EX7-064', 'BT1-042'},
+      );
     });
 
     test('a deck holding both cards is illegal', () {
@@ -398,30 +404,31 @@ void main() {
         ),
       ]);
 
-      final pairIssues = composition.issues.where(
-        (i) => i.message.contains('banned pair'),
-      );
+      final pairIssues = composition.issues.whereType<BannedPairIssue>();
       expect(pairIssues, hasLength(1));
-      expect(pairIssues.single.message, contains('Mother D-Reaper (EX2-007)'));
-      expect(pairIssues.single.message, contains('Shoto Kazama (EX7-064)'));
+      expect(pairIssues.single.entry.cardNumber, 'EX2-007');
+      expect(pairIssues.single.partner.cardNumber, 'EX7-064');
       expect(pairIssues.single.severity, DeckIssueSeverity.error);
     });
 
     test('either card on its own is fine', () {
       final composition = DeckComposition([
-        _entry(_card(number: 'EX2-007', limitations: const [motherDReaper]), 4),
+        _entry(
+          _card(number: 'EX2-007', limitations: const [motherDReaper]),
+          4,
+        ),
         _entry(_card(number: 'BT1-002'), 4),
       ]);
 
-      expect(
-        composition.issues.map((i) => i.message),
-        isNot(contains(contains('banned pair'))),
-      );
+      expect(composition.issues.whereType<BannedPairIssue>(), isEmpty);
     });
 
     test('the clash is reported once even when both cards carry it', () {
       final composition = DeckComposition([
-        _entry(_card(number: 'EX2-007', limitations: const [motherDReaper]), 1),
+        _entry(
+          _card(number: 'EX2-007', limitations: const [motherDReaper]),
+          1,
+        ),
         _entry(
           _card(
             number: 'EX7-064',
@@ -437,10 +444,7 @@ void main() {
         ),
       ]);
 
-      expect(
-        composition.issues.where((i) => i.message.contains('banned pair')),
-        hasLength(1),
-      );
+      expect(composition.issues.whereType<BannedPairIssue>(), hasLength(1));
     });
 
     test('a card about to be added finds its clash from either side', () {
@@ -453,21 +457,20 @@ void main() {
       // The ruling is written on the anchor, so the partner has nothing of
       // its own to go on and has to be matched the other way round.
       expect(
-        DeckComposition([
-          _entry(anchor, 1),
-        ]).pairConflictsWith(partner).map((e) => e.cardNumber),
+        DeckComposition([_entry(anchor, 1)])
+            .pairConflictsWith(partner)
+            .map((e) => e.cardNumber),
         ['EX2-007'],
       );
       expect(
-        DeckComposition([
-          _entry(partner, 1),
-        ]).pairConflictsWith(anchor).map((e) => e.cardNumber),
+        DeckComposition([_entry(partner, 1)])
+            .pairConflictsWith(anchor)
+            .map((e) => e.cardNumber),
         ['EX7-064'],
       );
       expect(
-        DeckComposition([
-          _entry(_card(number: 'BT1-002'), 1),
-        ]).pairConflictsWith(anchor),
+        DeckComposition([_entry(_card(number: 'BT1-002'), 1)])
+            .pairConflictsWith(anchor),
         isEmpty,
       );
     });

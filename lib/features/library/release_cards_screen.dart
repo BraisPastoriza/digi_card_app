@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/router/navigation.dart';
+import '../../l10n/l10n.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
@@ -55,8 +56,8 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
         SnackBar(
           content: Text(
             changed.isEmpty
-                ? 'No new cards — this set is as complete as $secondarySourceName has it.'
-                : 'Updated from $secondarySourceName.',
+                ? context.l10n.releaseRefreshedNothing(secondarySourceName)
+                : context.l10n.releaseRefreshedUpdated(secondarySourceName),
           ),
         ),
       );
@@ -87,7 +88,7 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
         SliverAppBar(
           pinned: true,
           title: Text(
-            release?.displayName ?? 'Expansion',
+            release?.displayName ?? context.l10n.releaseFallbackTitle,
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -111,7 +112,9 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
                   Expanded(
                     child: Text(
                       [
-                        '${cards.valueOrNull?.length ?? release.cardCount} cards',
+                        context.l10n.releaseCardCount(
+                          cards.valueOrNull?.length ?? release.cardCount,
+                        ),
                         if (release.date != null) release.date!,
                       ].join(' · '),
                       style: TextStyle(
@@ -122,7 +125,7 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
                   ),
                   if (release.group == ReleaseGroup.promo) ...[
                     FilterChip(
-                      label: const Text('Promos only'),
+                      label: Text(context.l10n.releasePromosOnly),
                       labelStyle: const TextStyle(fontSize: 12),
                       visualDensity: VisualDensity.compact,
                       selected: _promosOnly,
@@ -137,7 +140,9 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
                   if (release.printingCount > release.cardCount)
                     FilterChip(
                       label: Text(
-                        'Alt arts +${release.printingCount - release.cardCount}',
+                        context.l10n.releaseAltArts(
+                          release.printingCount - release.cardCount,
+                        ),
                       ),
                       labelStyle: const TextStyle(fontSize: 12),
                       visualDensity: VisualDensity.compact,
@@ -161,19 +166,19 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
               hasScrollBody: false,
               child: EmptyState(
                 icon: Icons.error_outline,
-                title: 'Could not load cards',
+                title: context.l10n.releaseCardsError,
                 message: '$error',
               ),
             ),
           ],
           data: (cards) => cards.isEmpty
-              ? const [
+              ? [
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: EmptyState(
                       icon: Icons.style_outlined,
-                      title: 'No cards in this expansion',
-                      message: 'The card list may not have been published yet.',
+                      title: context.l10n.releaseEmptyTitle,
+                      message: context.l10n.releaseEmptyMessage,
                     ),
                   ),
                 ]
@@ -227,10 +232,7 @@ class _PreviewNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Preview set. This expansion is not in the main card database '
-              'yet, so its cards come from $source and are still being '
-              'corrected. Some may be missing, and rulings and alternate arts '
-              'are not available. Pull down to check for newly revealed cards.',
+              context.l10n.releasePreviewNotice(source),
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.45,

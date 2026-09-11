@@ -20,18 +20,14 @@ import 'digimoncard_io_parser.dart';
 
 /// Steps of a card database sync, in the order they run.
 enum SyncStage {
-  checking('Checking for card updates'),
-  releases('Fetching expansions'),
-  downloading('Downloading card data'),
-  parsing('Reading cards'),
-  storing('Saving cards'),
-  indexing('Building search index'),
-  complete('Up to date'),
-  failed('Sync failed');
-
-  const SyncStage(this.label);
-
-  final String label;
+  checking,
+  releases,
+  downloading,
+  parsing,
+  storing,
+  indexing,
+  complete,
+  failed,
 }
 
 class SyncProgress {
@@ -42,11 +38,46 @@ class SyncProgress {
   /// 0..1 where the step can report it, null while indeterminate.
   final double? fraction;
 
-  final String? detail;
+  final SyncDetail? detail;
   final Object? error;
 
   bool get isTerminal =>
       stage == SyncStage.complete || stage == SyncStage.failed;
+}
+
+/// What a stage is counting, for the line under the progress bar.
+///
+/// Numbers rather than a sentence: the sync screen is what puts them into
+/// words, and it is the only place that knows the reader's language.
+sealed class SyncDetail {
+  const SyncDetail();
+}
+
+class ExpansionsFetched extends SyncDetail {
+  const ExpansionsFetched(this.completed, this.total);
+
+  final int completed;
+  final int total;
+}
+
+class BytesDownloaded extends SyncDetail {
+  const BytesDownloaded(this.received, this.total);
+
+  final int received;
+  final int total;
+}
+
+class CardsStored extends SyncDetail {
+  const CardsStored(this.count);
+
+  final int count;
+}
+
+/// Names the unreleased set being pulled from the secondary source.
+class PreviewPackFetched extends SyncDetail {
+  const PreviewPackFetched(this.pack);
+
+  final String pack;
 }
 
 /// Downloads the card database and writes it into local storage.
@@ -124,7 +155,7 @@ class CardSyncService {
         SyncProgress(
           SyncStage.releases,
           fraction: total == 0 ? null : completed / total,
-          detail: '$completed of $total expansions',
+          detail: ExpansionsFetched(completed, total),
         ),
       ),
     );
@@ -141,7 +172,7 @@ class CardSyncService {
         SyncProgress(
           SyncStage.downloading,
           fraction: total <= 0 ? null : received / total,
-          detail: '${_megabytes(received)} of ${_megabytes(total)} MB',
+          detail: BytesDownloaded(received, total),
         ),
       ),
     );
@@ -182,7 +213,7 @@ class CardSyncService {
         SyncProgress(
           SyncStage.complete,
           fraction: 1,
-          detail: '${cards.length} cards',
+          detail: CardsStored(cards.length),
         ),
       );
     } finally {
@@ -219,7 +250,10 @@ class CardSyncService {
 
     for (final preview in wanted) {
       controller.add(
-        SyncProgress(SyncStage.releases, detail: 'Preview: ${preview.pack}'),
+        SyncProgress(
+          SyncStage.releases,
+          detail: PreviewPackFetched(preview.pack),
+        ),
       );
       try {
         // One request at a time: two sequential calls stay far under the
@@ -639,6 +673,4 @@ class CardSyncService {
     ];
   }
 
-  static String _megabytes(int bytes) =>
-      (bytes / (1024 * 1024)).toStringAsFixed(1);
 }

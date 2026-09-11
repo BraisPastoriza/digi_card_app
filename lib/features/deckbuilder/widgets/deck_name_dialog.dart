@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 /// Prompts for a deck or revision name. Returns null if cancelled.
 Future<String?> showDeckNameDialog(
   BuildContext context, {
   required String title,
   String initialValue = '',
-  String label = 'Name',
-  String confirmLabel = 'Save',
+  String? label,
+  String? confirmLabel,
   String? helperText,
 }) {
   return showDialog<String>(
@@ -14,8 +16,8 @@ Future<String?> showDeckNameDialog(
     builder: (context) => _DeckNameDialog(
       title: title,
       initialValue: initialValue,
-      label: label,
-      confirmLabel: confirmLabel,
+      label: label ?? context.l10n.dialogNameLabel,
+      confirmLabel: confirmLabel ?? context.l10n.actionSave,
       helperText: helperText,
     ),
   );
@@ -79,7 +81,7 @@ class _DeckNameDialogState extends State<_DeckNameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.actionCancel),
         ),
         FilledButton(
           onPressed: _controller.text.trim().isEmpty ? null : _submit,

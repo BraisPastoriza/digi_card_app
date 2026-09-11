@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 class MultiSelectOption {
   const MultiSelectOption({
     required this.value,
@@ -76,11 +78,11 @@ class _MultiSelectPageState extends State<_MultiSelectPage> {
           if (_selected.isNotEmpty)
             TextButton(
               onPressed: () => setState(_selected.clear),
-              child: const Text('Clear'),
+              child: Text(context.l10n.actionClear),
             ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(_selected),
-            child: const Text('Done'),
+            child: Text(context.l10n.actionDone),
           ),
         ],
       ),
@@ -92,7 +94,9 @@ class _MultiSelectPageState extends State<_MultiSelectPage> {
               autofocus: false,
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
-                hintText: 'Search ${widget.title.toLowerCase()}',
+                hintText: context.l10n.multiSelectSearchHint(
+                  widget.title.toLowerCase(),
+                ),
                 prefixIcon: const Icon(Icons.search, size: 20),
               ),
             ),
@@ -102,7 +106,7 @@ class _MultiSelectPageState extends State<_MultiSelectPage> {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Text(
-                '${_selected.length} selected',
+                context.l10n.multiSelectCount(_selected.length),
                 style: TextStyle(fontSize: 13, color: scheme.primary),
               ),
             ),
@@ -111,7 +115,7 @@ class _MultiSelectPageState extends State<_MultiSelectPage> {
             child: visible.isEmpty
                 ? Center(
                     child: Text(
-                      'Nothing matches "$_query"',
+                      context.l10n.multiSelectNoMatch(_query),
                       style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
                   )

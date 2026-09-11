@@ -5,6 +5,7 @@ import '../../../core/providers.dart';
 import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/models/staple_list.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 import '../../../shared/widgets/common.dart';
 import '../staple_providers.dart';
@@ -22,21 +23,19 @@ class StaplesTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => EmptyState(
         icon: Icons.error_outline,
-        title: 'Could not load your lists',
+        title: context.l10n.staplesLoadError,
         message: '$error',
       ),
       data: (lists) => lists.isEmpty
           ? EmptyState(
               icon: Icons.bookmarks_outlined,
-              title: 'No staple lists',
+              title: context.l10n.staplesEmptyTitle,
               message:
-                  'A staple list is a set of cards you keep coming back to — '
-                  'the memory boosts, the floodgates, the tamers. Build one '
-                  'and it shows up as a source while you add cards to a deck.',
+                  context.l10n.staplesEmptyMessage,
               action: FilledButton.icon(
                 onPressed: () => createStapleList(context, ref),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Create a list'),
+                label: Text(context.l10n.staplesCreate),
               ),
             )
           : ListView.separated(
@@ -54,8 +53,8 @@ class StaplesTab extends ConsumerWidget {
 Future<void> createStapleList(BuildContext context, WidgetRef ref) async {
   final name = await showDeckNameDialog(
     context,
-    title: 'New staple list',
-    label: 'List name',
+    title: context.l10n.stapleNewTitle,
+    label: context.l10n.stapleNameLabel,
     initialValue: '',
   );
   if (name == null) return;
@@ -83,18 +82,18 @@ Future<void> showStapleActionsSheet(
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
-            subtitle: Text(list.count == 1 ? '1 card' : '${list.count} cards'),
+            subtitle: Text(context.l10n.cardCount(list.count)),
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.drive_file_rename_outline),
-            title: const Text('Rename'),
+            title: Text(context.l10n.actionRename),
             onTap: () async {
               Navigator.of(sheetContext).pop();
               final name = await showDeckNameDialog(
                 context,
-                title: 'Rename list',
-                label: 'List name',
+                title: context.l10n.stapleMenuRename,
+                label: context.l10n.stapleNameLabel,
                 initialValue: list.name,
               );
               if (name != null) {
@@ -104,7 +103,10 @@ Future<void> showStapleActionsSheet(
           ),
           ListTile(
             leading: Icon(Icons.delete_outline, color: scheme.error),
-            title: Text('Delete', style: TextStyle(color: scheme.error)),
+            title: Text(
+              context.l10n.actionDelete,
+              style: TextStyle(color: scheme.error),
+            ),
             onTap: () async {
               Navigator.of(sheetContext).pop();
               if (await showDeleteStapleListDialog(context, list)) {
@@ -125,23 +127,21 @@ Future<bool> showDeleteStapleListDialog(
   final result = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Delete ${list.name}?'),
+      title: Text(context.l10n.stapleDeleteTitle(list.name)),
       content: Text(
-        'The list and the ${list.count} '
-        '${list.count == 1 ? 'card' : 'cards'} in it are removed. Your decks '
-        'keep every card they already hold.',
+        context.l10n.stapleDeleteBody(list.count),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: FilledButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
-          child: const Text('Delete'),
+          child: Text(context.l10n.actionDelete),
         ),
       ],
     ),
@@ -192,7 +192,7 @@ class _StapleTile extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    list.count == 1 ? '1 card' : '${list.count} cards',
+                    context.l10n.cardCount(list.count),
                     style: TextStyle(
                       fontSize: 12.5,
                       color: scheme.onSurfaceVariant,
@@ -204,7 +204,7 @@ class _StapleTile extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    'Nothing in this list yet.',
+                    context.l10n.stapleNothingYet,
                     style: TextStyle(
                       fontSize: 12.5,
                       color: scheme.onSurfaceVariant,

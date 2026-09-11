@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/sync/card_sync_service.dart';
+import '../../l10n/l10n.dart';
 import '../../shared/widgets/app_logo.dart';
 
 /// First-run screen that fills the local card database.
@@ -91,9 +92,9 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
             children: [
               const AppLogo(),
               const SizedBox(height: 28),
-              const Text(
-                'DigiCard App',
-                style: TextStyle(
+              Text(
+                context.l10n.appTitle,
+                style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.6,
@@ -102,10 +103,10 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
               const SizedBox(height: 6),
               Text(
                 failed
-                    ? 'Could not download the card database'
+                    ? context.l10n.syncFailedTitle
                     : _rederiving
-                    ? 'Updating your cards to the new card rules'
-                    : 'Setting up your card library',
+                    ? context.l10n.syncRederiving
+                    : context.l10n.syncSettingUp,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
               ),
@@ -115,15 +116,14 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
               else if (_rederiving)
                 // No download to report on, so no stage list: this is a pass
                 // over cards the device already has.
-                const Column(
+                Column(
                   children: [
-                    LinearProgressIndicator(),
-                    SizedBox(height: 14),
+                    const LinearProgressIndicator(),
+                    const SizedBox(height: 14),
                     Text(
-                      'Reading the cards you already have. Nothing is being '
-                      'downloaded.',
+                      context.l10n.syncRederivingDetail,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13),
+                      style: const TextStyle(fontSize: 13),
                     ),
                   ],
                 )
@@ -179,21 +179,20 @@ class _SyncProgressView extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Text(
-          stage.label,
+          stage.name(context.l10n),
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 4),
         SizedBox(
           height: 20,
           child: Text(
-            progress.detail ?? '',
+            _detail(context, progress.detail),
             style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
           ),
         ),
         const SizedBox(height: 28),
         Text(
-          'The full card list is stored on your device, so the '
-          'library and deck builder work offline.',
+          context.l10n.syncOfflineNote,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 12,
@@ -225,7 +224,7 @@ class _SyncError extends StatelessWidget {
             border: Border.all(color: AppSurfaces.outline),
           ),
           child: Text(
-            _describe(error),
+            _describe(context, error),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -238,21 +237,49 @@ class _SyncError extends StatelessWidget {
         FilledButton.icon(
           onPressed: () => onRetry(),
           icon: const Icon(Icons.refresh, size: 18),
-          label: const Text('Try again'),
+          label: Text(context.l10n.actionTryAgain),
         ),
       ],
     );
   }
 
-  static String _describe(Object? error) {
-    if (error == null) return 'Something went wrong.';
+  /// Network failures get a sentence the user can act on; anything else is
+  /// shown as it came, untranslated, because it is a technical message and
+  /// changing its wording would make it harder to look up.
+  static String _describe(BuildContext context, Object? error) {
+    if (error == null) return context.l10n.syncErrorGeneric;
     final text = error.toString();
     if (text.contains('SocketException') ||
         text.contains('Failed host lookup') ||
         text.contains('connection error')) {
-      return 'No internet connection. Connect and try again — the card '
-          'database only needs to download once.';
+      return context.l10n.syncErrorOffline;
     }
     return text;
   }
+}
+
+/// Puts the numbers a stage reports into words.
+String _detail(BuildContext context, SyncDetail? detail) => switch (detail) {
+  null => '',
+  ExpansionsFetched(:final completed, :final total) => context.l10n
+      .syncDetailExpansions(completed, total),
+  BytesDownloaded(:final received, :final total) => context.l10n
+      .syncDetailMegabytes(_megabytes(received), _megabytes(total)),
+  CardsStored(:final count) => context.l10n.syncDetailCards(count),
+  PreviewPackFetched(:final pack) => context.l10n.syncDetailPreview(pack),
+};
+
+String _megabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);
+
+extension on SyncStage {
+  String name(AppLocalizations l10n) => switch (this) {
+    SyncStage.checking => l10n.syncStageChecking,
+    SyncStage.releases => l10n.syncStageReleases,
+    SyncStage.downloading => l10n.syncStageDownloading,
+    SyncStage.parsing => l10n.syncStageParsing,
+    SyncStage.storing => l10n.syncStageStoring,
+    SyncStage.indexing => l10n.syncStageIndexing,
+    SyncStage.complete => l10n.syncStageComplete,
+    SyncStage.failed => l10n.syncStageFailed,
+  };
 }

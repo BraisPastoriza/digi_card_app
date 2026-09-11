@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/models/deck_list.dart';
+import '../../../l10n/l10n.dart';
+import '../../../l10n/labels.dart';
 import '../../../domain/models/staple_list.dart';
 
 /// Hands a staple list over as text, the way the deck export does.
@@ -41,7 +43,11 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('${widget.list.name} copied.')));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.stapleExportCopied(widget.list.name)),
+        ),
+      );
   }
 
   @override
@@ -55,7 +61,7 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
           child: Text(
-            'Export ${widget.list.name}',
+            context.l10n.stapleExportTitle(widget.list.name),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -64,8 +70,7 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
           child: Text(
-            'One line per card, the same shape a deck list takes, so the '
-            'result reads in this app and in the tools that take deck lists.',
+            context.l10n.stapleExportExplainer,
             style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
           ),
         ),
@@ -74,7 +79,10 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
           child: SegmentedButton<DeckListFormat>(
             segments: [
               for (final format in DeckListFormat.values)
-                ButtonSegment(value: format, label: Text(format.label)),
+                ButtonSegment(
+                  value: format,
+                  label: Text(format.name(context.l10n)),
+                ),
             ],
             selected: {_format},
             showSelectedIcon: false,
@@ -99,7 +107,7 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
             ),
             child: SingleChildScrollView(
               child: SelectableText(
-                _text.isEmpty ? 'This list has no cards in it yet.' : _text,
+                _text.isEmpty ? context.l10n.stapleExportEmpty : _text,
                 style: const TextStyle(fontSize: 13, height: 1.5),
               ),
             ),
@@ -109,9 +117,7 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
             child: Text(
-              '$unresolved ${unresolved == 1 ? 'card is' : 'cards are'} in '
-              'this list but not in your library yet, so they are not written '
-              'out.',
+              context.l10n.stapleExportMissing(unresolved),
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ),
@@ -124,7 +130,7 @@ class _StapleExportSheetState extends State<_StapleExportSheet> {
               child: FilledButton.icon(
                 onPressed: widget.list.cards.isEmpty ? null : _copy,
                 icon: const Icon(Icons.copy_all_outlined, size: 18),
-                label: const Text('Copy to clipboard'),
+                label: Text(context.l10n.exportCopyToClipboard),
               ),
             ),
           ),

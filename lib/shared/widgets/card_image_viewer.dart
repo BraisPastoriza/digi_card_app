@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/models/digimon_card.dart';
+import '../../l10n/l10n.dart';
 
 /// Opens the card art full screen, where the printed text is actually legible.
 ///
@@ -104,7 +105,10 @@ class _CardImageViewerState extends State<_CardImageViewer> {
                       Padding(
                         padding: const EdgeInsets.only(right: 12),
                         child: Text(
-                          '${_index + 1} / ${widget.printings.length}',
+                          context.l10n.viewerPageOf(
+                            _index + 1,
+                            widget.printings.length,
+                          ),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 13,
@@ -124,7 +128,7 @@ class _CardImageViewerState extends State<_CardImageViewer> {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'Pinch or double-tap to zoom',
+                  context.l10n.viewerZoomHint,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.5),

@@ -48,19 +48,22 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     return _resolveEntries(rows);
   }
 
-  /// Name a deck gets when the user did not supply one.
+  /// Name a deck gets when the user did not supply one, if the screen does
+  /// not pass one of its own.
   ///
   /// Creating a deck does not stop to ask: naming it is far easier once you
-  /// can see what is in it, and the deck list renames in place.
+  /// can see what is in it, and the deck list renames in place. Screens pass
+  /// the name in the reader's language; this is the fallback for callers with
+  /// no interface to read it from.
   static const defaultDeckName = 'New Deck';
 
-  /// [defaultDeckName], numbered past the decks already called that, so a
-  /// shelf of unnamed decks can still be told apart.
-  Future<String> nextDefaultDeckName() async {
+  /// [base], numbered past the decks already called that, so a shelf of
+  /// unnamed decks can still be told apart.
+  Future<String> nextDefaultDeckName({String base = defaultDeckName}) async {
     final taken = (await select(decks).get()).map((d) => d.name).toSet();
-    if (!taken.contains(defaultDeckName)) return defaultDeckName;
+    if (!taken.contains(base)) return base;
     for (var suffix = 2; ; suffix++) {
-      final candidate = '$defaultDeckName $suffix';
+      final candidate = '$base $suffix';
       if (!taken.contains(candidate)) return candidate;
     }
   }

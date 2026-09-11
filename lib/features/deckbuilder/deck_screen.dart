@@ -9,6 +9,7 @@ import '../../data/db/daos/deck_dao.dart';
 import '../../core/router/navigation.dart';
 import '../../domain/models/card_filter.dart';
 import '../../domain/models/deck.dart';
+import '../../l10n/l10n.dart';
 import '../../shared/widgets/common.dart';
 import '../library/library_providers.dart';
 import 'deck_providers.dart';
@@ -38,7 +39,7 @@ class DeckScreen extends ConsumerWidget {
         appBar: AppBar(),
         body: EmptyState(
           icon: Icons.error_outline,
-          title: 'Could not load deck',
+          title: context.l10n.deckLoadError,
           message: '$error',
         ),
       ),
@@ -46,10 +47,10 @@ class DeckScreen extends ConsumerWidget {
         if (deck == null) {
           return Scaffold(
             appBar: AppBar(),
-            body: const EmptyState(
+            body: EmptyState(
               icon: Icons.layers_clear_outlined,
-              title: 'Deck not found',
-              message: 'It may have been deleted.',
+              title: context.l10n.deckNotFound,
+              message: context.l10n.deckNotFoundMessage,
             ),
           );
         }
@@ -112,7 +113,7 @@ class _DeckViewState extends ConsumerState<_DeckView>
             Text(deck.name, overflow: TextOverflow.ellipsis),
             if (revision != null)
               Text(
-                'Editing ${revision.name}',
+                context.l10n.deckEditing(revision.name),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -125,23 +126,32 @@ class _DeckViewState extends ConsumerState<_DeckView>
           PopupMenuButton<String>(
             onSelected: (action) => _handle(context, action),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'rename', child: Text('Rename deck')),
+              PopupMenuItem(
+                value: 'rename',
+                child: Text(context.l10n.deckMenuRename),
+              ),
               if (revision != null) ...[
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'thumbnail',
-                  child: Text('Deck thumbnail'),
+                  child: Text(context.l10n.deckMenuThumbnail),
                 ),
-                const PopupMenuItem(value: 'hand', child: Text('Test hand')),
-                const PopupMenuItem(value: 'export', child: Text('Export')),
+                PopupMenuItem(
+                  value: 'hand',
+                  child: Text(context.l10n.deckMenuTestHand),
+                ),
+                PopupMenuItem(
+                  value: 'export',
+                  child: Text(context.l10n.deckMenuExport),
+                ),
                 PopupMenuItem(
                   value: 'clear',
-                  child: Text('Clear ${revision.name}'),
+                  child: Text(context.l10n.deckMenuClear(revision.name)),
                 ),
               ],
               PopupMenuItem(
                 value: 'delete',
                 child: Text(
-                  'Delete deck',
+                  context.l10n.deckMenuDelete,
                   style: TextStyle(color: scheme.error),
                 ),
               ),
@@ -151,9 +161,9 @@ class _DeckViewState extends ConsumerState<_DeckView>
         bottom: TabBar(
           controller: _tabs,
           tabs: [
-            const Tab(text: 'Cards'),
-            Tab(text: 'Revisions (${deck.revisions.length})'),
-            const Tab(text: 'Stats'),
+            Tab(text: context.l10n.deckTabCards),
+            Tab(text: context.l10n.deckTabRevisions(deck.revisions.length)),
+            Tab(text: context.l10n.deckTabStats),
           ],
         ),
       ),
@@ -162,13 +172,13 @@ class _DeckViewState extends ConsumerState<_DeckView>
           : FloatingActionButton.extended(
               onPressed: () => _openPicker(context, revision.id),
               icon: const Icon(Icons.add),
-              label: const Text('Add cards'),
+              label: Text(context.l10n.deckAddCards),
             ),
       body: revision == null
-          ? const EmptyState(
+          ? EmptyState(
               icon: Icons.history_toggle_off,
-              title: 'This deck has no revisions',
-              message: 'Create one to start adding cards.',
+              title: context.l10n.deckNoRevisionsTitle,
+              message: context.l10n.deckNoRevisionsMessage,
             )
           : TabBarView(
               controller: _tabs,
@@ -194,8 +204,8 @@ class _DeckViewState extends ConsumerState<_DeckView>
       case 'rename':
         final name = await showDeckNameDialog(
           context,
-          title: 'Rename deck',
-          label: 'Deck name',
+          title: context.l10n.deckMenuRename,
+          label: context.l10n.deckNameLabel,
           initialValue: deck.name,
         );
         if (name != null) await dao.updateDeck(deck.id, name: name);
@@ -238,11 +248,9 @@ class _DeckViewState extends ConsumerState<_DeckView>
         if (revisionId == null || !context.mounted) return;
         final confirmed = await _confirm(
           context,
-          title: 'Clear ${deck.activeRevision!.name}?',
-          message:
-              'Removes every card from this revision. Other revisions '
-              'keep their cards.',
-          confirmLabel: 'Clear',
+          title: context.l10n.deckClearTitle(deck.activeRevision!.name),
+          message: context.l10n.deckClearMessage,
+          confirmLabel: context.l10n.actionClearConfirm,
         );
         if (confirmed) await dao.clearRevision(revisionId);
       case 'delete':
@@ -271,7 +279,7 @@ class _DeckViewState extends ConsumerState<_DeckView>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),

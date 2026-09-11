@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/digimon_colors.dart';
 import '../../../domain/models/card_enums.dart';
+import '../../../l10n/l10n.dart';
+import '../deck_text.dart';
+import '../../../l10n/labels.dart';
 import '../../../domain/models/deck.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
@@ -22,14 +25,14 @@ class DeckStatsTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => EmptyState(
         icon: Icons.error_outline,
-        title: 'Could not analyse this revision',
+        title: context.l10n.statsLoadError,
         message: '$error',
       ),
       data: (deck) => deck.allEntries.isEmpty
-          ? const EmptyState(
+          ? EmptyState(
               icon: Icons.insights_outlined,
-              title: 'Nothing to analyse yet',
-              message: 'Add cards to see the curve and colour balance.',
+              title: context.l10n.statsEmptyTitle,
+              message: context.l10n.statsEmptyMessage,
             )
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -39,14 +42,14 @@ class DeckStatsTab extends ConsumerWidget {
                 _CategoryCounts(deck: deck),
                 const SizedBox(height: 16),
                 _ChartCard(
-                  title: 'Cost curve',
-                  subtitle: 'Play cost of main deck cards',
+                  title: context.l10n.statsCurveTitle,
+                  subtitle: context.l10n.statsCurveSubtitle,
                   child: _BinChart(bins: _costBins(deck.costCurve)),
                 ),
                 const SizedBox(height: 16),
                 _ChartCard(
-                  title: 'Level spread',
-                  subtitle: 'Levels in the main deck',
+                  title: context.l10n.statsLevelTitle,
+                  subtitle: context.l10n.statsLevelSubtitle,
                   child: _BinChart(
                     bins: [
                       for (var level = 2; level <= 7; level++)
@@ -56,8 +59,8 @@ class DeckStatsTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 _ChartCard(
-                  title: 'Colour balance',
-                  subtitle: 'Cards of each colour, counting duals twice',
+                  title: context.l10n.statsColorTitle,
+                  subtitle: context.l10n.statsColorSubtitle,
                   child: _ColorBreakdown(spread: deck.colorSpread),
                 ),
               ],
@@ -114,7 +117,7 @@ class _LegalityCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                legal ? 'Tournament legal' : 'Not legal yet',
+                legal ? context.l10n.statsLegal : context.l10n.statsNotLegal,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -123,8 +126,12 @@ class _LegalityCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '${deck.mainDeckCount}/${DeckRules.mainDeckSize} · '
-                '${deck.eggDeckCount}/${DeckRules.maxEggDeckSize}',
+                context.l10n.statsDeckCounts(
+                  deck.mainDeckCount,
+                  DeckRules.mainDeckSize,
+                  deck.eggDeckCount,
+                  DeckRules.maxEggDeckSize,
+                ),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -153,7 +160,7 @@ class _LegalityCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        issue.message,
+                        describeIssue(issue, context.l10n),
                         style: TextStyle(
                           fontSize: 13,
                           height: 1.4,
@@ -204,7 +211,7 @@ class _CategoryCounts extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    category.label,
+                    category.name(context.l10n),
                     style: TextStyle(
                       fontSize: 11,
                       color: scheme.onSurfaceVariant,
@@ -278,7 +285,7 @@ class _BinChart extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     if (bins.isEmpty) {
       return Text(
-        'No cards with a cost yet',
+        context.l10n.statsNoCosts,
         style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
       );
     }
@@ -374,7 +381,7 @@ class _ColorBreakdown extends StatelessWidget {
         .toList();
     if (present.isEmpty) {
       return Text(
-        'No colours yet',
+        context.l10n.statsNoColors,
         style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
       );
     }
@@ -401,7 +408,7 @@ class _ColorBreakdown extends StatelessWidget {
                 SizedBox(
                   width: 52,
                   child: Text(
-                    color.label,
+                    color.name(context.l10n),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

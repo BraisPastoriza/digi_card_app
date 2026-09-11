@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/navigation.dart';
+import '../../l10n/l10n.dart';
 
 /// Bottom-navigation shell holding the two top-level sections.
 class AppShell extends StatelessWidget {
@@ -49,16 +50,16 @@ class AppShell extends StatelessWidget {
             index,
             initialLocation: index == shell.currentIndex,
           ),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view_rounded),
-              label: 'Library',
+              icon: const Icon(Icons.grid_view_outlined),
+              selectedIcon: const Icon(Icons.grid_view_rounded),
+              label: context.l10n.navLibrary,
             ),
             NavigationDestination(
-              icon: Icon(Icons.layers_outlined),
-              selectedIcon: Icon(Icons.layers_rounded),
-              label: 'Decks',
+              icon: const Icon(Icons.layers_outlined),
+              selectedIcon: const Icon(Icons.layers_rounded),
+              label: context.l10n.navDecks,
             ),
           ],
         ),

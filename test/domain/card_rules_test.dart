@@ -124,8 +124,8 @@ void main() {
 
       expect(composition.isLegal, isFalse);
       expect(
-        composition.issues.map((i) => i.message),
-        contains(contains('is a token')),
+        composition.issues.whereType<TokenInDeckIssue>().single.entry.card.name,
+        'Familiar',
       );
     });
 
@@ -138,10 +138,7 @@ void main() {
         ),
       ]);
 
-      expect(
-        composition.issues.map((i) => i.message),
-        isNot(contains(contains('is a token'))),
-      );
+      expect(composition.issues.whereType<TokenInDeckIssue>(), isEmpty);
     });
   });
 }

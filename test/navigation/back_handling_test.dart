@@ -1,4 +1,5 @@
 import 'package:digi_card_app/core/router/navigation.dart';
+import 'package:digi_card_app/l10n/l10n.dart';
 import 'package:digi_card_app/shared/widgets/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,7 +67,11 @@ void main() {
     tester,
   ) async {
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     router.go('/decks');
     await tester.pumpAndSettle();
 
@@ -93,7 +98,11 @@ void main() {
     // not been rebuilt, so everything that asks the navigator says there is
     // nothing to go back to — and an unhandled back means "leave the app".
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     router.go('/decks');
     await tester.pumpAndSettle();
 
@@ -116,7 +125,11 @@ void main() {
     // The other half: at the root there genuinely is nowhere to go, and
     // Android expects back to leave the app.
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     router.go('/decks');
     await tester.pumpAndSettle();
     // Well clear of the window that protects a page still opening.
@@ -134,7 +147,11 @@ void main() {
     tester,
   ) async {
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     expect(isPushSettling, isFalse, reason: 'nothing pushed yet');

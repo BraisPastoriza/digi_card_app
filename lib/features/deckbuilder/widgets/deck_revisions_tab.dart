@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/models/deck.dart';
+import '../../../l10n/l10n.dart';
 import '../deck_providers.dart';
 import 'deck_name_dialog.dart';
 
@@ -25,8 +26,7 @@ class DeckRevisionsTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
         Text(
-          'The active revision is the one you edit. Branch a new revision to '
-          'experiment while keeping the current list intact.',
+          context.l10n.revisionsExplainer,
           style: TextStyle(
             fontSize: 13,
             height: 1.45,
@@ -47,7 +47,7 @@ class DeckRevisionsTab extends ConsumerWidget {
               child: FilledButton.icon(
                 onPressed: () => _branch(context, ref),
                 icon: const Icon(Icons.call_split, size: 18),
-                label: const Text('Branch active'),
+                label: Text(context.l10n.revisionsBranch),
               ),
             ),
             const SizedBox(width: 10),
@@ -55,7 +55,7 @@ class DeckRevisionsTab extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed: () => _createEmpty(context, ref),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Empty'),
+                label: Text(context.l10n.revisionsEmpty),
               ),
             ),
           ],
@@ -82,11 +82,11 @@ class DeckRevisionsTab extends ConsumerWidget {
     if (source == null) return;
     final name = await showDeckNameDialog(
       context,
-      title: 'Branch from ${source.name}',
-      label: 'Revision name',
+      title: context.l10n.revisionBranchTitle(source.name),
+      label: context.l10n.revisionNameLabel,
       initialValue: _suggestedName(),
-      confirmLabel: 'Create',
-      helperText: 'Copies the cards in ${source.name}',
+      confirmLabel: context.l10n.actionCreate,
+      helperText: context.l10n.revisionBranchHelper(source.name),
     );
     if (name == null) return;
     await ref
@@ -101,10 +101,10 @@ class DeckRevisionsTab extends ConsumerWidget {
   Future<void> _createEmpty(BuildContext context, WidgetRef ref) async {
     final name = await showDeckNameDialog(
       context,
-      title: 'New empty revision',
-      label: 'Revision name',
+      title: context.l10n.revisionNewEmptyTitle,
+      label: context.l10n.revisionNameLabel,
       initialValue: _suggestedName(),
-      confirmLabel: 'Create',
+      confirmLabel: context.l10n.actionCreate,
     );
     if (name == null) return;
     await ref
@@ -155,19 +155,30 @@ class _RevisionCard extends ConsumerWidget {
         subtitle: Text(
           composition == null
               ? _formatDate(revision.updatedAt)
-              : '${composition.mainDeckCount} main · '
-                    '${composition.eggDeckCount} eggs · '
-                    '${_formatDate(revision.updatedAt)}',
+              : context.l10n.revisionSummary(
+                  composition.mainDeckCount,
+                  composition.eggDeckCount,
+                  _formatDate(revision.updatedAt),
+                ),
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (action) => _handle(context, ref, action),
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'rename', child: Text('Rename')),
-            const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
+            PopupMenuItem(
+              value: 'rename',
+              child: Text(context.l10n.actionRename),
+            ),
+            PopupMenuItem(
+              value: 'duplicate',
+              child: Text(context.l10n.actionDuplicate),
+            ),
             if (deck.revisions.length > 1)
               PopupMenuItem(
                 value: 'delete',
-                child: Text('Delete', style: TextStyle(color: scheme.error)),
+                child: Text(
+                  context.l10n.actionDelete,
+                  style: TextStyle(color: scheme.error),
+                ),
               ),
           ],
         ),
@@ -185,8 +196,8 @@ class _RevisionCard extends ConsumerWidget {
       case 'rename':
         final name = await showDeckNameDialog(
           context,
-          title: 'Rename revision',
-          label: 'Revision name',
+          title: context.l10n.revisionRenameTitle,
+          label: context.l10n.revisionNameLabel,
           initialValue: revision.name,
         );
         if (name != null) await dao.renameRevision(revision.id, name);
@@ -194,10 +205,10 @@ class _RevisionCard extends ConsumerWidget {
         if (!context.mounted) return;
         final name = await showDeckNameDialog(
           context,
-          title: 'Duplicate ${revision.name}',
-          label: 'Revision name',
-          initialValue: '${revision.name} copy',
-          confirmLabel: 'Create',
+          title: context.l10n.revisionDuplicateTitle(revision.name),
+          label: context.l10n.revisionNameLabel,
+          initialValue: context.l10n.revisionCopyName(revision.name),
+          confirmLabel: context.l10n.actionCreate,
         );
         if (name != null) {
           await dao.createRevisionFrom(
@@ -217,22 +228,19 @@ class _RevisionCard extends ConsumerWidget {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete ${revision.name}?'),
-        content: const Text(
-          'The cards in this revision are removed. Other revisions of the '
-          'deck are not affected.',
-        ),
+        title: Text(context.l10n.revisionDeleteTitle(revision.name)),
+        content: Text(context.l10n.revisionDeleteBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(context.l10n.actionDelete),
           ),
         ],
       ),

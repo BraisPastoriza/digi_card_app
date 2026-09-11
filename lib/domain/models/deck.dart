@@ -100,33 +100,87 @@ abstract final class DeckRules {
 /// the deck is simply flagged as not tournament legal.
 enum DeckIssueSeverity { error, warning }
 
-class DeckIssue {
-  const DeckIssue(this.severity, this.message);
+/// Something wrong with a deck, as data rather than as a sentence.
+///
+/// The rules are the same everywhere; the words are not, so the screen that
+/// shows an issue is what puts it into the reader's language.
+sealed class DeckIssue {
+  const DeckIssue(this.severity);
 
   final DeckIssueSeverity severity;
-  final String message;
 }
+
+/// The main deck is not the 50 cards the rules require.
+class MainDeckSizeIssue extends DeckIssue {
+  const MainDeckSizeIssue(this.difference) : super(DeckIssueSeverity.error);
+
+  /// Cards missing when positive, cards over when negative.
+  final int difference;
+}
+
+class EggDeckSizeIssue extends DeckIssue {
+  const EggDeckSizeIssue(this.excess) : super(DeckIssueSeverity.error);
+
+  final int excess;
+}
+
+/// More copies of a card than it is allowed, whether by the four-copy rule or
+/// by the restriction list.
+class CopyLimitIssue extends DeckIssue {
+  const CopyLimitIssue({
+    required this.entry,
+    required this.limit,
+    this.limitation,
+  }) : super(DeckIssueSeverity.error);
+
+  final DeckEntry entry;
+  final int limit;
+
+  /// The restriction list entry behind the limit, or null when it is simply
+  /// the four copies every card gets.
+  final CardLimitation? limitation;
+}
+
+/// Two cards the restriction list forbids sharing a deck.
+class BannedPairIssue extends DeckIssue {
+  const BannedPairIssue(this.entry, this.partner)
+    : super(DeckIssueSeverity.error);
+
+  final DeckEntry entry;
+  final DeckEntry partner;
+}
+
+class TokenInDeckIssue extends DeckIssue {
+  const TokenInDeckIssue(this.entry) : super(DeckIssueSeverity.error);
+
+  final DeckEntry entry;
+}
+
+class EmptyEggDeckIssue extends DeckIssue {
+  const EmptyEggDeckIssue() : super(DeckIssueSeverity.warning);
+}
+
+/// The blocks a deck list is written in, in the order they are shown.
+enum DeckSectionKind { digiEggs, digimon, tamers, options }
 
 /// One block of a deck list, e.g. the Lv.4 Digimon.
 class DeckSection {
   const DeckSection({
-    required this.title,
+    required this.kind,
     required this.entries,
-    this.subtitle,
+    this.level,
     this.limit,
   });
 
-  final String title;
+  final DeckSectionKind kind;
 
-  /// Qualifier shown next to [title], e.g. `Lv.4`.
-  final String? subtitle;
+  /// The level the block gathers, where it is split by level.
+  final int? level;
 
   final List<DeckEntry> entries;
 
   /// Copies the rules allow in this block, where there is a ceiling.
   final int? limit;
-
-  String get label => subtitle == null ? title : '$title · $subtitle';
 
   int get count => entries.fold(0, (sum, e) => sum + e.quantity);
 }
@@ -202,24 +256,27 @@ class DeckComposition {
 
     return [
       DeckSection(
-        title: 'Digi-Eggs',
-        subtitle: 'Lv.2',
+        kind: DeckSectionKind.digiEggs,
+        level: 2,
         entries: eggDeck.sorted(_byCostThenNumber),
         limit: DeckRules.maxEggDeckSize,
       ),
       for (final level in digimonByLevel.keys.sorted((a, b) => a.compareTo(b)))
         DeckSection(
-          title: 'Digimon',
-          subtitle: 'Lv.$level',
+          kind: DeckSectionKind.digimon,
+          level: level,
           entries: digimonByLevel[level]!,
         ),
-      DeckSection(title: 'Digimon', entries: levellessDigimon),
       DeckSection(
-        title: 'Tamers',
+        kind: DeckSectionKind.digimon,
+        entries: levellessDigimon,
+      ),
+      DeckSection(
+        kind: DeckSectionKind.tamers,
         entries: entriesOfCategory(CardCategory.tamer),
       ),
       DeckSection(
-        title: 'Options',
+        kind: DeckSectionKind.options,
         entries: entriesOfCategory(CardCategory.option),
       ),
     ].where((section) => section.entries.isNotEmpty).toList();
@@ -270,38 +327,21 @@ class DeckComposition {
     final issues = <DeckIssue>[];
 
     if (mainDeckCount != DeckRules.mainDeckSize) {
-      final diff = DeckRules.mainDeckSize - mainDeckCount;
-      issues.add(
-        DeckIssue(
-          DeckIssueSeverity.error,
-          diff > 0
-              ? 'Main deck needs $diff more ${_cardWord(diff)} (${DeckRules.mainDeckSize} required).'
-              : 'Main deck is over by ${-diff} ${_cardWord(-diff)} (${DeckRules.mainDeckSize} allowed).',
-        ),
-      );
+      issues.add(MainDeckSizeIssue(DeckRules.mainDeckSize - mainDeckCount));
     }
 
     if (eggDeckCount > DeckRules.maxEggDeckSize) {
-      issues.add(
-        DeckIssue(
-          DeckIssueSeverity.error,
-          'Egg deck is over by ${eggDeckCount - DeckRules.maxEggDeckSize} '
-          '(${DeckRules.maxEggDeckSize} allowed).',
-        ),
-      );
+      issues.add(EggDeckSizeIssue(eggDeckCount - DeckRules.maxEggDeckSize));
     }
 
     for (final entry in allEntries) {
       final limit = entry.card.copyLimit;
       if (entry.quantity > limit) {
-        final reason = entry.card.activeLimitation;
         issues.add(
-          DeckIssue(
-            DeckIssueSeverity.error,
-            reason == null
-                ? '${entry.card.name} (${entry.cardNumber}): ${entry.quantity} copies, max $limit.'
-                : '${entry.card.name} (${entry.cardNumber}) is ${reason.type.label.toLowerCase()} '
-                      'to $limit ${_copyWord(limit)}; deck has ${entry.quantity}.',
+          CopyLimitIssue(
+            entry: entry,
+            limit: limit,
+            limitation: entry.card.activeLimitation,
           ),
         );
       }
@@ -311,22 +351,11 @@ class DeckComposition {
 
     // Decks built before tokens were blocked can still hold one.
     for (final entry in allEntries.where((e) => e.card.isToken)) {
-      issues.add(
-        DeckIssue(
-          DeckIssueSeverity.error,
-          '${entry.card.name} (${entry.cardNumber}) is a token. Tokens are '
-          'created during play and cannot be part of a deck.',
-        ),
-      );
+      issues.add(TokenInDeckIssue(entry));
     }
 
     if (eggDeckCount == 0 && mainDeckCount > 0) {
-      issues.add(
-        const DeckIssue(
-          DeckIssueSeverity.warning,
-          'Egg deck is empty. Most decks run 4-5 Digi-Eggs.',
-        ),
-      );
+      issues.add(const EmptyEggDeckIssue());
     }
 
     return issues;
@@ -366,14 +395,7 @@ class DeckComposition {
           // still one problem and belongs in the list once.
           final pair = ([entry.cardNumber, number]..sort()).join('|');
           if (!reported.add(pair)) continue;
-          issues.add(
-            DeckIssue(
-              DeckIssueSeverity.error,
-              '${entry.card.name} (${entry.cardNumber}) and '
-              '${partner.card.name} ($number) are a banned pair; a deck may '
-              'run either one, not both.',
-            ),
-          );
+          issues.add(BannedPairIssue(entry, partner));
         }
       }
     }
@@ -381,8 +403,4 @@ class DeckComposition {
   }
 
   bool get isLegal => !issues.any((i) => i.severity == DeckIssueSeverity.error);
-
-  static String _cardWord(int count) => count == 1 ? 'card' : 'cards';
-
-  static String _copyWord(int count) => count == 1 ? 'copy' : 'copies';
 }

@@ -1,0 +1,1268 @@
+{
+  "@@locale": "en",
+  "appTitle": "DigiCard App",
+  "@appTitle": {
+    "description": "The application name, shown in the task switcher."
+  },
+  "navLibrary": "Library",
+  "@navLibrary": {
+    "description": "Bottom navigation tab holding the card database."
+  },
+  "navDecks": "Decks",
+  "@navDecks": {
+    "description": "Bottom navigation tab holding the user's decks."
+  },
+  "viewerZoomHint": "Pinch or double-tap to zoom",
+  "viewerPageOf": "{index} / {total}",
+  "@viewerPageOf": {
+    "description": "Position within the card's alternate arts.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actionClear": "Clear",
+  "@actionClear": {
+    "description": "Empties the current selection."
+  },
+  "actionDone": "Done",
+  "@actionDone": {
+    "description": "Confirms a selection and closes the page."
+  },
+  "multiSelectSearchHint": "Search {facet}",
+  "@multiSelectSearchHint": {
+    "description": "Hint in the search field of a value picker; facet is the lowercased page title, e.g. traits.",
+    "placeholders": {
+      "facet": {
+        "type": "String"
+      }
+    }
+  },
+  "multiSelectCount": "{count} selected",
+  "@multiSelectCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "multiSelectNoMatch": "Nothing matches \"{query}\"",
+  "@multiSelectNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "releasePreviewBadge": "PREVIEW",
+  "@releasePreviewBadge": {
+    "description": "Marks an expansion whose cards are not released yet. Uppercase."
+  },
+  "syncSettingUp": "Setting up your card library",
+  "syncRederiving": "Updating your cards to the new card rules",
+  "syncFailedTitle": "Could not download the card database",
+  "syncRederivingDetail": "Reading the cards you already have. Nothing is being downloaded.",
+  "syncOfflineNote": "The full card list is stored on your device, so the library and deck builder work offline.",
+  "actionTryAgain": "Try again",
+  "syncErrorGeneric": "Something went wrong.",
+  "syncErrorOffline": "No internet connection. Connect and try again — the card database only needs to download once.",
+  "syncStageChecking": "Checking for card updates",
+  "syncStageReleases": "Fetching expansions",
+  "syncStageDownloading": "Downloading card data",
+  "syncStageParsing": "Reading cards",
+  "syncStageStoring": "Saving cards",
+  "syncStageIndexing": "Building search index",
+  "syncStageComplete": "Up to date",
+  "syncStageFailed": "Sync failed",
+  "syncDetailExpansions": "{completed} of {total} expansions",
+  "@syncDetailExpansions": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "syncDetailMegabytes": "{received} of {total} MB",
+  "@syncDetailMegabytes": {
+    "placeholders": {
+      "received": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncDetailCards": "{count} cards",
+  "@syncDetailCards": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncDetailPreview": "Preview: {pack}",
+  "@syncDetailPreview": {
+    "placeholders": {
+      "pack": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryTitle": "Library",
+  "@libraryTitle": {
+    "description": "Title of the expansions screen."
+  },
+  "libraryDatabaseTooltip": "Card database",
+  "libraryReleasesError": "Could not load expansions",
+  "librarySearchHint": "Search cards, effects, traits",
+  "librarySectionSubtitle": "{sets} sets · {cards} cards",
+  "@librarySectionSubtitle": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "cards": {
+        "type": "int"
+      }
+    }
+  },
+  "databaseTitle": "Card database",
+  "databaseCardsStored": "Cards stored",
+  "databasePublished": "Data published",
+  "databaseLastDownloaded": "Last downloaded",
+  "databaseUnknown": "unknown",
+  "@databaseUnknown": {
+    "description": "Stands in for a date the database does not have."
+  },
+  "databaseNever": "never",
+  "@databaseNever": {
+    "description": "Stands in for a download that has not happened."
+  },
+  "databaseSources": "Card data comes from the Heroicc API, plus {source} for sets Heroicc has not published yet. Refreshing re-downloads the full card list, which is how new sets show up.",
+  "@databaseSources": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "databaseCredits": "Data sources & credits",
+  "databaseCheckUpdates": "Check for updates",
+  "searchHint": "Name, effect, trait…",
+  "searchFailed": "Search failed",
+  "searchNoCards": "No cards found",
+  "searchNoCardsFiltered": "Try removing a filter or two.",
+  "searchNoCardsPlain": "Nothing matches that search.",
+  "searchClearFilters": "Clear filters",
+  "searchEndOfResults": "End of results",
+  "searchSearching": "Searching…",
+  "searchResultCount": "{count, plural, =1{{count} card} other{{count} cards}}",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchSortTooltip": "Sort",
+  "searchRemoveFacet": "Remove {facet}",
+  "@searchRemoveFacet": {
+    "placeholders": {
+      "facet": {
+        "type": "String"
+      }
+    }
+  },
+  "searchClearAll": "Clear all",
+  "releaseFallbackTitle": "Expansion",
+  "releaseCardCount": "{count, plural, =1{{count} card} other{{count} cards}}",
+  "@releaseCardCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "releasePromosOnly": "Promos only",
+  "releaseAltArts": "Alt arts +{count}",
+  "@releaseAltArts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "releaseCardsError": "Could not load cards",
+  "releaseEmptyTitle": "No cards in this expansion",
+  "releaseEmptyMessage": "The card list may not have been published yet.",
+  "releasePreviewNotice": "Preview set. This expansion is not in the main card database yet, so its cards come from {source} and are still being corrected. Some may be missing, and rulings and alternate arts are not available. Pull down to check for newly revealed cards.",
+  "@releasePreviewNotice": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "releaseRefreshedNothing": "No new cards — this set is as complete as {source} has it.",
+  "@releaseRefreshedNothing": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "releaseRefreshedUpdated": "Updated from {source}.",
+  "@releaseRefreshedUpdated": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "colorRed": "Red",
+  "colorBlue": "Blue",
+  "colorYellow": "Yellow",
+  "colorGreen": "Green",
+  "colorBlack": "Black",
+  "colorPurple": "Purple",
+  "colorWhite": "White",
+  "categoryDigimon": "Digimon",
+  "@categoryDigimon": {
+    "description": "Card type. Left in English in every language: it is the word printed on the card."
+  },
+  "categoryTamer": "Tamer",
+  "@categoryTamer": {
+    "description": "Card type, printed on the card and left in English."
+  },
+  "categoryOption": "Option",
+  "@categoryOption": {
+    "description": "Card type, printed on the card and left in English."
+  },
+  "categoryDigiEgg": "Digi-Egg",
+  "@categoryDigiEgg": {
+    "description": "Card type, printed on the card and left in English."
+  },
+  "releaseGroupBooster": "Booster Packs",
+  "releaseGroupEx": "EX Boosters",
+  "releaseGroupStarter": "Starter Decks",
+  "releaseGroupAdvanceDeck": "Advanced Boosters",
+  "releaseGroupLimited": "Limited Card Packs",
+  "releaseGroupResurgence": "Resurgence Boosters",
+  "releaseGroupPromo": "Promotional Cards",
+  "releaseGroupOther": "Other Products",
+  "sortCardNumber": "Card number",
+  "sortNameAsc": "Name A-Z",
+  "sortCostAsc": "Cost, low to high",
+  "sortCostDesc": "Cost, high to low",
+  "sortDpDesc": "DP, high to low",
+  "sortLevelAsc": "Level, low to high",
+  "matchAnyOf": "Any of",
+  "@matchAnyOf": {
+    "description": "Filter mode: a card needs only one of the selected values."
+  },
+  "matchAllOf": "All of",
+  "@matchAllOf": {
+    "description": "Filter mode: a card needs every selected value."
+  },
+  "matchExactly": "Exactly",
+  "@matchExactly": {
+    "description": "Colour filter mode: the card's colours are exactly those selected."
+  },
+  "limitationRestricted": "Restricted",
+  "limitationBanned": "Banned",
+  "limitationBannedPair": "Banned Pair",
+  "limitationUnrestricted": "Unrestricted",
+  "filtersTitle": "Filters",
+  "filtersReset": "Reset",
+  "filterColor": "Color",
+  "filterCardType": "Card type",
+  "filterLevel": "Level",
+  "filterLevelValue": "Lv.{level}",
+  "@filterLevelValue": {
+    "description": "A Digimon level as a filter chip.",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "filterPlayCost": "Play / use cost",
+  "filterDigivolveCost": "Digivolution cost",
+  "filterDp": "DP",
+  "@filterDp": {
+    "description": "Digimon power, printed on the card as DP in every language."
+  },
+  "filterKeyword": "Keyword",
+  "filterRarity": "Rarity",
+  "filterAttribute": "Attribute",
+  "filterForm": "Form",
+  "filterTrait": "Trait",
+  "filterTraits": "Traits",
+  "@filterTraits": {
+    "description": "Title of the full-screen trait picker."
+  },
+  "filterExpansion": "Expansion",
+  "filterExpansions": "Expansions",
+  "@filterExpansions": {
+    "description": "Title of the full-screen expansion picker."
+  },
+  "filterNarrowNote": "ACE, dual and token cards narrow whichever types are selected.",
+  "filterAltArts": "Show alternate arts",
+  "filterAltArtsSubtitle": "List every printing instead of one card per number",
+  "filterRestrictedOnly": "Restricted cards only",
+  "filterRestrictedOnlySubtitle": "Cards limited or banned by the official list",
+  "filterAny": "Any",
+  "@filterAny": {
+    "description": "Shown where a filter is not narrowing anything."
+  },
+  "filterShowResults": "Show results",
+  "filterShowCount": "{count, plural, =1{Show 1 card} other{Show {count} cards}}",
+  "@filterShowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "facetLevels": "Lv. {levels}",
+  "@facetLevels": {
+    "description": "Chip listing the levels being filtered on, e.g. Lv. 3, 4.",
+    "placeholders": {
+      "levels": {
+        "type": "String"
+      }
+    }
+  },
+  "facetCost": "Cost",
+  "facetDigivolve": "Digivolve",
+  "facetDp": "DP",
+  "facetDualCard": "Dual Card",
+  "facetToken": "Token",
+  "@facetToken": {
+    "description": "Card type printed on the card; left in English."
+  },
+  "facetAlternateArts": "Alternate arts",
+  "facetRangeExact": "{label} {value}",
+  "@facetRangeExact": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "facetRangeBetween": "{label} {min}-{max}",
+  "@facetRangeBetween": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "facetRangeFrom": "{label} {min}+",
+  "@facetRangeFrom": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "facetRangeUpTo": "{label} ≤{max}",
+  "@facetRangeUpTo": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "cardLoadError": "Could not load card",
+  "cardNotFound": "Card not found",
+  "cardNotFoundMessage": "It may have been removed in the last card update.",
+  "cardAddToDeck": "Add to deck",
+  "cardEffect": "Effect",
+  "cardSecurityEffect": "Security effect",
+  "cardInheritedEffect": "Inherited effect",
+  "cardInheritedEffects": "Inherited effects",
+  "cardOriginalArt": "Original art",
+  "cardAlternateArt": "Alternate art {number}",
+  "@cardAlternateArt": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cardBlock": "Block {block}",
+  "@cardBlock": {
+    "placeholders": {
+      "block": {
+        "type": "int"
+      }
+    }
+  },
+  "cardDualBadge": "Dual card",
+  "cardLevel": "Level",
+  "cardPlayCost": "Play cost",
+  "cardUseCost": "Use cost",
+  "cardDp": "DP",
+  "cardForm": "Form",
+  "cardAttribute": "Attribute",
+  "cardNotTournamentLegal": "{limitation} — not tournament legal",
+  "@cardNotTournamentLegal": {
+    "placeholders": {
+      "limitation": {
+        "type": "String"
+      }
+    }
+  },
+  "cardLimitedTo": "{limitation} to {count, plural, =1{{count} copy} other{{count} copies}}",
+  "@cardLimitedTo": {
+    "placeholders": {
+      "limitation": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardPairBanTitle": "Banned pair — playable, but not together",
+  "cardPairBanOne": "A deck with this card cannot also run {partner}.",
+  "@cardPairBanOne": {
+    "placeholders": {
+      "partner": {
+        "type": "String"
+      }
+    }
+  },
+  "cardPairBanMany": "A deck with this card cannot also run any of {partners}.",
+  "@cardPairBanMany": {
+    "placeholders": {
+      "partners": {
+        "type": "String"
+      }
+    }
+  },
+  "cardRaisedCopyLimit": "A deck may run up to {limit} copies of this card.",
+  "@cardRaisedCopyLimit": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "cardDigivolveTitle": "Digivolution requirements",
+  "cardDigivolveFromText": "{count, plural, =1{The last condition is printed in the card’s effect box, not in its cost box.} other{The last {count} conditions are printed in the card’s effect box, not in its cost box.}}",
+  "@cardDigivolveFromText": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardLevelUnpublished": "Level not published yet",
+  "cardConditionUnpublished": "Condition not published yet",
+  "cardCostValue": "Cost {cost}",
+  "@cardCostValue": {
+    "placeholders": {
+      "cost": {
+        "type": "int"
+      }
+    }
+  },
+  "cardOtherFace": "Other face — {category}",
+  "@cardOtherFace": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "cardErrata": "Errata",
+  "cardErrataDated": "Errata · {date}",
+  "@cardErrataDated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cardErrataPrinted": "Printed",
+  "cardErrataShouldRead": "Should read",
+  "cardFoundIn": "Found in",
+  "cardRulings": "Rulings ({count})",
+  "@cardRulings": {
+    "description": "Section heading for official Q&A about the card. Rulings is used untranslated by Spanish-speaking players.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardPreviewNotice": "Preview card from a set that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.",
+  "digivolveLevel": "Lv.{level}",
+  "@digivolveLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "digivolveAppmonGrade": "{grade} Appmon",
+  "@digivolveAppmonGrade": {
+    "description": "An Appmon grade, e.g. Standard Appmon. The grade itself is card text.",
+    "placeholders": {
+      "grade": {
+        "type": "String"
+      }
+    }
+  },
+  "digivolveAnyColor": "any colour",
+  "creditsTitle": "Data & credits",
+  "creditsArtworkTitle": "Card artwork and card text",
+  "creditsArtworkBody": "All card images, card text and related imagery are the intellectual property of © Akiyoshi Hongo, Toei Animation and © BANDAI. Their copyrights, trademarks and related rights apply.\n\nDigiCard App is a fan-made tool. It is not affiliated with, endorsed by, or connected to Bandai Namco Entertainment or Toei Animation.",
+  "creditsHeroiTitle": "Card data — Heroicc",
+  "creditsHeroiBody": "The card database, expansion list and rulings come from the Heroicc API.\n\nDigiCard App is not affiliated with, endorsed by, or connected to Heroicc. Original content provided by Heroicc — that is, the parts not owned by Akiyoshi Hongo, Toei Animation or BANDAI — is used under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International licence (CC BY-NC-SA 4.0).",
+  "creditsPreviewTitle": "Preview sets — {source}",
+  "@creditsPreviewTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsPreviewBody": "A set the Heroicc API has not published yet is filled in from the digimoncard.io public API so its cards can be searched and built with early. Those sets are marked PREVIEW wherever they appear.\n\nDigiCard App is not affiliated with, endorsed by, or connected to digimoncard.io. Preview data is community-maintained and still changing: expect gaps and corrections, and check anything that matters against the printed card.",
+  "creditsImagesTitle": "How this app treats card images",
+  "creditsImagesBody": "Card images are shown and exported whole. The app does not crop or cover the copyright line or the artist name, and adds no watermark, stamp or logo of its own to a card image.",
+  "creditsCachingTitle": "Caching",
+  "creditsCachingBody": "The full card list is downloaded once and kept on your device, so browsing and deck building make no further requests. Both APIs ask callers to cache rather than re-fetch, and to identify themselves; this app sends its own User-Agent on every request.",
+  "creditsFooter": "Card images and text © Akiyoshi Hongo, Toei Animation, © BANDAI. Card data from Heroicc and {source}. DigiCard App is a fan project, not affiliated with any of them.",
+  "@creditsFooter": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "issueMainDeckShort": "{missing, plural, =1{Main deck needs 1 more card ({size} required).} other{Main deck needs {missing} more cards ({size} required).}}",
+  "@issueMainDeckShort": {
+    "placeholders": {
+      "missing": {
+        "type": "int"
+      },
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "issueMainDeckOver": "{excess, plural, =1{Main deck is over by 1 card ({size} allowed).} other{Main deck is over by {excess} cards ({size} allowed).}}",
+  "@issueMainDeckOver": {
+    "placeholders": {
+      "excess": {
+        "type": "int"
+      },
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "issueEggDeckOver": "Egg deck is over by {excess} ({size} allowed).",
+  "@issueEggDeckOver": {
+    "placeholders": {
+      "excess": {
+        "type": "int"
+      },
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "issueTooManyCopies": "{name} ({number}): {quantity} copies, max {limit}.",
+  "@issueTooManyCopies": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "issueTooManyCopiesLimited": "{name} ({number}) is {limitation} to {limit, plural, =1{1 copy} other{{limit} copies}}; deck has {quantity}.",
+  "@issueTooManyCopiesLimited": {
+    "description": "limitation is the lowercased restriction type, e.g. restricted.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      },
+      "limitation": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "issueBannedPair": "{name} ({number}) and {partnerName} ({partnerNumber}) are a banned pair; a deck may run either one, not both.",
+  "@issueBannedPair": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      },
+      "partnerName": {
+        "type": "String"
+      },
+      "partnerNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "issueToken": "{name} ({number}) is a token. Tokens are created during play and cannot be part of a deck.",
+  "@issueToken": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "issueEmptyEggDeck": "Egg deck is empty. Most decks run 4-5 Digi-Eggs.",
+  "sectionDigiEggs": "Digi-Eggs",
+  "@sectionDigiEggs": {
+    "description": "Deck section heading; the card type as printed, left in English."
+  },
+  "sectionDigimon": "Digimon",
+  "@sectionDigimon": {
+    "description": "Deck section heading; the card type as printed, left in English."
+  },
+  "sectionTamers": "Tamers",
+  "@sectionTamers": {
+    "description": "Deck section heading; the card type as printed, left in English."
+  },
+  "sectionOptions": "Options",
+  "@sectionOptions": {
+    "description": "Deck section heading; the card type as printed, left in English."
+  },
+  "sectionWithLevel": "{section} · Lv.{level}",
+  "@sectionWithLevel": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "decksTitle": "Decks",
+  "decksTabStaples": "Staples",
+  "@decksTabStaples": {
+    "description": "Tab holding the user's reusable card lists."
+  },
+  "decksImportDeck": "Import deck list",
+  "decksImportStaples": "Import staple list",
+  "decksNewDeck": "New deck",
+  "decksNewList": "New list",
+  "decksLoadError": "Could not load decks",
+  "decksEmptyTitle": "No decks yet",
+  "decksEmptyMessage": "Build a deck of 50 cards plus up to 5 Digi-Eggs. Every deck keeps its own revisions, so you can try changes without losing what worked.",
+  "decksCreateFirst": "Create your first deck",
+  "decksSearchHint": "Search decks",
+  "decksNoMatchTitle": "No decks match",
+  "decksNoMatchMessage": "Nothing here is called \"{query}\".",
+  "@decksNoMatchMessage": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "deckRevisionCount": "{count, plural, =1{1 revision} other{{count} revisions}}",
+  "@deckRevisionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deckRevisionWithCount": "{name} · {count, plural, =1{1 revision} other{{count} revisions}}",
+  "@deckRevisionWithCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deckNoRevisions": "No revisions",
+  "actionRename": "Rename",
+  "actionDelete": "Delete",
+  "actionCancel": "Cancel",
+  "actionSave": "Save",
+  "deckRenameTitle": "Rename deck",
+  "deckNameLabel": "Deck name",
+  "dialogNameLabel": "Name",
+  "deckDeleteTitle": "Delete {name}?",
+  "@deckDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deckDeleteBody": "{count, plural, =1{The deck and its 1 revision are removed. This cannot be undone.} other{The deck and all {count} of its revisions are removed. This cannot be undone.}}",
+  "@deckDeleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deckCountMain": "Main",
+  "@deckCountMain": {
+    "description": "Label next to the main deck's card count."
+  },
+  "deckCountEggs": "Eggs",
+  "@deckCountEggs": {
+    "description": "Label next to the egg deck's card count."
+  },
+  "deckLegal": "Legal",
+  "deckDraft": "Draft",
+  "thumbnailTitle": "Deck thumbnail",
+  "thumbnailSubtitle": "The card that stands for this deck in the deck list.",
+  "thumbnailEmptyTitle": "Nothing to pick yet",
+  "thumbnailEmptyMessage": "Add cards to this revision first.",
+  "thumbnailAutomatic": "Choose automatically",
+  "thumbnailAutomaticNamed": "Choose automatically ({name})",
+  "@thumbnailAutomaticNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stapleSourceTitle": "Build from a staple list",
+  "stapleSourceEmpty": "You have no lists yet. Build one under Decks · Staples.",
+  "stapleSourceHint": "Opens the card picker showing just that list.",
+  "cardCount": "{count, plural, =1{1 card} other{{count} cards}}",
+  "@cardCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deckLoadError": "Could not load deck",
+  "deckNotFound": "Deck not found",
+  "deckNotFoundMessage": "It may have been deleted.",
+  "deckEditing": "Editing {revision}",
+  "@deckEditing": {
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "deckMenuRename": "Rename deck",
+  "deckMenuThumbnail": "Deck thumbnail",
+  "deckMenuTestHand": "Test hand",
+  "deckMenuExport": "Export",
+  "deckMenuClear": "Clear {revision}",
+  "@deckMenuClear": {
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "deckMenuDelete": "Delete deck",
+  "deckTabCards": "Cards",
+  "deckTabRevisions": "Revisions ({count})",
+  "@deckTabRevisions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deckTabStats": "Stats",
+  "deckAddCards": "Add cards",
+  "deckNoRevisionsTitle": "This deck has no revisions",
+  "deckNoRevisionsMessage": "Create one to start adding cards.",
+  "deckClearTitle": "Clear {revision}?",
+  "@deckClearTitle": {
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "deckClearMessage": "Removes every card from this revision. Other revisions keep their cards.",
+  "actionClearConfirm": "Clear",
+  "revisionLoadError": "Could not load this revision",
+  "revisionEmptyTitle": "This revision is empty",
+  "revisionEmptyMessage": "Add 50 cards to the main deck and up to 5 Digi-Eggs to the egg deck. A deck with nothing in it is not kept, so leaving now is the same as never having made it.",
+  "deckCardTileBadge": "Card",
+  "@deckCardTileBadge": {
+    "description": "Button that opens the card's own page from a deck tile."
+  },
+  "statsLoadError": "Could not analyse this revision",
+  "statsEmptyTitle": "Nothing to analyse yet",
+  "statsEmptyMessage": "Add cards to see the curve and colour balance.",
+  "statsCurveTitle": "Cost curve",
+  "statsCurveSubtitle": "Play cost of main deck cards",
+  "statsLevelTitle": "Level spread",
+  "statsLevelSubtitle": "Levels in the main deck",
+  "statsColorTitle": "Colour balance",
+  "statsColorSubtitle": "Cards of each colour, counting duals twice",
+  "statsLegal": "Tournament legal",
+  "statsNotLegal": "Not legal yet",
+  "statsDeckCounts": "{main}/{mainSize} · {eggs}/{eggSize}",
+  "@statsDeckCounts": {
+    "placeholders": {
+      "main": {
+        "type": "int"
+      },
+      "mainSize": {
+        "type": "int"
+      },
+      "eggs": {
+        "type": "int"
+      },
+      "eggSize": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNoCosts": "No cards with a cost yet",
+  "statsNoColors": "No colours yet",
+  "revisionsExplainer": "The active revision is the one you edit. Branch a new revision to experiment while keeping the current list intact.",
+  "revisionsBranch": "Branch active",
+  "revisionsEmpty": "Empty",
+  "revisionBranchTitle": "Branch from {name}",
+  "@revisionBranchTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionBranchHelper": "Copies the cards in {name}",
+  "@revisionBranchHelper": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionNameLabel": "Revision name",
+  "actionCreate": "Create",
+  "revisionNewEmptyTitle": "New empty revision",
+  "revisionSummary": "{main} main · {eggs} eggs · {date}",
+  "@revisionSummary": {
+    "placeholders": {
+      "main": {
+        "type": "int"
+      },
+      "eggs": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "actionDuplicate": "Duplicate",
+  "revisionRenameTitle": "Rename revision",
+  "revisionDuplicateTitle": "Duplicate {name}",
+  "@revisionDuplicateTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionCopyName": "{name} copy",
+  "@revisionCopyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionDeleteTitle": "Delete {name}?",
+  "@revisionDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionDeleteBody": "The cards in this revision are removed. Other revisions of the deck are not affected.",
+  "pickerCopyCapped": "{name} is {limitation} to {limit, plural, =1{1 copy} other{{limit} copies}}.",
+  "@pickerCopyCapped": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "limitation": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "pickerBannedPairWarning": "{name} is a banned pair with {partners}. A deck may run either, not both.",
+  "@pickerBannedPairWarning": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "partners": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerSearchHint": "Add cards…",
+  "pickerNoCardsFiltered": "Try a different search or clear the filters.",
+  "pickerNoCardsInList": "Nothing in this list matches. Try another source, search or filter.",
+  "pickerAllCards": "All cards",
+  "pickerListChip": "{name} · {count}",
+  "@pickerListChip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pickerMainDeck": "Main deck",
+  "pickerEggDeck": "Egg deck",
+  "pickerTapHint": "Tap a card to set copies",
+  "addToDeckTokenBlocked": "Tokens are created during play and cannot go in a deck.",
+  "addToDeckTitle": "Add to deck",
+  "addToDeckCardLine": "{name} · {number}",
+  "@addToDeckCardLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "addToDeckEmptyMessage": "Create a deck to start adding cards to it.",
+  "addToDeckNewSubtitle": "Start a deck with this card",
+  "addToDeckAdded": "Added {name} to {deck}",
+  "@addToDeckAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "deck": {
+        "type": "String"
+      }
+    }
+  },
+  "addToDeckAddedWithPair": "Added {name} to {deck} — banned pair with {partners}",
+  "@addToDeckAddedWithPair": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "deck": {
+        "type": "String"
+      },
+      "partners": {
+        "type": "String"
+      }
+    }
+  },
+  "handTitle": "Test hand",
+  "handNotFullTitle": "Not a full deck yet",
+  "handNotFullMessage": "A test hand is dealt off the {size} cards of the main deck, which the Digi-Eggs are not part of. This revision has {count} of {size}.",
+  "@handNotFullMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "handOpeningTitle": "Opening hand",
+  "handOpeningSubtitle": "The 5 cards you draw",
+  "handSecurityTitle": "Security",
+  "handSecuritySubtitle": "Top of the stack first",
+  "handTestAgain": "Test again",
+  "exportTitle": "Export",
+  "exportTabImage": "Image",
+  "exportTabText": "Text",
+  "exportNothingTitle": "Nothing to export",
+  "exportNothingMessage": "This revision has no cards in it yet.",
+  "exportFallbackDeckName": "Deck",
+  "exportRenderFailed": "Could not render the deck image.",
+  "exportNeedsPermission": "DigiCard needs permission to save to your gallery.",
+  "exportSaved": "Saved to your gallery.",
+  "exportLoadingArt": "Loading card art…",
+  "exportLayoutHint": "{description}. Pinch to look closer — the saved image is full size.",
+  "@exportLayoutHint": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "exportSaving": "Saving…",
+  "exportSaveToGallery": "Save to gallery",
+  "exportListCopied": "{format} list copied.",
+  "@exportListCopied": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "exportCopyToClipboard": "Copy to clipboard",
+  "layoutDetailed": "Detailed",
+  "layoutDetailedDescription": "Split into sections, 8 per row",
+  "layoutCompact": "Compact",
+  "layoutCompactDescription": "One grid, 7 per row",
+  "listFormatStandard": "Default",
+  "listFormatUntap": "Untap",
+  "@listFormatUntap": {
+    "description": "Name of the Untap.in deck format; a product name, left as it is."
+  },
+  "importClipboardEmpty": "The clipboard has no text in it.",
+  "importDefaultDeckName": "Imported deck",
+  "importDefaultShortName": "Imported",
+  "importTitle": "Import deck list",
+  "importExplainer": "Paste a deck list in either format — \"4 Agumon BT1-010\" or \"4 Agumon (BT1-010)\". Headings and comments between the lines are ignored.",
+  "importPaste": "Paste",
+  "importReading": "Reading…",
+  "importReadList": "Read list",
+  "importNewDeck": "New deck",
+  "importNewRevision": "New revision",
+  "importNoDecks": "You have no decks to add a revision to yet.",
+  "importDeckField": "Deck",
+  "importNothingRecognised": "No cards recognised in that list.",
+  "importSummary": "{cards} cards · {copies} copies",
+  "@importSummary": {
+    "placeholders": {
+      "cards": {
+        "type": "int"
+      },
+      "copies": {
+        "type": "int"
+      }
+    }
+  },
+  "importUnmatched": "{count, plural, =1{1 line could not be matched and will be left out:} other{{count} lines could not be matched and will be left out:}}",
+  "@importUnmatched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importAndMore": "…and {count} more",
+  "@importAndMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleNotFound": "List not found",
+  "stapleMenuRename": "Rename list",
+  "stapleMenuExport": "Export list",
+  "stapleMenuDelete": "Delete list",
+  "stapleAddCards": "Add cards",
+  "stapleEmptyTitle": "This list is empty",
+  "stapleEmptyMessage": "Add the cards you want at hand. They show up as a source in the deck builder, so you can drop them into a deck without going looking for them.",
+  "stapleMissingCards": "{count, plural, =1{1 more card is in this list but not in your library yet.} other{{count} more cards are in this list but not in your library yet.}}",
+  "@stapleMissingCards": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleRemoved": "Removed {name}",
+  "@stapleRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "actionUndo": "Undo",
+  "stapleNameLabel": "List name",
+  "staplesLoadError": "Could not load your lists",
+  "staplesEmptyTitle": "No staple lists",
+  "staplesEmptyMessage": "A staple list is a set of cards you keep coming back to — the memory boosts, the floodgates, the tamers. Build one and it shows up as a source while you add cards to a deck.",
+  "staplesCreate": "Create a list",
+  "stapleNewTitle": "New staple list",
+  "stapleDeleteTitle": "Delete {name}?",
+  "@stapleDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stapleDeleteBody": "{count, plural, =1{The list and the 1 card in it are removed. Your decks keep every card they already hold.} other{The list and the {count} cards in it are removed. Your decks keep every card they already hold.}}",
+  "@stapleDeleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleNothingYet": "Nothing in this list yet.",
+  "stapleExportCopied": "{name} copied.",
+  "@stapleExportCopied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stapleExportTitle": "Export {name}",
+  "@stapleExportTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stapleExportExplainer": "One line per card, the same shape a deck list takes, so the result reads in this app and in the tools that take deck lists.",
+  "stapleExportEmpty": "This list has no cards in it yet.",
+  "stapleExportMissing": "{count, plural, =1{1 card is in this list but not in your library yet, so it is not written out.} other{{count} cards are in this list but not in your library yet, so they are not written out.}}",
+  "@stapleExportMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "staplePickerHint": "Add cards to the list…",
+  "staplePickerSummary": "{name} · {count, plural, =1{1 card} other{{count} cards}}",
+  "@staplePickerSummary": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "staplePickerTapHint": "Tap to add or remove",
+  "stapleImportTitle": "Import a staple list",
+  "stapleImportExplainer": "Paste a list of cards — the export from this app, or any deck list. Copies are ignored: a staple list holds each card once.",
+  "stapleImportDestination": "Where it goes",
+  "stapleImportNewList": "New list",
+  "stapleImportAddToList": "Add to a list",
+  "stapleImportNameHint": "Blue tech",
+  "@stapleImportNameHint": {
+    "description": "Example staple list name shown as a hint."
+  },
+  "stapleImportNoLists": "You have no lists to add to yet.",
+  "stapleImportListField": "List",
+  "stapleImportListOption": "{name} · {count}",
+  "@stapleImportListOption": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleImportButton": "{count, plural, =1{Import 1 card} other{Import {count} cards}}",
+  "@stapleImportButton": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleImportFound": "{count, plural, =1{1 card found} other{{count} cards found}}",
+  "@stapleImportFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleImportUnmatched": "{count, plural, =1{1 line matched no card and is left out:} other{{count} lines matched no card and are left out:}}",
+  "@stapleImportUnmatched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stapleImportAndMore": "and {count} more",
+  "@stapleImportAndMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "defaultDeckName": "New Deck",
+  "@defaultDeckName": {
+    "description": "Name a deck is created with when the user does not supply one. Stored as typed, and renameable afterwards."
+  },
+  "importImporting": "Importing…",
+  "importAction": "Import"
+}

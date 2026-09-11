@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/router/navigation.dart';
 import '../../../domain/models/deck.dart';
+import '../../../l10n/l10n.dart';
+import '../deck_text.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
@@ -52,22 +54,20 @@ class _DeckCardsTabState extends ConsumerState<DeckCardsTab> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => EmptyState(
         icon: Icons.error_outline,
-        title: 'Could not load this revision',
+        title: context.l10n.revisionLoadError,
         message: '$error',
       ),
       data: (composition) {
         if (composition.allEntries.isEmpty) {
           return EmptyState(
             icon: Icons.add_card,
-            title: 'This revision is empty',
+            title: context.l10n.revisionEmptyTitle,
             message:
-                'Add 50 cards to the main deck and up to 5 Digi-Eggs to the '
-                'egg deck. A deck with nothing in it is not kept, so leaving '
-                'now is the same as never having made it.',
+                context.l10n.revisionEmptyMessage,
             action: FilledButton.icon(
               onPressed: widget.onAddCards,
               icon: const Icon(Icons.search, size: 18),
-              label: const Text('Add cards'),
+              label: Text(context.l10n.deckAddCards),
             ),
           );
         }
@@ -129,7 +129,7 @@ class _SectionHeader extends StatelessWidget {
     final limit = section.limit;
     final overLimit = limit != null && section.count > limit;
     return SectionHeader(
-      section.label,
+      sectionLabel(section, context.l10n),
       trailing: Text(
         limit == null ? '${section.count}' : '${section.count} / $limit',
         style: TextStyle(

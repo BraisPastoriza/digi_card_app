@@ -7,6 +7,8 @@ import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/digimon_colors.dart';
 import '../../../domain/models/card_enums.dart';
+import '../../../l10n/l10n.dart';
+import '../../../l10n/labels.dart';
 import '../../../domain/models/card_filter.dart';
 import '../library_providers.dart';
 import 'multi_select_page.dart';
@@ -56,6 +58,9 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   /// Sections the user has opened. Everything past the first few starts
   /// collapsed: with 48 keywords and 20-odd attributes, an all-open sheet is
   /// several screens of chips to scroll past.
+  ///
+  /// The names in here identify the sections; what each one is called on
+  /// screen comes from the translations and can change under them.
   final _open = <String>{'Color', 'Card type', 'Level'};
 
   @override
@@ -93,17 +98,20 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
           padding: const EdgeInsets.fromLTRB(20, 4, 12, 8),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Filters',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+                  context.l10n.filtersTitle,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               TextButton(
                 onPressed: _draft.activeFacetCount == 0
                     ? null
                     : () => _edit((f) => f.clearedFacets()),
-                child: const Text('Reset'),
+                child: Text(context.l10n.filtersReset),
               ),
             ],
           ),
@@ -114,7 +122,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
             children: [
               _Section(
-                title: 'Color',
+                title: context.l10n.filterColor,
                 selectedCount: _draft.colors.length,
                 expanded: _open.contains('Color'),
                 onToggle: () => _toggleSection('Color'),
@@ -141,7 +149,10 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                       SegmentedButton<ColorMatchMode>(
                         segments: [
                           for (final mode in ColorMatchMode.values)
-                            ButtonSegment(value: mode, label: Text(mode.label)),
+                            ButtonSegment(
+                              value: mode,
+                              label: Text(mode.name(context.l10n)),
+                            ),
                         ],
                         selected: {_draft.colorMatchMode},
                         showSelectedIcon: false,
@@ -160,7 +171,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 ),
               ),
               _Section(
-                title: 'Card type',
+                title: context.l10n.filterCardType,
                 selectedCount:
                     _draft.categories.length +
                     (_draft.aceOnly ? 1 : 0) +
@@ -173,7 +184,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                   children: [
                     _ChipWrap(
                       options: CardCategory.values,
-                      labelOf: (category) => category.label,
+                      labelOf: (category) => category.name(context.l10n),
                       selected: _draft.categories,
                       onToggle: (category) => _edit(
                         (f) => f.copyWith(
@@ -183,8 +194,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'ACE, dual and token cards narrow whichever types are '
-                      'selected.',
+                      context.l10n.filterNarrowNote,
                       style: TextStyle(
                         fontSize: 11.5,
                         color: scheme.onSurfaceVariant,
@@ -201,7 +211,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                               _edit((f) => f.copyWith(aceOnly: value)),
                         ),
                         FilterChip(
-                          label: const Text('Dual Card'),
+                          label: Text(context.l10n.facetDualCard),
                           selected: _draft.dualOnly,
                           onSelected: (value) =>
                               _edit((f) => f.copyWith(dualOnly: value)),
@@ -209,7 +219,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                         // Tokens are printed as Digimon, so they have no card
                         // type of their own to sit beside the four above.
                         FilterChip(
-                          label: const Text('Token'),
+                          label: Text(context.l10n.facetToken),
                           selected: _draft.tokens == TokenMode.only,
                           onSelected: (value) => _edit(
                             (f) => f.copyWith(
@@ -225,13 +235,13 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 ),
               ),
               _Section(
-                title: 'Level',
+                title: context.l10n.filterLevel,
                 selectedCount: _draft.levels.length,
                 expanded: _open.contains('Level'),
                 onToggle: () => _toggleSection('Level'),
                 child: _ChipWrap(
                   options: FilterBounds.levels,
-                  labelOf: (level) => 'Lv.$level',
+                  labelOf: (level) => context.l10n.filterLevelValue(level),
                   selected: _draft.levels,
                   onToggle: (level) => _edit(
                     (f) => f.copyWith(levels: _toggled(f.levels, level)),
@@ -239,7 +249,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 ),
               ),
               _RangeSection(
-                title: 'Play / use cost',
+                title: context.l10n.filterPlayCost,
                 range: _draft.playCost,
                 max: FilterBounds.maxCost,
                 expanded: _open.contains('Play / use cost'),
@@ -247,7 +257,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 onChanged: (range) => _edit((f) => f.copyWith(playCost: range)),
               ),
               _RangeSection(
-                title: 'Digivolution cost',
+                title: context.l10n.filterDigivolveCost,
                 range: _draft.digivolveCost,
                 max: FilterBounds.maxDigivolveCost,
                 expanded: _open.contains('Digivolution cost'),
@@ -256,7 +266,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     _edit((f) => f.copyWith(digivolveCost: range)),
               ),
               _RangeSection(
-                title: 'DP',
+                title: context.l10n.filterDp,
                 range: _draft.dp,
                 max: FilterBounds.maxDp,
                 step: FilterBounds.dpStep,
@@ -265,7 +275,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 onChanged: (range) => _edit((f) => f.copyWith(dp: range)),
               ),
               _AsyncChipSection(
-                title: 'Keyword',
+                title: context.l10n.filterKeyword,
                 searchable: true,
                 options: ref.watch(keywordOptionsProvider),
                 selected: _draft.keywords,
@@ -279,7 +289,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     _edit((f) => f.copyWith(keywordMatchMode: mode)),
               ),
               _AsyncChipSection(
-                title: 'Rarity',
+                title: context.l10n.filterRarity,
                 options: ref.watch(rarityOptionsProvider),
                 selected: _draft.rarities,
                 expanded: _open.contains('Rarity'),
@@ -289,7 +299,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 ),
               ),
               _AsyncChipSection(
-                title: 'Attribute',
+                title: context.l10n.filterAttribute,
                 searchable: true,
                 options: ref.watch(attributeOptionsProvider),
                 selected: _draft.attributes,
@@ -301,7 +311,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 ),
               ),
               _AsyncChipSection(
-                title: 'Form',
+                title: context.l10n.filterForm,
                 searchable: true,
                 options: ref.watch(formOptionsProvider),
                 selected: _draft.forms,
@@ -313,14 +323,14 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
               // Traits and expansions have hundreds of options each, so they
               // open a searchable page instead of expanding in place.
               _PickerSection(
-                title: 'Trait',
+                title: context.l10n.filterTrait,
                 selected: _draft.traits,
                 onOpen: () async {
                   final options = await ref.read(traitOptionsProvider.future);
                   if (!context.mounted) return;
                   final picked = await showMultiSelect(
                     context,
-                    title: 'Traits',
+                    title: context.l10n.filterTraits,
                     options: [
                       for (final trait in options)
                         MultiSelectOption(value: trait, label: trait),
@@ -335,7 +345,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     _edit((f) => f.copyWith(traitMatchMode: mode)),
               ),
               _PickerSection(
-                title: 'Expansion',
+                title: context.l10n.filterExpansion,
                 selected: _draft.releaseIds,
                 labelOf: _releaseLabel,
                 onOpen: () async {
@@ -345,14 +355,16 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                   if (!context.mounted) return;
                   final picked = await showMultiSelect(
                     context,
-                    title: 'Expansions',
+                    title: context.l10n.filterExpansions,
                     options: [
                       for (final section in sections)
                         for (final release in section.releases)
                           MultiSelectOption(
                             value: release.id,
                             label: release.displayName,
-                            detail: release.setCode ?? section.group.label,
+                            detail:
+                                release.setCode ??
+                                section.group.name(context.l10n),
                           ),
                     ],
                     selected: _draft.releaseIds,
@@ -369,9 +381,9 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 value: _draft.includeAlternateArts,
                 onChanged: (value) =>
                     _edit((f) => f.copyWith(includeAlternateArts: value)),
-                title: const Text('Show alternate arts'),
+                title: Text(context.l10n.filterAltArts),
                 subtitle: Text(
-                  'List every printing instead of one card per number',
+                  context.l10n.filterAltArtsSubtitle,
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
               ),
@@ -380,9 +392,9 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 value: _draft.restrictedOnly,
                 onChanged: (value) =>
                     _edit((f) => f.copyWith(restrictedOnly: value)),
-                title: const Text('Restricted cards only'),
+                title: Text(context.l10n.filterRestrictedOnly),
                 subtitle: Text(
-                  'Cards limited or banned by the official list',
+                  context.l10n.filterRestrictedOnlySubtitle,
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
               ),
@@ -433,9 +445,8 @@ class _ApplyBar extends ConsumerWidget {
           child: FilledButton(
             onPressed: onApply,
             child: Text(switch (count) {
-              AsyncData(:final value) when value == 1 => 'Show 1 card',
-              AsyncData(:final value) => 'Show $value cards',
-              _ => 'Show results',
+              AsyncData(:final value) => context.l10n.filterShowCount(value),
+              _ => context.l10n.filterShowResults,
             }),
           ),
         ),
@@ -638,7 +649,9 @@ class _AsyncChipSectionState extends State<_AsyncChipSection> {
                   onChanged: (value) => setState(() => _query = value),
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: 'Search ${widget.title.toLowerCase()}',
+                    hintText: context.l10n.multiSelectSearchHint(
+                      widget.title.toLowerCase(),
+                    ),
                     prefixIcon: const Icon(Icons.search, size: 18),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -650,7 +663,7 @@ class _AsyncChipSectionState extends State<_AsyncChipSection> {
               ],
               if (visible.isEmpty)
                 Text(
-                  'Nothing matches "$_query"',
+                  context.l10n.multiSelectNoMatch(_query),
                   style: TextStyle(
                     fontSize: 13,
                     color: scheme.onSurfaceVariant,
@@ -717,7 +730,7 @@ class _ColorChip extends StatelessWidget {
             ),
             const SizedBox(width: 7),
             Text(
-              color.label,
+              color.name(context.l10n),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -769,7 +782,7 @@ class _RangeSection extends StatelessWidget {
               ? (low == high
                     ? '${low.toInt()}'
                     : '${low.toInt()} – ${high.toInt()}')
-              : 'Any',
+              : context.l10n.filterAny,
           style: TextStyle(
             fontSize: 13,
             fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -806,7 +819,7 @@ class _RangeSection extends StatelessWidget {
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
-                child: const Text('Clear'),
+                child: Text(context.l10n.actionClear),
               ),
             ),
         ],
@@ -850,7 +863,7 @@ class _PickerSection extends StatelessWidget {
           ),
           subtitle: Text(
             selected.isEmpty
-                ? 'Any'
+                ? context.l10n.filterAny
                 : selected.map((v) => labelOf?.call(v) ?? v).join(', '),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -911,7 +924,7 @@ class _MatchModeToggle extends StatelessWidget {
     return SegmentedButton<MatchMode>(
       segments: [
         for (final value in MatchMode.values)
-          ButtonSegment(value: value, label: Text(value.label)),
+          ButtonSegment(value: value, label: Text(value.name(context.l10n))),
       ],
       selected: {mode},
       showSelectedIcon: false,

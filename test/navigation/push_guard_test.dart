@@ -1,4 +1,5 @@
 import 'package:digi_card_app/core/router/navigation.dart';
+import 'package:digi_card_app/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -55,7 +56,11 @@ void main() {
     // the navigator has not rebuilt with it, so its `maybePop` finds nothing to
     // pop — and Android takes an unhandled back as "leave the app".
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     // A deck lives inside the Decks branch, not at the root: that is the
@@ -87,7 +92,11 @@ void main() {
     // The defect this guard exists for. Kept as a test so that if anyone
     // reintroduces a plain `context.push` on a tile, the reason is on record.
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     final context = router.routerDelegate.navigatorKey.currentContext!;
@@ -108,7 +117,11 @@ void main() {
     tester,
   ) async {
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     final context = router.routerDelegate.navigatorKey.currentContext!;
@@ -126,7 +139,11 @@ void main() {
     'pushOnce ignores a stray tap on a different tile mid-transition',
     (tester) async {
       final router = _buildRouter();
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
       await tester.pumpAndSettle();
 
       final context = router.routerDelegate.navigatorKey.currentContext!;
@@ -145,7 +162,11 @@ void main() {
     // The failure a user hit: the deck they had been reading would not open
     // again, while every other deck did. The guard has to expire, not latch.
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     final context = router.routerDelegate.navigatorKey.currentContext!;
@@ -172,7 +193,11 @@ void main() {
     // pointing at a page that never arrived. A guard that read the location
     // would drop every later tap on that tile, for good.
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     final context = router.routerDelegate.navigatorKey.currentContext!;
@@ -197,7 +222,11 @@ void main() {
     tester,
   ) async {
     final router = _buildRouter();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
     await tester.pumpAndSettle();
 
     final context = router.routerDelegate.navigatorKey.currentContext!;

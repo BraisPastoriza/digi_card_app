@@ -56,13 +56,13 @@ void main() {
         _entry(_card(number: 'BT1-030', name: 'MetalGreymon', level: 5), 2),
       ]);
 
-      expect(composition.sections.map((s) => s.label), [
-        'Digi-Eggs · Lv.2',
-        'Digimon · Lv.3',
-        'Digimon · Lv.4',
-        'Digimon · Lv.5',
-        'Tamers',
-        'Options',
+      expect(composition.sections.map((s) => (s.kind, s.level)), [
+        (DeckSectionKind.digiEggs, 2),
+        (DeckSectionKind.digimon, 3),
+        (DeckSectionKind.digimon, 4),
+        (DeckSectionKind.digimon, 5),
+        (DeckSectionKind.tamers, null),
+        (DeckSectionKind.options, null),
       ]);
       expect(composition.sections.first.limit, DeckRules.maxEggDeckSize);
       expect(composition.sections[1].count, 4);
@@ -84,7 +84,7 @@ void main() {
 
       final composition = DeckComposition([_entry(dual, 3)]);
 
-      expect(composition.sections.single.title, 'Digimon');
+      expect(composition.sections.single.kind, DeckSectionKind.digimon);
       expect(composition.countOfCategory(CardCategory.option), 0);
       expect(composition.countOfCategory(CardCategory.digimon), 3);
     });
@@ -94,7 +94,9 @@ void main() {
         _entry(_card(number: 'BT1-010', name: 'Agumon', level: 3), 4),
       ]);
 
-      expect(composition.sections.map((s) => s.label), ['Digimon · Lv.3']);
+      expect(composition.sections.map((s) => (s.kind, s.level)), [
+        (DeckSectionKind.digimon, 3),
+      ]);
     });
   });
 

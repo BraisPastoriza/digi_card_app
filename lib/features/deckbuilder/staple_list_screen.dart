@@ -6,6 +6,7 @@ import '../../core/providers.dart';
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/digimon_card.dart';
+import '../../l10n/l10n.dart';
 import '../../domain/models/staple_list.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
@@ -38,10 +39,10 @@ class StapleListScreen extends ConsumerWidget {
             icon: const Icon(Icons.arrow_back),
           ),
         ),
-        body: const EmptyState(
+        body: EmptyState(
           icon: Icons.bookmark_remove_outlined,
-          title: 'List not found',
-          message: 'It may have been deleted.',
+          title: context.l10n.stapleNotFound,
+          message: context.l10n.deckNotFoundMessage,
         ),
       );
     }
@@ -61,7 +62,7 @@ class StapleListScreen extends ConsumerWidget {
           children: [
             Text(list.name, overflow: TextOverflow.ellipsis),
             Text(
-              list.count == 1 ? '1 card' : '${list.count} cards',
+              context.l10n.cardCount(list.count),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -74,12 +75,18 @@ class StapleListScreen extends ConsumerWidget {
           PopupMenuButton<String>(
             onSelected: (action) => _handle(context, ref, list, action),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'rename', child: Text('Rename list')),
-              const PopupMenuItem(value: 'export', child: Text('Export list')),
+              PopupMenuItem(
+                value: 'rename',
+                child: Text(context.l10n.stapleMenuRename),
+              ),
+              PopupMenuItem(
+                value: 'export',
+                child: Text(context.l10n.stapleMenuExport),
+              ),
               PopupMenuItem(
                 value: 'delete',
                 child: Text(
-                  'Delete list',
+                  context.l10n.stapleMenuDelete,
                   style: TextStyle(color: scheme.error),
                 ),
               ),
@@ -90,20 +97,18 @@ class StapleListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.pushOnce('/decks/staples/$listId/add'),
         icon: const Icon(Icons.add),
-        label: const Text('Add cards'),
+        label: Text(context.l10n.stapleAddCards),
       ),
       body: list.isEmpty
           ? EmptyState(
               icon: Icons.add_card,
-              title: 'This list is empty',
+              title: context.l10n.stapleEmptyTitle,
               message:
-                  'Add the cards you want at hand. They show up as a source '
-                  'in the deck builder, so you can drop them into a deck '
-                  'without going looking for them.',
+                  context.l10n.stapleEmptyMessage,
               action: FilledButton.icon(
                 onPressed: () => context.pushOnce('/decks/staples/$listId/add'),
                 icon: const Icon(Icons.search, size: 18),
-                label: const Text('Add cards'),
+                label: Text(context.l10n.stapleAddCards),
               ),
             )
           : CustomScrollView(
@@ -133,9 +138,7 @@ class StapleListScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                       child: Text(
-                        '$unresolved more '
-                        '${unresolved == 1 ? 'card is' : 'cards are'} in this '
-                        'list but not in your library yet.',
+                        context.l10n.stapleMissingCards(unresolved),
                         style: TextStyle(
                           fontSize: 12,
                           color: scheme.onSurfaceVariant,
@@ -156,14 +159,15 @@ class StapleListScreen extends ConsumerWidget {
     DigimonCard card,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     await ref.read(stapleDaoProvider).removeCard(list.id, card.number);
     messenger
       ..removeCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('Removed ${card.name}'),
+          content: Text(l10n.stapleRemoved(card.name)),
           action: SnackBarAction(
-            label: 'Undo',
+            label: l10n.actionUndo,
             onPressed: () =>
                 ref.read(stapleDaoProvider).addCards(list.id, [card.number]),
           ),
@@ -181,8 +185,8 @@ class StapleListScreen extends ConsumerWidget {
       case 'rename':
         final name = await showDeckNameDialog(
           context,
-          title: 'Rename list',
-          label: 'List name',
+          title: context.l10n.stapleMenuRename,
+          label: context.l10n.stapleNameLabel,
           initialValue: list.name,
         );
         if (name != null) {

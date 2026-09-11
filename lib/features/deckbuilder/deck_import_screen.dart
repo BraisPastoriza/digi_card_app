@@ -8,6 +8,7 @@ import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck.dart';
 import '../../domain/models/deck_list.dart';
+import '../../l10n/l10n.dart';
 import 'deck_providers.dart';
 
 /// Builds a deck out of a pasted text list — the reverse of the text export.
@@ -50,10 +51,11 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
       _matches?.where((m) => !m.isResolved).toList() ?? const [];
 
   Future<void> _paste() async {
+    final l10n = context.l10n;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
     if (text == null || text.trim().isEmpty) {
-      _report('The clipboard has no text in it.');
+      _report(l10n.importClipboardEmpty);
       return;
     }
     setState(() {
@@ -96,7 +98,7 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
       ];
       _reading = false;
       if (_nameController.text.trim().isEmpty) {
-        _nameController.text = 'Imported deck';
+        _nameController.text = context.l10n.importDefaultDeckName;
       }
     });
   }
@@ -127,7 +129,7 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
     }
     await dao.createRevisionFromList(
       deckId: deckId,
-      name: name.isEmpty ? 'Imported' : name,
+      name: name.isEmpty ? context.l10n.importDefaultShortName : name,
       quantities: quantities,
     );
     if (!mounted) return;
@@ -152,15 +154,13 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
           onPressed: () => context.goBack('/decks'),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('Import deck list'),
+        title: Text(context.l10n.importTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           Text(
-            'Paste a deck list in either format — "4 Agumon BT1-010" or '
-            '"4 Agumon (BT1-010)". Headings and comments between the lines '
-            'are ignored.',
+            context.l10n.importExplainer,
             style: TextStyle(
               fontSize: 13,
               height: 1.45,
@@ -188,7 +188,7 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _paste,
                   icon: const Icon(Icons.content_paste, size: 18),
-                  label: const Text('Paste'),
+                  label: Text(context.l10n.importPaste),
                 ),
               ),
               const SizedBox(width: 10),
@@ -198,7 +198,11 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
                       ? null
                       : _read,
                   icon: const Icon(Icons.playlist_add_check, size: 18),
-                  label: Text(_reading ? 'Reading…' : 'Read list'),
+                  label: Text(
+                    _reading
+                        ? context.l10n.importReading
+                        : context.l10n.importReadList,
+                  ),
                 ),
               ),
             ],
@@ -220,7 +224,11 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
                       ? null
                       : _import,
                   icon: const Icon(Icons.download_done, size: 18),
-                  label: Text(_importing ? 'Importing…' : 'Import'),
+                  label: Text(
+                    _importing
+                        ? context.l10n.importImporting
+                        : context.l10n.importAction,
+                  ),
                 ),
               ),
             ],
@@ -236,11 +244,14 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
       SizedBox(
         width: double.infinity,
         child: SegmentedButton<_Destination>(
-          segments: const [
-            ButtonSegment(value: _Destination.newDeck, label: Text('New deck')),
+          segments: [
+            ButtonSegment(
+              value: _Destination.newDeck,
+              label: Text(context.l10n.importNewDeck),
+            ),
             ButtonSegment(
               value: _Destination.newRevision,
-              label: Text('New revision'),
+              label: Text(context.l10n.importNewRevision),
             ),
           ],
           selected: {_destination},
@@ -252,12 +263,14 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
       const SizedBox(height: 14),
       if (_destination == _Destination.newRevision) ...[
         if (decks.isEmpty)
-          const Text('You have no decks to add a revision to yet.')
+          Text(context.l10n.importNoDecks)
         else
           DropdownButtonFormField<int>(
             initialValue: _targetDeckId,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Deck'),
+            decoration: InputDecoration(
+              labelText: context.l10n.importDeckField,
+            ),
             items: [
               for (final deck in decks)
                 DropdownMenuItem(
@@ -274,8 +287,8 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
         textCapitalization: TextCapitalization.sentences,
         decoration: InputDecoration(
           labelText: _destination == _Destination.newDeck
-              ? 'Deck name'
-              : 'Revision name',
+              ? context.l10n.deckNameLabel
+              : context.l10n.revisionNameLabel,
         ),
       ),
     ],
@@ -317,8 +330,8 @@ class _Summary extends StatelessWidget {
               Expanded(
                 child: Text(
                   resolved.isEmpty
-                      ? 'No cards recognised in that list.'
-                      : '${resolved.length} cards · $copies copies',
+                      ? context.l10n.importNothingRecognised
+                      : context.l10n.importSummary(resolved.length, copies),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
@@ -330,8 +343,7 @@ class _Summary extends StatelessWidget {
           if (unresolved.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              '${unresolved.length} ${unresolved.length == 1 ? 'line' : 'lines'} '
-              'could not be matched and will be left out:',
+              context.l10n.importUnmatched(unresolved.length),
               style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 6),
@@ -353,7 +365,7 @@ class _Summary extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '…and ${unresolved.length - 12} more',
+                  context.l10n.importAndMore(unresolved.length - 12),
                   style: TextStyle(
                     fontSize: 12.5,
                     color: scheme.onSurfaceVariant,

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/digimon_colors.dart';
 import '../../../domain/models/card_enums.dart';
+import '../../../l10n/l10n.dart';
+import '../deck_text.dart';
 import '../../../domain/models/deck.dart';
 import '../../../shared/widgets/card_thumbnail.dart';
 
@@ -108,7 +110,7 @@ class DeckSheet extends StatelessWidget {
             const SizedBox(height: 28),
             if (layout.grouped)
               for (final section in composition.sections) ...[
-                _sectionLabel(section),
+                _sectionLabel(section, context.l10n),
                 const SizedBox(height: 12),
                 _grid(section.entries),
                 const SizedBox(height: 26),
@@ -167,7 +169,7 @@ class DeckSheet extends StatelessWidget {
     ],
   );
 
-  Widget _sectionLabel(DeckSection section) => Row(
+  Widget _sectionLabel(DeckSection section, AppLocalizations l10n) => Row(
     children: [
       Container(
         width: 5,
@@ -179,7 +181,7 @@ class DeckSheet extends StatelessWidget {
       ),
       const SizedBox(width: 12),
       Text(
-        section.label,
+        sectionLabel(section, l10n),
         style: const TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.w700,
