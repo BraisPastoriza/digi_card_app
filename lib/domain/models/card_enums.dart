@@ -142,7 +142,12 @@ abstract final class CardTrait {
 enum LimitationType {
   restrict('restrict', 'Restricted', 1),
   ban('ban', 'Banned', 0),
-  bannedPair('banned-pair', 'Banned Pair', 0),
+  // A banned pair leaves the card itself alone: it is legal at the usual four
+  // copies, and only the deck that also runs one of its named partners is
+  // illegal. The list still publishes an allowance of zero next to it, which
+  // is the allowance of the pairing, not of the card — see
+  // [CardLimitation.fromJson].
+  bannedPair('banned-pair', 'Banned Pair', 4),
   unrestrict('unrestrict', 'Unrestricted', 4);
 
   const LimitationType(this.apiValue, this.label, this.allowance);

@@ -161,9 +161,8 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
     ).map((r) => r.cost).whereType<int>(),
   ];
 
-  final limitations = _asMapList(
-    attributes['limitations'],
-  ).map(CardLimitation.fromJson).toList();
+  final rawLimitations = _asMapList(attributes['limitations']);
+  final limitations = rawLimitations.map(CardLimitation.fromJson).toList();
 
   // A few cards carry a ⟨Rule⟩ line raising the four-copy cap, which is what
   // makes decks built almost entirely out of one card legal.
@@ -205,7 +204,12 @@ ParsedCard? _parseDocument(Map<String, dynamic> document) {
     ruleCopyLimit: ruleCopyLimit,
     digivolutionRequirements: jsonEncode(requirements),
     faqs: jsonEncode(_asMapList(attributes['faqs'])),
-    limitations: jsonEncode(limitations.map((l) => l.toJson()).toList()),
+    // Stored as the API sent it, the way the FAQs and the digivolution
+    // requirements are. Writing back what the model made of it means any
+    // field the model does not read yet is gone for good, and getting it
+    // back costs the user a full re-download — which is how the cards a
+    // banned pair names came to be missing from every install before this.
+    limitations: jsonEncode(rawLimitations),
     rarity: CardRarity.normalize(
       attributes['rarity'] as String?,
       isToken: TokenCard.hasTokenNumber(number),

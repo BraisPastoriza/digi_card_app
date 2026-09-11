@@ -179,6 +179,7 @@ class CardLimitation {
     this.date,
     this.allowance,
     this.note,
+    this.pairedCardNumbers = const [],
   });
 
   final LimitationType type;
@@ -186,43 +187,86 @@ class CardLimitation {
   final int? allowance;
   final String? note;
 
+  /// For a [LimitationType.bannedPair], the cards this one may not share a
+  /// deck with — any one of them, not all of them together.
+  ///
+  /// The list writes the ruling on one of the two cards and names the others
+  /// here, so the entry only ever exists on one side of the pairing.
+  final List<String> pairedCardNumbers;
+
   /// Copies of this card number a deck may legally contain.
   int get effectiveAllowance => allowance ?? type.allowance;
 
-  factory CardLimitation.fromJson(Map<String, dynamic> json) => CardLimitation(
-    type:
+  factory CardLimitation.fromJson(Map<String, dynamic> json) {
+    final type =
         LimitationType.tryParse(json['type'] as String?) ??
-        LimitationType.restrict,
-    date: json['date'] as String?,
-    allowance: json['allowance'] as int?,
-    note: json['note'] as String?,
-  );
+        LimitationType.restrict;
+    final allowance = json['allowance'] as int?;
+    return CardLimitation(
+      type: type,
+      date: json['date'] as String?,
+      // The zero published alongside a banned pair is how many copies the
+      // *pairing* may run, and reading it as a copy limit would ban a card
+      // that is perfectly legal on its own.
+      allowance: type == LimitationType.bannedPair ? null : allowance,
+      note: json['note'] as String?,
+      pairedCardNumbers:
+          (json['paired-card-numbers'] as List?)?.whereType<String>().toList() ??
+          const [],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'type': type.apiValue,
     if (date != null) 'date': date,
     if (allowance != null) 'allowance': allowance,
     if (note != null) 'note': note,
+    if (pairedCardNumbers.isNotEmpty) 'paired-card-numbers': pairedCardNumbers,
   };
 
-  /// The limitation from [limitations] that still applies, or `null` if the
-  /// card is unrestricted.
+  /// The limitation from [limitations] that still caps this card's copies, or
+  /// `null` if the card may be run in fours.
   ///
   /// Entries accumulate over time, so the newest restriction wins — unless an
   /// `unrestrict` entry postdates it, which lifts the card again.
+  ///
+  /// Banned pairs are left out: they say nothing about how many copies a deck
+  /// may hold, only about what the deck may hold alongside them, and a card
+  /// can carry one of each. [pairBansIn] is that other half.
   static CardLimitation? activeIn(List<CardLimitation> limitations) {
     final applicable = limitations
-        .where((l) => l.type != LimitationType.unrestrict)
+        .where(
+          (l) =>
+              l.type != LimitationType.unrestrict &&
+              l.type != LimitationType.bannedPair,
+        )
         .sorted((a, b) => (a.date ?? '').compareTo(b.date ?? ''));
     if (applicable.isEmpty) return null;
 
     final latest = applicable.last;
+    if (_liftedAfter(limitations, latest.date)) return null;
+    return latest;
+  }
+
+  /// The banned-pair entries from [limitations] that still apply.
+  ///
+  /// A card can be named in more than one ruling, so unlike [activeIn] the
+  /// newest does not replace the ones before it — every pairing that has not
+  /// been lifted still stands.
+  static List<CardLimitation> pairBansIn(List<CardLimitation> limitations) => [
+    for (final limitation in limitations)
+      if (limitation.type == LimitationType.bannedPair &&
+          !_liftedAfter(limitations, limitation.date))
+        limitation,
+  ];
+
+  /// Whether an `unrestrict` entry postdates [date] and so lifts it.
+  static bool _liftedAfter(List<CardLimitation> limitations, String? date) {
     final lifted = limitations
         .where((l) => l.type == LimitationType.unrestrict)
         .map((l) => l.date ?? '')
         .maxOrNull;
-    if (lifted != null && lifted.compareTo(latest.date ?? '') > 0) return null;
-    return latest;
+    return lifted != null && lifted.compareTo(date ?? '') > 0;
   }
 
   /// Copies of a card the restriction list allows, defaulting to 4.
@@ -459,6 +503,16 @@ class DigimonCard {
 
   /// The most recent limitation that still applies, or `null` if unrestricted.
   CardLimitation? get activeLimitation => CardLimitation.activeIn(limitations);
+
+  /// The pairings this card is banned in, which the restriction list records
+  /// on one of the two cards only. Empty on the other side of the pairing.
+  List<CardLimitation> get pairBans => CardLimitation.pairBansIn(limitations);
+
+  /// Card numbers this card may not share a deck with, as far as its own
+  /// entries say.
+  Set<String> get bannedWith => {
+    for (final ban in pairBans) ...ban.pairedCardNumbers,
+  };
 
   /// Copies of this card a deck may contain.
   int get copyLimit =>

@@ -34,7 +34,10 @@ abstract final class CardDataVersions {
   /// 2. Keywords printed inside reminder text no longer count as the card's
   ///    own, and the digivolution conditions in the effect box now feed the
   ///    cost filter.
-  static const derived = 2;
+  /// 3. A banned pair no longer reads as a copy limit of zero. The three cards
+  ///    on the list were unaddable to any deck; they are legal in fours, and
+  ///    only the deck that also runs their partner is not.
+  static const derived = 3;
 
   /// Whether a database last written at schema [from] holds card rows this
   /// build cannot use, and therefore has to re-download them.

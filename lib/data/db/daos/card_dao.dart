@@ -80,6 +80,24 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     return {for (final row in rows) row.number: row.toDigimonCard()};
   }
 
+  /// The cards carrying a banned-pair entry, which is a handful in the whole
+  /// game.
+  ///
+  /// Matched on the stored JSON rather than a column of its own: the entries
+  /// are far too few to earn an index, and a column would have to be derived
+  /// again on every restriction list update.
+  Future<List<DigimonCard>> pairRestrictedCards() async {
+    final query = select(cards)
+      ..where(
+        (c) =>
+            c.isPrimary.equals(true) &
+            c.limitations.like('%"${LimitationType.bannedPair.apiValue}"%'),
+      )
+      ..orderBy([(c) => OrderingTerm.asc(c.numberSort)]);
+    final rows = await query.get();
+    return rows.map((row) => row.toDigimonCard()).toList();
+  }
+
   /// Primary printings looked up by printed name, case-insensitively, for
   /// importing deck lists that name cards without their number.
   ///

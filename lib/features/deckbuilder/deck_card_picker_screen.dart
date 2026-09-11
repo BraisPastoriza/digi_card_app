@@ -122,19 +122,41 @@ class _DeckCardPickerScreenState extends ConsumerState<DeckCardPickerScreen> {
       // Silently capping would look like a dropped tap, so say why.
       final limitedBy = card.activeLimitation;
       if (limitedBy != null) {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                '${card.name} is ${limitedBy.type.label.toLowerCase()} to '
-                '${card.copyLimit} '
-                '${card.copyLimit == 1 ? 'copy' : 'copies'}.',
-              ),
-            ),
-          );
+        _say(
+          '${card.name} is ${limitedBy.type.label.toLowerCase()} to '
+          '${card.copyLimit} '
+          '${card.copyLimit == 1 ? 'copy' : 'copies'}.',
+        );
       }
+      return;
     }
+    if (delta > 0) _warnAboutPairs(card);
+  }
+
+  /// Says so when the card just added is banned alongside one already in the
+  /// deck.
+  ///
+  /// The card still goes in — the deck screen lists the clash as an error, and
+  /// a player mid-build may well be on their way to taking the other one out —
+  /// but finding out only at validation time is finding out too late.
+  void _warnAboutPairs(DigimonCard card) {
+    final composition = ref
+        .read(compositionProvider(widget.revisionId))
+        .valueOrNull;
+    final conflicts = composition?.pairConflictsWith(card) ?? const [];
+    if (conflicts.isEmpty) return;
+
+    _say(
+      '${card.name} is a banned pair with '
+      '${conflicts.map((e) => e.card.name).join(', ')}. '
+      'A deck may run either, not both.',
+    );
+  }
+
+  void _say(String message) {
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

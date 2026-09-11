@@ -303,4 +303,173 @@ void main() {
       expect(CardLimitation.copyLimitIn(limitations), 1);
     });
   });
+
+  group('banned pairs', () {
+    // The shape the restriction list publishes: the ruling sits on one of the
+    // two cards, names the other, and carries an allowance of zero that is
+    // about the pairing rather than about the card.
+    const motherDReaper = CardLimitation(
+      type: LimitationType.bannedPair,
+      date: '2025-03-28',
+      pairedCardNumbers: ['EX7-064'],
+      note: 'Banned together.',
+    );
+
+    test('a banned pair leaves the card itself at four copies', () {
+      final card = _card(
+        number: 'EX2-007',
+        name: 'Mother D-Reaper',
+        limitations: const [motherDReaper],
+      );
+
+      expect(card.copyLimit, 4);
+      expect(card.activeLimitation, isNull);
+      expect(
+        DeckComposition([_entry(card, 4)]).issues.map((i) => i.message),
+        isNot(contains(contains('Mother D-Reaper'))),
+      );
+    });
+
+    test('the allowance the list publishes is not read as a copy limit', () {
+      final parsed = CardLimitation.fromJson(const {
+        'type': 'banned-pair',
+        'date': '2025-03-28',
+        'allowance': 0,
+        'paired-card-numbers': ['EX7-064'],
+      });
+
+      expect(parsed.type, LimitationType.bannedPair);
+      expect(parsed.pairedCardNumbers, ['EX7-064']);
+      expect(parsed.effectiveAllowance, 4);
+      expect(CardLimitation.copyLimitIn([parsed]), 4);
+    });
+
+    test('the paired numbers survive a round trip through storage', () {
+      final restored = CardLimitation.fromJson(motherDReaper.toJson());
+
+      expect(restored.pairedCardNumbers, ['EX7-064']);
+      expect(restored.type, LimitationType.bannedPair);
+    });
+
+    test('a later unrestrict lifts the pairing', () {
+      const limitations = [
+        motherDReaper,
+        CardLimitation(type: LimitationType.unrestrict, date: '2026-01-01'),
+      ];
+
+      expect(CardLimitation.pairBansIn(limitations), isEmpty);
+    });
+
+    test('every standing pairing counts, not just the newest', () {
+      const limitations = [
+        motherDReaper,
+        CardLimitation(
+          type: LimitationType.bannedPair,
+          date: '2026-01-01',
+          pairedCardNumbers: ['BT1-042'],
+        ),
+      ];
+
+      expect(CardLimitation.pairBansIn(limitations), hasLength(2));
+      expect(_card(limitations: limitations).bannedWith, {
+        'EX7-064',
+        'BT1-042',
+      });
+    });
+
+    test('a deck holding both cards is illegal', () {
+      final composition = DeckComposition([
+        _entry(
+          _card(
+            number: 'EX2-007',
+            name: 'Mother D-Reaper',
+            category: CardCategory.digiEgg,
+            limitations: const [motherDReaper],
+          ),
+          1,
+        ),
+        _entry(
+          _card(
+            number: 'EX7-064',
+            name: 'Shoto Kazama',
+            category: CardCategory.tamer,
+          ),
+          4,
+        ),
+      ]);
+
+      final pairIssues = composition.issues.where(
+        (i) => i.message.contains('banned pair'),
+      );
+      expect(pairIssues, hasLength(1));
+      expect(pairIssues.single.message, contains('Mother D-Reaper (EX2-007)'));
+      expect(pairIssues.single.message, contains('Shoto Kazama (EX7-064)'));
+      expect(pairIssues.single.severity, DeckIssueSeverity.error);
+    });
+
+    test('either card on its own is fine', () {
+      final composition = DeckComposition([
+        _entry(_card(number: 'EX2-007', limitations: const [motherDReaper]), 4),
+        _entry(_card(number: 'BT1-002'), 4),
+      ]);
+
+      expect(
+        composition.issues.map((i) => i.message),
+        isNot(contains(contains('banned pair'))),
+      );
+    });
+
+    test('the clash is reported once even when both cards carry it', () {
+      final composition = DeckComposition([
+        _entry(_card(number: 'EX2-007', limitations: const [motherDReaper]), 1),
+        _entry(
+          _card(
+            number: 'EX7-064',
+            limitations: const [
+              CardLimitation(
+                type: LimitationType.bannedPair,
+                date: '2025-03-28',
+                pairedCardNumbers: ['EX2-007'],
+              ),
+            ],
+          ),
+          1,
+        ),
+      ]);
+
+      expect(
+        composition.issues.where((i) => i.message.contains('banned pair')),
+        hasLength(1),
+      );
+    });
+
+    test('a card about to be added finds its clash from either side', () {
+      final anchor = _card(
+        number: 'EX2-007',
+        limitations: const [motherDReaper],
+      );
+      final partner = _card(number: 'EX7-064');
+
+      // The ruling is written on the anchor, so the partner has nothing of
+      // its own to go on and has to be matched the other way round.
+      expect(
+        DeckComposition([
+          _entry(anchor, 1),
+        ]).pairConflictsWith(partner).map((e) => e.cardNumber),
+        ['EX2-007'],
+      );
+      expect(
+        DeckComposition([
+          _entry(partner, 1),
+        ]).pairConflictsWith(anchor).map((e) => e.cardNumber),
+        ['EX7-064'],
+      );
+      expect(
+        DeckComposition([
+          _entry(_card(number: 'BT1-002'), 1),
+        ]).pairConflictsWith(anchor),
+        isEmpty,
+      );
+    });
+  });
 }

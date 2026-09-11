@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../domain/models/deck.dart';
 import '../../../domain/models/digimon_card.dart';
+import '../../../domain/models/pair_restrictions.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
 
@@ -146,9 +147,20 @@ class _DeckRow extends ConsumerWidget {
     final quantities = ref.watch(revisionQuantitiesProvider(revision.id));
     final quantity = quantities[card.number] ?? 0;
     final atLimit = quantity >= card.copyLimit;
+    // Whether this particular deck already holds a card this one is banned
+    // alongside. Read from the index rather than from [card], which only
+    // knows about the pairing when the ruling happens to be written on it.
+    final clashes = [
+      for (final restriction
+          in ref.watch(pairRestrictionsProvider).valueOrNull?.forNumber(
+                card.number,
+              ) ??
+              const <PairRestriction>[])
+        if ((quantities[restriction.partnerNumber] ?? 0) > 0) restriction,
+    ];
 
     return ListTile(
-      onTap: atLimit ? null : () => _add(context, ref, revision.id),
+      onTap: atLimit ? null : () => _add(context, ref, revision.id, clashes),
       title: Text(deck.name),
       subtitle: Text(
         deck.revisions.length > 1
@@ -185,14 +197,25 @@ class _DeckRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _add(BuildContext context, WidgetRef ref, int revisionId) async {
+  Future<void> _add(
+    BuildContext context,
+    WidgetRef ref,
+    int revisionId,
+    List<PairRestriction> clashes,
+  ) async {
     await ref
         .read(deckDaoProvider)
         .adjustQuantity(revisionId: revisionId, card: card, delta: 1);
     if (!context.mounted) return;
     Navigator.of(context).pop();
+    // The card goes in either way; the deck screen holds the error. Saying it
+    // here is what stops the clash being discovered at the end of a build.
+    final warning = clashes.isEmpty
+        ? ''
+        : ' — banned pair with '
+              '${clashes.map((c) => c.partnerLabel).join(', ')}';
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added ${card.name} to ${deck.name}')),
+      SnackBar(content: Text('Added ${card.name} to ${deck.name}$warning')),
     );
   }
 }

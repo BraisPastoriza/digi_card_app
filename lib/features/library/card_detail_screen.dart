@@ -1,11 +1,14 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/digimon_colors.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../../domain/models/digimon_card.dart';
+import '../../domain/models/pair_restrictions.dart';
 import '../../shared/widgets/card_image_viewer.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
@@ -153,6 +156,10 @@ class _CardDetailViewState extends State<_CardDetailView> {
                 const SizedBox(height: 14),
                 _CopyLimitBanner(limit: card.copyLimit),
               ],
+              // Separate from the banner above: a card can be restricted and
+              // banned in a pair at once, and this one also has to appear on
+              // the card the ruling was not written on.
+              _PairBanBanners(number: card.number),
               const SizedBox(height: 20),
               _StatGrid(card: card),
               if (card.digivolutionRequirements.isNotEmpty)
@@ -358,6 +365,123 @@ class _LimitationBanner extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 limitation.note!,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1.45,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The pairings a card is banned in, one banner per ruling.
+///
+/// Reads from [pairRestrictionsProvider] rather than from the card, because
+/// the restriction list writes each ruling on one of the two cards only and
+/// this has to show on both.
+class _PairBanBanners extends ConsumerWidget {
+  const _PairBanBanners({required this.number});
+
+  final String number;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final restrictions =
+        ref.watch(pairRestrictionsProvider).valueOrNull?.forNumber(number) ??
+        const <PairRestriction>[];
+    if (restrictions.isEmpty) return const SizedBox.shrink();
+
+    // A single ruling can name several cards at once — BT20-037 is banned
+    // with two — and they belong under one explanation rather than repeating
+    // it per card.
+    final rulings = groupBy(
+      restrictions,
+      (PairRestriction r) => '${r.date} ${r.note}',
+    ).values;
+
+    return Column(
+      children: [
+        for (final ruling in rulings) ...[
+          const SizedBox(height: 14),
+          _PairBanBanner(ruling: ruling),
+        ],
+      ],
+    );
+  }
+}
+
+class _PairBanBanner extends StatelessWidget {
+  const _PairBanBanner({required this.ruling});
+
+  /// The cards one ruling bans this card alongside.
+  final List<PairRestriction> ruling;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    const accent = DigimonColors.yellow;
+    final date = ruling.first.date;
+    final note = ruling.first.note;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accent.withValues(alpha: 0.45)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.link_off_rounded, size: 16, color: accent),
+                const SizedBox(width: 8),
+                const Text(
+                  'Banned pair — playable, but not together',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
+                ),
+                if (date != null) ...[
+                  const Spacer(),
+                  Text(
+                    date,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              ruling.length == 1
+                  ? 'A deck with this card cannot also run '
+                        '${ruling.single.partnerLabel}.'
+                  : 'A deck with this card cannot also run any of '
+                        '${ruling.map((r) => r.partnerLabel).join(', ')}.',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: scheme.onSurface,
+              ),
+            ),
+            if (note != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                note,
                 style: TextStyle(
                   fontSize: 12.5,
                   height: 1.45,

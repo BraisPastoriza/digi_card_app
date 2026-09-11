@@ -307,6 +307,8 @@ class DeckComposition {
       }
     }
 
+    issues.addAll(_pairBanIssues);
+
     // Decks built before tokens were blocked can still hold one.
     for (final entry in allEntries.where((e) => e.card.isToken)) {
       issues.add(
@@ -327,6 +329,54 @@ class DeckComposition {
       );
     }
 
+    return issues;
+  }
+
+  /// The cards already in the deck that [card] may not share it with.
+  ///
+  /// Checked both ways round, because the ruling is recorded on one of the two
+  /// cards and either of them can be the one being added.
+  List<DeckEntry> pairConflictsWith(DigimonCard card) {
+    final banned = card.bannedWith;
+    return [
+      for (final entry in allEntries)
+        if (entry.cardNumber != card.number &&
+            (banned.contains(entry.cardNumber) ||
+                entry.card.bannedWith.contains(card.number)))
+          entry,
+    ];
+  }
+
+  /// Errors for the cards the restriction list forbids sharing a deck.
+  ///
+  /// The ruling is published on one of the two cards and names the other, so
+  /// walking the deck once from the card that carries the entry is enough to
+  /// find every clash — the other side has nothing to say.
+  List<DeckIssue> get _pairBanIssues {
+    final byNumber = {for (final entry in allEntries) entry.cardNumber: entry};
+    final issues = <DeckIssue>[];
+    final reported = <String>{};
+
+    for (final entry in allEntries) {
+      for (final ban in entry.card.pairBans) {
+        for (final number in ban.pairedCardNumbers) {
+          final partner = byNumber[number];
+          if (partner == null) continue;
+          // Should the list ever write the ruling on both cards, the pair is
+          // still one problem and belongs in the list once.
+          final pair = ([entry.cardNumber, number]..sort()).join('|');
+          if (!reported.add(pair)) continue;
+          issues.add(
+            DeckIssue(
+              DeckIssueSeverity.error,
+              '${entry.card.name} (${entry.cardNumber}) and '
+              '${partner.card.name} ($number) are a banned pair; a deck may '
+              'run either one, not both.',
+            ),
+          );
+        }
+      }
+    }
     return issues;
   }
 

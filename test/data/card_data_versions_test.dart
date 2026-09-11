@@ -29,7 +29,7 @@ void main() {
 
       expect(db.schemaVersion, 12);
       expect(CardDataVersions.invalidatedAt, 9);
-      expect(CardDataVersions.derived, 2);
+      expect(CardDataVersions.derived, 3);
     });
 
     test('a schema bump cannot silently invalidate the card data', () {

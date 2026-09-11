@@ -8,6 +8,7 @@ import '../data/db/daos/deck_dao.dart';
 import '../data/db/daos/release_dao.dart';
 import '../data/db/daos/staple_dao.dart';
 import '../data/sync/card_sync_service.dart';
+import '../domain/models/pair_restrictions.dart';
 
 /// The single database connection for the app's lifetime.
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -27,6 +28,28 @@ final digimonCardIoApiProvider = Provider<DigimonCardIoApi>(
 final cardDaoProvider = Provider<CardDao>(
   (ref) => ref.watch(appDatabaseProvider).cardDao,
 );
+
+/// Which cards may not share a deck, readable from either side of a pairing.
+///
+/// Kept whole rather than looked up per card: there are only a few pairings in
+/// the game, and the card being asked about is as often the one the ruling was
+/// not written on.
+final pairRestrictionsProvider = FutureProvider<PairRestrictions>((ref) async {
+  final dao = ref.watch(cardDaoProvider);
+  final carriers = await dao.pairRestrictedCards();
+  if (carriers.isEmpty) return const PairRestrictions.empty();
+
+  final numbers = {
+    for (final card in carriers) ...[card.number, ...card.bannedWith],
+  };
+  final named = await dao.cardsByNumbers(numbers);
+  return PairRestrictions.from(
+    carriers,
+    namesByNumber: {
+      for (final entry in named.entries) entry.key: entry.value.name,
+    },
+  );
+});
 
 final releaseDaoProvider = Provider<ReleaseDao>(
   (ref) => ref.watch(appDatabaseProvider).releaseDao,
