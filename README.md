@@ -28,16 +28,23 @@ form, keyword and expansion. Colours, traits and keywords can be asked for
 either way round — any of the ones picked, or all of them at once, which is
 how you find the card that is both Dragon and Vaccine. Card pages show the
 full rules text, digivolution requirements, alternate arts, official rulings,
-errata and restriction status.
+errata and restriction status, and a card the list limits or bans carries a
+badge wherever its picture appears. A card can be put on a staple list or in a
+deck from its own page.
 
 **Deck builder** — decks of 50 main-deck cards plus up to 5 Digi-Eggs, checked
-against the official rules and the current restriction list as you build.
+against the official rules and the current restriction list as you build,
+including the pairs of cards the list forbids sharing a deck.
 Every deck holds named **revisions**: one is active and takes your edits, and
 you can branch a new one from it to try a change without losing the list that
 was working. A finished deck can be dealt as a **test hand** — five cards and
 five security off a shuffled main deck, redealt as often as you like — which
 is the only way to see how often the list actually opens the way it is meant
 to.
+
+The interface is in English and Spanish, following the device unless you pick
+one under Library → translate. Card names and card text stay in English, which
+is the language the cards are printed in.
 
 Everything runs offline. The card database is downloaded once and stored
 locally; card images are cached as you view them.
@@ -156,7 +163,7 @@ than crash.
 Useful when the API changes shape:
 
 ```bash
-curl -H "User-Agent: DigiCardApp/1.2.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
+curl -H "User-Agent: DigiCardApp/1.3.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
 curl -o en.json <the English download link from that response>
 dart run tool/inspect_bulk.dart en.json
 ```
@@ -213,8 +220,8 @@ card data and artwork belong to the parties above and are not licensed by it.
 
 ## Roadmap
 
-1.2.0 covers the library, the deck builder with revisions, deck import and
-export, the preview sets, staple lists and test hands.
+1.3.0 covers the library, the deck builder with revisions, deck import and
+export, the preview sets, staple lists, test hands and a Spanish interface.
 
 Planned next:
 
