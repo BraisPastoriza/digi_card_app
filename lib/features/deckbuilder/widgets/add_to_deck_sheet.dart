@@ -76,15 +76,22 @@ class _AddToDeckSheet extends ConsumerWidget {
                 message: '$error',
               ),
               data: (decks) => decks.isEmpty
-                  ? EmptyState(
-                      icon: Icons.layers_outlined,
-                      title: context.l10n.decksEmptyTitle,
-                      message: context.l10n.addToDeckEmptyMessage,
-                      action: FilledButton.icon(
-                        onPressed: () => _createDeckWithCard(context, ref),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: Text(context.l10n.decksNewDeck),
-                      ),
+                  // Scrollable even with nothing in it: on a short screen the
+                  // sheet is not tall enough for the empty state to stand.
+                  ? ListView(
+                      controller: scrollController,
+                      children: [
+                        EmptyState(
+                          icon: Icons.layers_outlined,
+                          title: context.l10n.decksEmptyTitle,
+                          message: context.l10n.addToDeckEmptyMessage,
+                          action: FilledButton.icon(
+                            onPressed: () => _createDeckWithCard(context, ref),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: Text(context.l10n.decksNewDeck),
+                          ),
+                        ),
+                      ],
                     )
                   : ListView(
                       controller: scrollController,

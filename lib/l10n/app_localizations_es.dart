@@ -1586,4 +1586,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String languageSystemDetail(String language) {
     return 'Ahora: $language';
   }
+
+  @override
+  String get cardAddToList => 'Añadir a una lista de imprescindibles';
+
+  @override
+  String get addToListTitle => 'Añadir a una lista';
+
+  @override
+  String get addToListEmptyMessage =>
+      'Una lista de imprescindibles mantiene a mano, en el constructor de mazos, las cartas a las que vuelves.';
+
+  @override
+  String get addToListNewSubtitle => 'Empieza una lista con esta carta';
+
+  @override
+  String addToListAdded(String name, String list) {
+    return '$name añadida a $list';
+  }
+
+  @override
+  String addToListRemoved(String name, String list) {
+    return '$name quitada de $list';
+  }
+
+  @override
+  String get addToListHolds => 'En esta lista';
 }

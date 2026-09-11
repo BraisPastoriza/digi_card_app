@@ -1575,4 +1575,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String languageSystemDetail(String language) {
     return 'Now: $language';
   }
+
+  @override
+  String get cardAddToList => 'Add to a staple list';
+
+  @override
+  String get addToListTitle => 'Add to list';
+
+  @override
+  String get addToListEmptyMessage =>
+      'A staple list keeps the cards you come back to within reach of the deck builder.';
+
+  @override
+  String get addToListNewSubtitle => 'Start a list with this card';
+
+  @override
+  String addToListAdded(String name, String list) {
+    return '$name added to $list';
+  }
+
+  @override
+  String addToListRemoved(String name, String list) {
+    return '$name removed from $list';
+  }
+
+  @override
+  String get addToListHolds => 'In this list';
 }

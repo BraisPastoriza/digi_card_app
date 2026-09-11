@@ -1276,5 +1276,35 @@
         "type": "String"
       }
     }
+  },
+  "cardAddToList": "Add to a staple list",
+  "addToListTitle": "Add to list",
+  "addToListEmptyMessage": "A staple list keeps the cards you come back to within reach of the deck builder.",
+  "addToListNewSubtitle": "Start a list with this card",
+  "addToListAdded": "{name} added to {list}",
+  "@addToListAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "addToListRemoved": "{name} removed from {list}",
+  "@addToListRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "addToListHolds": "In this list",
+  "@addToListHolds": {
+    "description": "Accessible label for the tick on a list that already holds the card."
   }
 }

@@ -16,6 +16,7 @@ import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/game_text.dart';
 import '../deckbuilder/widgets/add_to_deck_sheet.dart';
+import '../deckbuilder/widgets/add_to_staple_sheet.dart';
 import 'library_providers.dart';
 
 /// Everything the card database knows about one card, including its alternate
@@ -88,6 +89,11 @@ class _CardDetailViewState extends State<_CardDetailView> {
           pinned: true,
           title: Text(card.name, overflow: TextOverflow.ellipsis),
           actions: [
+            IconButton(
+              tooltip: context.l10n.cardAddToList,
+              onPressed: () => showAddToStapleSheet(context, _card),
+              icon: const Icon(Icons.bookmark_add_outlined),
+            ),
             IconButton(
               tooltip: context.l10n.cardAddToDeck,
               onPressed: () => showAddToDeckSheet(context, _card),

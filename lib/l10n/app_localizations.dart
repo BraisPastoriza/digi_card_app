@@ -2513,6 +2513,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Now: {language}'**
   String languageSystemDetail(String language);
+
+  /// No description provided for @cardAddToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to a staple list'**
+  String get cardAddToList;
+
+  /// No description provided for @addToListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to list'**
+  String get addToListTitle;
+
+  /// No description provided for @addToListEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A staple list keeps the cards you come back to within reach of the deck builder.'**
+  String get addToListEmptyMessage;
+
+  /// No description provided for @addToListNewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a list with this card'**
+  String get addToListNewSubtitle;
+
+  /// No description provided for @addToListAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added to {list}'**
+  String addToListAdded(String name, String list);
+
+  /// No description provided for @addToListRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed from {list}'**
+  String addToListRemoved(String name, String list);
+
+  /// Accessible label for the tick on a list that already holds the card.
+  ///
+  /// In en, this message translates to:
+  /// **'In this list'**
+  String get addToListHolds;
 }
 
 class _AppLocalizationsDelegate

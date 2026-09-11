@@ -399,5 +399,12 @@
   "languageTitle": "Idioma",
   "languageSubtitle": "Los nombres y los textos de las cartas se quedan en inglés, que es el idioma en el que están impresas.",
   "languageSystem": "El del dispositivo",
-  "languageSystemDetail": "Ahora: {language}"
+  "languageSystemDetail": "Ahora: {language}",
+  "cardAddToList": "Añadir a una lista de imprescindibles",
+  "addToListTitle": "Añadir a una lista",
+  "addToListEmptyMessage": "Una lista de imprescindibles mantiene a mano, en el constructor de mazos, las cartas a las que vuelves.",
+  "addToListNewSubtitle": "Empieza una lista con esta carta",
+  "addToListAdded": "{name} añadida a {list}",
+  "addToListRemoved": "{name} quitada de {list}",
+  "addToListHolds": "En esta lista"
 }
