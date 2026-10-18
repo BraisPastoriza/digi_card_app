@@ -492,6 +492,12 @@ class CardSyncService {
       }
     }
 
+    // Still listed in `previewReleases` is not enough: once the primary API
+    // publishes a set, its cards come from there and so must its label and
+    // its place in the ordering.
+    bool isPreview(String id) =>
+        !orderedIds.contains(id) && previewReleases.any((p) => p.id == id);
+
     await _db.transaction(() async {
       await _db.delete(_db.cardReleaseLinks).go();
       await _db.delete(_db.cardTraits).go();
@@ -515,9 +521,7 @@ class CardSyncService {
               cardCount: Value(primaryInRelease[detail.id]?.length ?? 0),
               printingCount: Value(releaseToCards[detail.id]?.length ?? 0),
               dataSource: Value(
-                previewReleases.any((p) => p.id == detail.id)
-                    ? secondarySourceName
-                    : null,
+                isPreview(detail.id) ? secondarySourceName : null,
               ),
               // Neither the promo aggregate nor a preview set appears in the
               // API's own ordering. The aggregate floats to the top of its
@@ -526,8 +530,7 @@ class CardSyncService {
               // `indexOf` would give it.
               sortIndex: Value(switch (detail.id) {
                 allPromosReleaseId => orderedIds.length + 1,
-                final id when previewReleases.any((p) => p.id == id) =>
-                  orderedIds.length + 2,
+                final id when isPreview(id) => orderedIds.length + 2,
                 allLimitedReleaseId => orderedIds.length + 3,
                 final id => orderedIds.indexOf(id),
               }),
@@ -672,5 +675,4 @@ class CardSyncService {
       ),
     ];
   }
-
 }
