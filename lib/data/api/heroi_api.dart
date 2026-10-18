@@ -73,7 +73,13 @@ class HeroiApi {
             ),
           );
 
-  static const baseUrl = 'https://api.heroi.cc';
+  /// Overridable at build time, e.g.
+  /// `--dart-define=HEROI_API_URL=http://localhost:3000`, to try the app
+  /// against a local build of the API before its data reaches production.
+  static const baseUrl = String.fromEnvironment(
+    'HEROI_API_URL',
+    defaultValue: 'https://api.heroi.cc',
+  );
   static const userAgent = AppInfo.userAgent;
 
   /// The app ships English cards only; the API also serves ja, ko and zh-Hans.
