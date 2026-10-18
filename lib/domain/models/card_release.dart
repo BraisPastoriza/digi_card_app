@@ -123,10 +123,10 @@ const specialLimitedSetReleaseId = 'special-limited-set';
 /// before the canonical data catches up.
 ///
 /// These are named here rather than discovered because the point is to keep
-/// the secondary source on a very short leash: two known sets, two requests.
-/// No retirement code is needed — the sync skips any preview whose id the
-/// primary API has started publishing, so each one disappears on its own the
-/// day the real data lands.
+/// the secondary source on a very short leash: a handful of known sets, one
+/// request each. No retirement code is needed — the sync skips any preview
+/// whose id the primary API has started publishing, so each one disappears on
+/// its own the day the real data lands.
 class PreviewRelease {
   const PreviewRelease({
     required this.id,
@@ -159,6 +159,12 @@ const previewReleases = [
     id: 'bt-26',
     name: 'TIMELESS BONDS [BT-26]',
     pack: 'BT-26',
+    genre: 'Booster Pack',
+  ),
+  PreviewRelease(
+    id: 'bt-27',
+    name: 'IGNITION OF X [BT-27]',
+    pack: 'BT-27',
     genre: 'Booster Pack',
   ),
   PreviewRelease(
