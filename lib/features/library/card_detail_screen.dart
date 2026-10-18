@@ -102,7 +102,9 @@ class _CardDetailViewState extends State<_CardDetailView> {
           ],
         ),
         if (previewReleases.any((p) => card.releaseIds.contains(p.id)))
-          const SliverToBoxAdapter(child: _PreviewCardNotice()),
+          SliverToBoxAdapter(
+            child: _PreviewCardNotice(releaseIds: card.releaseIds),
+          ),
         SliverToBoxAdapter(
           child: Column(
             children: [
@@ -1057,11 +1059,22 @@ class _FaqSection extends StatelessWidget {
 /// Shown on a card from a set the main database has not published yet, so the
 /// empty rulings and missing alternate arts read as "not published" rather
 /// than "this card has none".
-class _PreviewCardNotice extends StatelessWidget {
-  const _PreviewCardNotice();
+class _PreviewCardNotice extends ConsumerWidget {
+  const _PreviewCardNotice({required this.releaseIds});
+
+  final List<String> releaseIds;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Being on the preview list is not enough: once the primary API publishes
+    // the set, the sync stores it as an ordinary release.
+    final previews = [
+      for (final id in releaseIds)
+        if (previewReleases.any((p) => p.id == id))
+          ref.watch(releaseProvider(id)).valueOrNull?.isPreview ?? false,
+    ];
+    if (!previews.contains(true)) return const SizedBox.shrink();
+
     final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
