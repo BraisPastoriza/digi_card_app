@@ -48,6 +48,11 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
   Future<void> _start() async {
     final service = ref.read(cardSyncServiceProvider);
     final resyncRequested = ref.read(resyncRequestedProvider);
+    // This much runs inside initState, where Riverpod refuses provider writes
+    // — the throw used to leave "Check for updates" spinning forever. The flag
+    // is cleared once the tree is done building.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
     ref.read(resyncRequestedProvider.notifier).state = false;
 
     if (!widget.force && !resyncRequested && await service.hasCards()) {
