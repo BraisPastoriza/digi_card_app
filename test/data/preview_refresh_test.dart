@@ -11,12 +11,17 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Answers every request with one canned payload, so a refresh can be run
-/// against a known set listing without touching the network.
+/// Answers with canned payloads, so a refresh can be run against a known set
+/// listing without touching the network.
 class _CannedAdapter implements HttpClientAdapter {
   _CannedAdapter(this.rows);
 
+  /// What EX-13 answers with.
   List<Map<String, dynamic>> rows;
+
+  /// What the other packs answer with; a pack missing here answers with
+  /// nothing, which a refresh skips.
+  Map<String, List<Map<String, dynamic>>> otherPacks = {};
 
   @override
   Future<ResponseBody> fetch(
@@ -24,7 +29,10 @@ class _CannedAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async => ResponseBody.fromString(
-    jsonEncode(rows),
+    jsonEncode(switch (options.uri.queryParameters['pack']) {
+      'EX-13' => rows,
+      final pack => otherPacks[pack] ?? const [],
+    }),
     200,
     headers: {
       Headers.contentTypeHeader: [Headers.jsonContentType],
@@ -197,6 +205,25 @@ void main() {
 
     expect(await service.refreshPreviews(), isEmpty);
     expect(await cardIdsIn('ex-13'), {'EX13-001'});
+  });
+
+  test('adds a set put on the preview list since the last full sync', () async {
+    // BT-27 was added to the list after this database was synced, and a full
+    // sync will not run again until the primary dump changes.
+    adapter.rows = [_row('EX13-001', 'Old Name')];
+    adapter.otherPacks['BT-27'] = [_row('BT27-035', 'Alphamon: Ouryuken')];
+
+    expect(await service.refreshPreviews(), ['bt-27']);
+    expect(await cardIdsIn('bt-27'), {'BT27-035'});
+
+    final release = await db.releaseDao.releaseById('bt-27');
+    expect(release!.isPreview, isTrue);
+    expect(release.cardCount, 1);
+    expect(
+      release.sortIndex,
+      (await db.releaseDao.releaseById('ex-13'))!.sortIndex,
+      reason: 'it sorts with the other preview sets',
+    );
   });
 
   test('keeps what it has when the source answers with nothing', () async {

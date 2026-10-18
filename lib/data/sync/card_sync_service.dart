@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
@@ -305,11 +306,14 @@ class CardSyncService {
     final wanted = [
       for (final preview in previewReleases)
         if (onlyReleaseId == null || preview.id == onlyReleaseId)
-          // Only sets still standing in for unpublished data. Once the primary
-          // API publishes one, a full sync replaces it and it must not be
-          // overwritten from the secondary source again.
-          if (stored.any((r) => r.id == preview.id && r.isPreview)) preview,
+          // Sets still standing in for unpublished data, and sets added to the
+          // list since the last full sync — which may be months away, since a
+          // full sync waits for a new primary dump. Once the primary API
+          // publishes one, a full sync stores it as an ordinary release and
+          // it must not be overwritten from the secondary source again.
+          if (stored.every((r) => r.id != preview.id || r.isPreview)) preview,
     ];
+    final sortIndex = _previewSortIndex(stored);
 
     final changed = <String>[];
     for (final preview in wanted) {
@@ -320,7 +324,9 @@ class CardSyncService {
         // a bad day. Either way it is not a reason to empty a set the user can
         // currently browse.
         if (parsed.isEmpty) continue;
-        if (await _storePreview(preview, parsed)) changed.add(preview.id);
+        if (await _storePreview(preview, parsed, sortIndex: sortIndex)) {
+          changed.add(preview.id);
+        }
       } on Object {
         // Same bargain as during a sync: the secondary source is a bonus, and
         // failing to reach it costs the user nothing they already had.
@@ -334,10 +340,22 @@ class CardSyncService {
   ///
   /// Returns whether anything actually changed, so a pull-to-refresh can say
   /// "nothing new" rather than implying it found something.
+  /// Where a preview set sorts when a refresh, not a full sync, is the first
+  /// to store it: alongside the other previews, past every published release.
+  int _previewSortIndex(List<CardRelease> stored) {
+    final preview = stored.firstWhereOrNull((r) => r.isPreview);
+    if (preview != null) return preview.sortIndex;
+    final promos = stored.firstWhereOrNull((r) => r.id == allPromosReleaseId);
+    if (promos != null) return promos.sortIndex + 1;
+    return stored.map((r) => r.sortIndex).fold(0, max) + 1;
+  }
+
+  /// [sortIndex] places the release if this is the first time it is stored.
   Future<bool> _storePreview(
     PreviewRelease preview,
-    List<ParsedCard> parsed,
-  ) async {
+    List<ParsedCard> parsed, {
+    required int sortIndex,
+  }) async {
     // Cards this release currently contributes, split by whether they are its
     // own or somebody else's. A Limited pack is mostly reprints of cards the
     // primary source owns: those are linked here but must survive a refresh,
@@ -392,6 +410,20 @@ class CardSyncService {
       }
 
       await _db.batch((batch) {
+        // A set added to the preview list since the last full sync has no row
+        // yet, and the links below need one.
+        batch.insert(
+          _db.releases,
+          ReleasesCompanion.insert(
+            id: preview.id,
+            name: preview.name,
+            groupName: classifyRelease(preview.id).name,
+            genre: Value(preview.genre),
+            dataSource: const Value(secondarySourceName),
+            sortIndex: Value(sortIndex),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
         batch.insertAll(_db.cards, [
           for (final card in fresh) _cardCompanion(card, {preview.id}),
         ]);
