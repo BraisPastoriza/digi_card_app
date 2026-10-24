@@ -425,33 +425,39 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     return predicate;
   }
 
-  /// Restricts to cards whose text matches [rawQuery] using the FTS5 index.
+  /// Restricts to cards whose text matches every word of [rawQuery].
   ///
-  /// The query string is interpolated rather than bound because drift cannot
+  /// A word matches the start of any word in the FTS5 index, or anywhere
+  /// inside the card's name: names are compounds like "Baohuckmon", which an
+  /// FTS token prefix never reaches into for "huck". Effect text stays
+  /// prefix-only so "ace" doesn't drag in every "place".
+  ///
+  /// The FTS query is interpolated rather than bound because drift cannot
   /// bind variables inside a [CustomExpression]. That is safe here only
-  /// because [_toFtsQuery] rebuilds the string from scratch out of
-  /// letter/digit tokens, discarding every quote and operator the user typed.
+  /// because [_queryTokens] keeps nothing but letters and digits, discarding
+  /// every quote and operator the user typed.
   Expression<bool>? _ftsMatchExpression(String rawQuery) {
-    final ftsQuery = _toFtsQuery(rawQuery);
-    if (ftsQuery == null) return null;
-    return CustomExpression<bool>(
-      "cards.id IN (SELECT card_id FROM $cardSearchTable "
-      "WHERE $cardSearchTable MATCH '$ftsQuery')",
-    );
+    final tokens = _queryTokens(rawQuery);
+    if (tokens.isEmpty) return null;
+    return tokens
+        .map(
+          (token) =>
+              CustomExpression<bool>(
+                "cards.id IN (SELECT card_id FROM $cardSearchTable "
+                "WHERE $cardSearchTable MATCH '\"$token\"*')",
+              ) |
+              cards.name.like('%$token%'),
+        )
+        .reduce((a, b) => a & b);
   }
 
-  /// Turns free text into an FTS5 prefix query, or null when there is nothing
-  /// searchable in it.
-  static String? _toFtsQuery(String rawQuery) {
-    final tokens = rawQuery
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), ' ')
-        .split(' ')
-        .where((token) => token.isNotEmpty)
-        .toList();
-    if (tokens.isEmpty) return null;
-    return tokens.map((token) => '"$token"*').join(' ');
-  }
+  /// The lowercase letter/digit words in free text.
+  static List<String> _queryTokens(String rawQuery) => rawQuery
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), ' ')
+      .split(' ')
+      .where((token) => token.isNotEmpty)
+      .toList();
 
   List<OrderingTerm Function($CardsTable)> _ordering(CardSort sort) =>
       switch (sort) {

@@ -1,5 +1,6 @@
 import 'package:digi_card_app/data/db/app_database.dart';
 import 'package:digi_card_app/domain/models/card_filter.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -146,5 +147,44 @@ void main() {
       ),
       isEmpty,
     );
+  });
+
+  group('text query', () {
+    setUp(() async {
+      await db.batch((batch) {
+        for (final (number, name, effect) in [
+          ('BT1-001', 'Baohuckmon', 'Gain 1 memory.'),
+          ('BT1-002', 'Saviorhuckmon', null),
+          ('BT1-003', 'Huckmon', null),
+          ('BT1-004', 'Agumon', 'This Digimon gets +1000 DP for each place.'),
+        ]) {
+          batch.update(
+            db.cards,
+            CardsCompanion(name: Value(name), effect: Value(effect)),
+            where: (c) => c.id.equals(number),
+          );
+        }
+      });
+      await db.rebuildSearchIndex();
+    });
+
+    test('finds a word inside a compound card name', () async {
+      expect(await search(const CardFilter(query: 'huck')), [
+        'BT1-001',
+        'BT1-002',
+        'BT1-003',
+      ]);
+    });
+
+    test('matches effect text only at the start of a word', () async {
+      expect(await search(const CardFilter(query: 'memory')), ['BT1-001']);
+      expect(await search(const CardFilter(query: 'ace')), isEmpty);
+    });
+
+    test('needs every word to match', () async {
+      expect(await search(const CardFilter(query: 'huck savior')), [
+        'BT1-002',
+      ]);
+    });
   });
 }
