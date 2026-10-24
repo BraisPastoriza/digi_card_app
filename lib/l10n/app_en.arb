@@ -146,7 +146,7 @@
   "@databaseNever": {
     "description": "Stands in for a download that has not happened."
   },
-  "databaseSources": "Card data comes from the Heroicc API, plus {source} for sets Heroicc has not published yet. Refreshing re-downloads the full card list, which is how new sets show up.",
+  "databaseSources": "Card data comes from the Heroicc API, plus {source} for sets Heroicc has not published yet. Sets still being revealed show up on their own; checking for updates downloads the full card list again once Heroicc publishes a new one.",
   "@databaseSources": {
     "placeholders": {
       "source": {
@@ -156,6 +156,10 @@
   },
   "databaseCredits": "Data sources & credits",
   "databaseCheckUpdates": "Check for updates",
+  "cardUpdateTitle": "New card data available",
+  "cardUpdateMessage": "Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.",
+  "cardUpdateAction": "Update",
+  "cardUpdateDismiss": "Not now",
   "searchHint": "Name, effect, trait…",
   "searchFailed": "Search failed",
   "searchNoCards": "No cards found",

@@ -39,6 +39,41 @@ List<ParsedCard> parseDigimonCardIoPack(
   return byNumber.values.toList();
 }
 
+/// The preview release for a pack found by asking for it, named the way the
+/// primary API names its releases.
+///
+/// Their rows carry the product as `set_name`, e.g. `BT-27: BOOSTER IGNITION
+/// OF X`; the primary API prints `IGNITION OF X [BT-27]`. The product-type
+/// prefix is dropped for boosters only, matching what the primary API does:
+/// its Limited packs keep `LIMITED CARD PACK` in the name. A pack none of
+/// whose rows names it is still worth showing, under its bare code.
+PreviewRelease discoveredPreview(
+  String pack,
+  List<Map<String, dynamic>> rows, {
+  String? genre,
+}) {
+  // A reprint lists every product it is in, and an event promo is listed
+  // under its own name, so only an entry starting with this pack's code is
+  // the pack's name.
+  final prefix = '$pack: ';
+  final names = [
+    for (final row in rows)
+      for (final setName in (row['set_name'] as List?) ?? const [])
+        if (setName is String && setName.startsWith(prefix))
+          setName
+              .substring(prefix.length)
+              .replaceFirst(RegExp(r'^(EXTRA )?BOOSTER '), '')
+              .trim(),
+  ].where((name) => name.isNotEmpty);
+  final name = names.isEmpty ? null : names.first;
+  return PreviewRelease(
+    id: pack.toLowerCase(),
+    name: '${name ?? pack} [$pack]',
+    pack: pack,
+    genre: genre,
+  );
+}
+
 ParsedCard? _parseRow(Map<String, dynamic> row, PreviewRelease release) {
   final number = (row['id'] as String?)?.trim();
   if (number == null || number.isEmpty) return null;

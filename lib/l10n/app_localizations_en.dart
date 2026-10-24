@@ -157,7 +157,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String databaseSources(String source) {
-    return 'Card data comes from the Heroicc API, plus $source for sets Heroicc has not published yet. Refreshing re-downloads the full card list, which is how new sets show up.';
+    return 'Card data comes from the Heroicc API, plus $source for sets Heroicc has not published yet. Sets still being revealed show up on their own; checking for updates downloads the full card list again once Heroicc publishes a new one.';
   }
 
   @override
@@ -165,6 +165,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get databaseCheckUpdates => 'Check for updates';
+
+  @override
+  String get cardUpdateTitle => 'New card data available';
+
+  @override
+  String get cardUpdateMessage =>
+      'Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.';
+
+  @override
+  String get cardUpdateAction => 'Update';
+
+  @override
+  String get cardUpdateDismiss => 'Not now';
 
   @override
   String get searchHint => 'Name, effect, trait…';

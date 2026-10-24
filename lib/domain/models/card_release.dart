@@ -122,11 +122,13 @@ const specialLimitedSetReleaseId = 'special-limited-set';
 /// secondary source so the newest cards are searchable and deck-buildable
 /// before the canonical data catches up.
 ///
-/// These are named here rather than discovered because the point is to keep
-/// the secondary source on a very short leash: a handful of known sets, one
-/// request each. No retirement code is needed — the sync skips any preview
-/// whose id the primary API has started publishing, so each one disappears on
-/// its own the day the real data lands.
+/// The sets come from three places: [previewReleases], the ones a sync finds
+/// by asking for the next set of each of [previewSeries], and the ones already
+/// stored from earlier syncs. The secondary source stays on a short leash all
+/// the same: known sets plus one guess per series, one request each. No
+/// retirement code is needed — the sync skips any preview whose id the primary
+/// API has started publishing, so each one disappears on its own the day the
+/// real data lands.
 class PreviewRelease {
   const PreviewRelease({
     required this.id,
@@ -134,6 +136,15 @@ class PreviewRelease {
     required this.pack,
     this.genre,
   });
+
+  /// A preview set as an earlier sync stored it, so a set it discovered keeps
+  /// being refreshed without being on [previewReleases].
+  factory PreviewRelease.fromRelease(CardRelease release) => PreviewRelease(
+    id: release.id,
+    name: release.name,
+    pack: release.setCode ?? release.id.toUpperCase(),
+    genre: release.genre,
+  );
 
   /// Slug in the primary API's own style, so [classifyRelease] files it in
   /// the right library group without a special case.
@@ -153,7 +164,27 @@ class PreviewRelease {
 /// wherever its data is.
 const secondarySourceName = 'digimoncard.io';
 
-/// The sets currently filled in from the secondary source.
+/// Product lines whose next set a sync looks for on the secondary source, by
+/// release-id prefix, with the genre the primary API files them under.
+///
+/// Numbered one after another, so "the set after the newest one we know" is a
+/// single request that comes back empty until the first card is revealed.
+const previewSeries = {
+  'bt': 'Booster Pack',
+  'ex': 'Booster Pack',
+  'lm': 'Premium Bandai',
+};
+
+/// Whether [releaseId] is the kind of release a sync may fill in from the
+/// secondary source. Says nothing about whether it currently is one: that is
+/// [CardRelease.isPreview], which needs the stored release to answer.
+bool mayBePreview(String releaseId) =>
+    previewReleases.any((preview) => preview.id == releaseId) ||
+    RegExp('^(${previewSeries.keys.join('|')})-\\d+\$').hasMatch(releaseId);
+
+/// Sets filled in from the secondary source whatever [previewSeries] finds:
+/// ones announced before their predecessor was revealed, or whose name the
+/// secondary source spells in a way the discovery cannot read.
 const previewReleases = [
   PreviewRelease(
     id: 'bt-26',

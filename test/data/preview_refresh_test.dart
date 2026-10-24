@@ -226,6 +226,76 @@ void main() {
     );
   });
 
+  group('discovery', () {
+    Map<String, dynamic> inPack(String id, String name, String setName) => {
+      ..._row(id, name),
+      'set_name': [setName],
+    };
+
+    setUp(() => adapter.rows = [_row('EX13-001', 'Old Name')]);
+
+    test('adds the set after the newest one of a series', () async {
+      adapter.otherPacks['EX-14'] = [
+        inPack('EX14-054', 'Barbamon', 'EX-14: EXTRA BOOSTER MALEVOLENT VII'),
+      ];
+
+      expect(await service.refreshPreviews(), ['ex-14']);
+      expect(await cardIdsIn('ex-14'), {'EX14-054'});
+
+      final release = await db.releaseDao.releaseById('ex-14');
+      expect(release!.isPreview, isTrue);
+      expect(release.name, 'MALEVOLENT VII [EX-14]');
+      expect(release.genre, 'Booster Pack');
+    });
+
+    test('keeps going while the next set has cards too', () async {
+      adapter.otherPacks['EX-14'] = [
+        inPack('EX14-001', 'A', 'EX-14: EXTRA BOOSTER MALEVOLENT VII'),
+      ];
+      adapter.otherPacks['EX-15'] = [
+        inPack('EX15-001', 'B', 'EX-15: EXTRA BOOSTER SOMETHING NEW'),
+      ];
+
+      expect(await service.refreshPreviews(), ['ex-14', 'ex-15']);
+    });
+
+    test('does not skip ahead past a set with no cards yet', () async {
+      adapter.otherPacks['EX-15'] = [
+        inPack('EX15-001', 'B', 'EX-15: EXTRA BOOSTER SOMETHING NEW'),
+      ];
+
+      expect(await service.refreshPreviews(), isEmpty);
+      expect(await db.releaseDao.releaseById('ex-15'), isNull);
+    });
+
+    test('keeps refreshing a set it discovered earlier', () async {
+      // EX-14 is stored as a preview but is not on the fixed list.
+      await db
+          .into(db.releases)
+          .insert(
+            ReleasesCompanion.insert(
+              id: 'ex-14',
+              name: 'MALEVOLENT VII [EX-14]',
+              groupName: 'ex',
+              dataSource: const Value(secondarySourceName),
+            ),
+          );
+      adapter.otherPacks['EX-14'] = [_row('EX14-002', 'Newly Revealed')];
+
+      expect(await service.refreshPreviews(), ['ex-14']);
+      expect(await cardIdsIn('ex-14'), {'EX14-002'});
+    });
+
+    test('a pull on one set looks for nothing new', () async {
+      adapter.otherPacks['EX-14'] = [
+        inPack('EX14-054', 'Barbamon', 'EX-14: EXTRA BOOSTER MALEVOLENT VII'),
+      ];
+
+      expect(await service.refreshPreviews(onlyReleaseId: 'ex-13'), isEmpty);
+      expect(await db.releaseDao.releaseById('ex-14'), isNull);
+    });
+  });
+
   test('keeps what it has when the source answers with nothing', () async {
     adapter.rows = [];
 

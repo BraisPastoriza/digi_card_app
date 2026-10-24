@@ -190,7 +190,12 @@ class CardSyncService {
       cards.addAll(previews.cards);
 
       controller.add(const SyncProgress(SyncStage.storing));
-      await _store(cards, [...details, ...previews.details], ids);
+      await _store(
+        cards,
+        [...details, ...previews.details],
+        ids,
+        previewIds: {for (final detail in previews.details) detail.id},
+      );
 
       controller.add(const SyncProgress(SyncStage.indexing));
       await _db.rebuildSearchIndex();
@@ -239,54 +244,127 @@ class CardSyncService {
     StreamController<SyncProgress> controller, {
     required Set<String> knownNumbers,
   }) async {
-    final wanted = previewReleases
-        .where((preview) => !publishedIds.contains(preview.id))
-        .toList();
-    if (wanted.isEmpty) {
-      return (cards: <ParsedCard>[], details: <ReleaseDetail>[]);
-    }
+    final published = publishedIds.toSet();
+    // Read before the store replaces every release, so a set an earlier sync
+    // discovered is asked for again rather than forgotten.
+    final known = _knownPreviews(await _db.releaseDao.allReleases(), published);
 
     final cards = <ParsedCard>[];
     final details = <ReleaseDetail>[];
 
-    for (final preview in wanted) {
-      controller.add(
-        SyncProgress(
-          SyncStage.releases,
-          detail: PreviewPackFetched(preview.pack),
+    void add(PreviewRelease preview, List<Map<String, dynamic>> rows) {
+      final parsed = parseDigimonCardIoPack(rows, preview);
+      if (parsed.isEmpty) return;
+
+      // A Limited pack is mostly reprints of cards from other sets, and the
+      // primary source already has those — with better data and their real
+      // artwork. Only what is genuinely new gets stored; the reprints are
+      // linked to the pack through the release detail below, so the pack
+      // still lists its full contents.
+      cards.addAll(parsed.where((card) => !knownNumbers.contains(card.number)));
+      details.add(
+        ReleaseDetail(
+          id: preview.id,
+          name: preview.name,
+          cardIds: parsed.map((card) => card.id).toList(),
+          genre: preview.genre,
         ),
       );
-      try {
-        // One request at a time: two sequential calls stay far under the
-        // secondary API's 15-per-10-seconds limit with no throttling of our
-        // own to get wrong.
-        final rows = await _secondaryApi.cardsInPack(preview.pack);
-        final parsed = parseDigimonCardIoPack(rows, preview);
-        if (parsed.isEmpty) continue;
+    }
 
-        // A Limited pack is mostly reprints of cards from other sets, and the
-        // primary source already has those — with better data and their real
-        // artwork. Only what is genuinely new gets stored; the reprints are
-        // linked to the pack through the release detail below, so the pack
-        // still lists its full contents.
-        cards.addAll(
-          parsed.where((card) => !knownNumbers.contains(card.number)),
-        );
-        details.add(
-          ReleaseDetail(
-            id: preview.id,
-            name: preview.name,
-            cardIds: parsed.map((card) => card.id).toList(),
-            genre: preview.genre,
-          ),
-        );
+    void reportFetching(String pack) => controller.add(
+      SyncProgress(SyncStage.releases, detail: PreviewPackFetched(pack)),
+    );
+
+    for (final preview in known) {
+      reportFetching(preview.pack);
+      try {
+        // One request at a time: a handful of sequential calls stay far under
+        // the secondary API's 15-per-10-seconds limit with no throttling of
+        // our own to get wrong.
+        add(preview, await _secondaryApi.cardsInPack(preview.pack));
       } on Object {
         // Deliberately swallowed: an unreachable preview set must never cost
         // the user the 7,600 cards the primary sync just downloaded.
         continue;
       }
     }
+
+    final found = await _discoverPreviews({
+      ...published,
+      ...known.map((preview) => preview.id),
+    }, onRequest: reportFetching);
+    for (final (:preview, :rows) in found) {
+      add(preview, rows);
+    }
     return (cards: cards, details: details);
+  }
+
+  /// The preview sets to ask the secondary source about: the fixed list and
+  /// whatever an earlier sync discovered, minus every set in [published].
+  ///
+  /// Where both name a set, the fixed list wins: it is there to correct what
+  /// the discovery would have made of it.
+  List<PreviewRelease> _knownPreviews(
+    List<CardRelease> stored,
+    Set<String> published,
+  ) {
+    final byId = {
+      for (final release in stored)
+        if (release.isPreview) release.id: PreviewRelease.fromRelease(release),
+      for (final preview in previewReleases) preview.id: preview,
+    };
+    return [
+      for (final preview in byId.values)
+        if (!published.contains(preview.id)) preview,
+    ];
+  }
+
+  /// How many sets in a row of one series a single sync will discover.
+  ///
+  /// Normally one: a set is found the day its first card is revealed. The rest
+  /// covers an app that has not been opened for a couple of release cycles,
+  /// while keeping a misbehaving source from turning into a request loop.
+  static const _maxDiscoveredPerSeries = 3;
+
+  /// Asks the secondary source for the set after the newest one of each of
+  /// [previewSeries] in [knownIds], and returns the ones it has cards for,
+  /// with the rows it answered with so they need not be fetched again.
+  ///
+  /// An empty answer is the usual one — the next set has not been revealed
+  /// yet — and ends the search in that series. A failure does too: discovery
+  /// is a bonus on top of a bonus.
+  Future<List<({PreviewRelease preview, List<Map<String, dynamic>> rows})>>
+  _discoverPreviews(
+    Set<String> knownIds, {
+    void Function(String pack)? onRequest,
+  }) async {
+    final found =
+        <({PreviewRelease preview, List<Map<String, dynamic>> rows})>[];
+    for (final MapEntry(key: series, value: genre) in previewSeries.entries) {
+      final pattern = RegExp('^$series-(\\d+)\$');
+      final numbers = [
+        for (final id in knownIds) ?pattern.firstMatch(id)?.group(1),
+      ].map(int.parse);
+      if (numbers.isEmpty) continue;
+
+      var next = numbers.reduce(max) + 1;
+      for (var i = 0; i < _maxDiscoveredPerSeries; i++, next++) {
+        final pack = '${series.toUpperCase()}-${'$next'.padLeft(2, '0')}';
+        onRequest?.call(pack);
+        try {
+          final rows = await _secondaryApi.cardsInPack(pack);
+          if (rows.isEmpty) break;
+          found.add((
+            preview: discoveredPreview(pack, rows, genre: genre),
+            rows: rows,
+          ));
+        } on Object {
+          break;
+        }
+      }
+    }
+    return found;
   }
 
   /// Re-fetches the preview sets and writes back what changed, without
@@ -299,19 +377,24 @@ class CardSyncService {
   /// dump is unchanged — which it is for months at a time — so an EX-13 that
   /// was half-revealed on the day of the first sync stayed half-revealed.
   ///
+  /// A refresh of every set also looks for the next set of each series, so a
+  /// newly revealed one turns up without waiting for a full sync — which may
+  /// be months away, since a full sync waits for a new primary dump.
+  ///
   /// [onlyReleaseId] refreshes a single set, which is what pulling down inside
   /// one does. Returns the sets that actually changed.
   Future<List<String>> refreshPreviews({String? onlyReleaseId}) async {
     final stored = await _db.releaseDao.allReleases();
+    // Once the primary API publishes a set, a full sync stores it as an
+    // ordinary release and it must not be overwritten from the secondary
+    // source again.
+    final known = _knownPreviews(stored, {
+      for (final release in stored)
+        if (!release.isPreview) release.id,
+    });
     final wanted = [
-      for (final preview in previewReleases)
-        if (onlyReleaseId == null || preview.id == onlyReleaseId)
-          // Sets still standing in for unpublished data, and sets added to the
-          // list since the last full sync — which may be months away, since a
-          // full sync waits for a new primary dump. Once the primary API
-          // publishes one, a full sync stores it as an ordinary release and
-          // it must not be overwritten from the secondary source again.
-          if (stored.every((r) => r.id != preview.id || r.isPreview)) preview,
+      for (final preview in known)
+        if (onlyReleaseId == null || preview.id == onlyReleaseId) preview,
     ];
     final sortIndex = _previewSortIndex(stored);
 
@@ -333,7 +416,37 @@ class CardSyncService {
         continue;
       }
     }
+
+    if (onlyReleaseId == null) {
+      final found = await _discoverPreviews({
+        for (final release in stored) release.id,
+        for (final preview in known) preview.id,
+      });
+      for (final (:preview, :rows) in found) {
+        try {
+          final parsed = parseDigimonCardIoPack(rows, preview);
+          if (parsed.isEmpty) continue;
+          if (await _storePreview(preview, parsed, sortIndex: sortIndex)) {
+            changed.add(preview.id);
+          }
+        } on Object {
+          continue;
+        }
+      }
+    }
     return changed;
+  }
+
+  /// Id of the card dump the primary API publishes now, or null when it
+  /// cannot be reached. Different from the stored one means a full sync has
+  /// something to bring in — new sets, corrections, or a preview set that has
+  /// since been published — and this finds that out without downloading it.
+  Future<String?> latestBulkId() async {
+    try {
+      return (await _api.latestEnglishBulk())?.id;
+    } on Object {
+      return null;
+    }
   }
 
   /// Replaces one preview release's contents with [parsed].
@@ -474,8 +587,9 @@ class CardSyncService {
   Future<void> _store(
     List<ParsedCard> cards,
     List<ReleaseDetail> details,
-    List<String> orderedIds,
-  ) async {
+    List<String> orderedIds, {
+    required Set<String> previewIds,
+  }) async {
     final byId = {for (final card in cards) card.id: card};
 
     // A card belongs to a release if either side of the API says so: the
@@ -524,11 +638,11 @@ class CardSyncService {
       }
     }
 
-    // Still listed in `previewReleases` is not enough: once the primary API
-    // publishes a set, its cards come from there and so must its label and
-    // its place in the ordering.
+    // Fetched from the secondary source is not enough on its own: once the
+    // primary API publishes a set, its cards come from there and so must its
+    // label and its place in the ordering.
     bool isPreview(String id) =>
-        !orderedIds.contains(id) && previewReleases.any((p) => p.id == id);
+        !orderedIds.contains(id) && previewIds.contains(id);
 
     await _db.transaction(() async {
       await _db.delete(_db.cardReleaseLinks).go();

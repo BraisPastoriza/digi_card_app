@@ -25,9 +25,17 @@ final digimonCardIoApiProvider = Provider<DigimonCardIoApi>(
   (ref) => DigimonCardIoApi(),
 );
 
-final cardDaoProvider = Provider<CardDao>(
-  (ref) => ref.watch(appDatabaseProvider).cardDao,
-);
+/// Card reads. Rebuilt whenever a sync finishes, like [releaseDaoProvider]: a
+/// sync replaces every card, so everything read through it before then is
+/// showing cards that no longer exist.
+///
+/// A new accessor rather than the database's own: handing back the same object
+/// would let Riverpod decide nothing changed and leave every reader as it was.
+/// An accessor holds nothing but the database, so a new one costs nothing.
+final cardDaoProvider = Provider<CardDao>((ref) {
+  ref.watch(libraryReadyProvider);
+  return CardDao(ref.watch(appDatabaseProvider));
+});
 
 /// Which cards may not share a deck, readable from either side of a pairing.
 ///
@@ -51,9 +59,11 @@ final pairRestrictionsProvider = FutureProvider<PairRestrictions>((ref) async {
   );
 });
 
-final releaseDaoProvider = Provider<ReleaseDao>(
-  (ref) => ref.watch(appDatabaseProvider).releaseDao,
-);
+/// Release reads, rebuilt whenever a sync finishes; see [cardDaoProvider].
+final releaseDaoProvider = Provider<ReleaseDao>((ref) {
+  ref.watch(libraryReadyProvider);
+  return ReleaseDao(ref.watch(appDatabaseProvider));
+});
 
 final deckDaoProvider = Provider<DeckDao>(
   (ref) => ref.watch(appDatabaseProvider).deckDao,

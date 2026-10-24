@@ -101,7 +101,7 @@ class _CardDetailViewState extends State<_CardDetailView> {
             ),
           ],
         ),
-        if (previewReleases.any((p) => card.releaseIds.contains(p.id)))
+        if (card.releaseIds.any(mayBePreview))
           SliverToBoxAdapter(
             child: _PreviewCardNotice(releaseIds: card.releaseIds),
           ),
@@ -1066,11 +1066,11 @@ class _PreviewCardNotice extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Being on the preview list is not enough: once the primary API publishes
+    // Looking like a preview is not enough: once the primary API publishes
     // the set, the sync stores it as an ordinary release.
     final previews = [
       for (final id in releaseIds)
-        if (previewReleases.any((p) => p.id == id))
+        if (mayBePreview(id))
           ref.watch(releaseProvider(id)).valueOrNull?.isPreview ?? false,
     ];
     if (!previews.contains(true)) return const SizedBox.shrink();

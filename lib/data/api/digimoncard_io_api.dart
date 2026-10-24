@@ -4,15 +4,16 @@ import '../../core/app_info.dart';
 
 /// Read-only client for the digimoncard.io public API.
 ///
-/// This is the app's *secondary* card source. It exists for one job: the two
-/// sets the primary API has not published yet (see `previewReleases`). Every
+/// This is the app's *secondary* card source. It exists for one job: the
+/// sets the primary API has not published yet (see `PreviewRelease`). Every
 /// other card in the app comes from the primary source.
 ///
 /// Their documented rate limit is 15 requests per 10 seconds per IP, with a
 /// block of up to an hour for repeat offenders. A sync makes one request per
-/// preview set, one at a time, so the limit is never anywhere near in play —
-/// and a refresh of the preview sets, which the user can now ask for by
-/// pulling down on a set, makes exactly one. [_backoff] is there anyway: if
+/// preview set plus one per series to look for the next set, one at a time,
+/// so the limit is never anywhere near in play — and a refresh of a single
+/// set, which the user asks for by pulling down on it, makes exactly one.
+/// [_backoff] is there anyway: if
 /// this app ever does manage to annoy them, it should be by accident and
 /// briefly, not by retrying into a block.
 class DigimonCardIoApi {

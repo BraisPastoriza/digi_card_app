@@ -158,7 +158,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String databaseSources(String source) {
-    return 'Los datos de las cartas vienen de la API de Heroicc, más $source para las colecciones que Heroicc aún no ha publicado. Al actualizar se vuelve a descargar la lista completa, que es como aparecen las colecciones nuevas.';
+    return 'Los datos de las cartas vienen de la API de Heroicc, más $source para las colecciones que Heroicc aún no ha publicado. Las colecciones que se están desvelando aparecen solas; al buscar actualizaciones se vuelve a descargar la lista completa cuando Heroicc publica una nueva.';
   }
 
   @override
@@ -166,6 +166,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get databaseCheckUpdates => 'Buscar actualizaciones';
+
+  @override
+  String get cardUpdateTitle => 'Hay datos de cartas nuevos';
+
+  @override
+  String get cardUpdateMessage =>
+      'Heroicc ha publicado una actualización de la base de datos de cartas. Puede incluir colecciones que aquí siguen marcadas como AVANCE.';
+
+  @override
+  String get cardUpdateAction => 'Actualizar';
+
+  @override
+  String get cardUpdateDismiss => 'Ahora no';
 
   @override
   String get searchHint => 'Nombre, efecto, rasgo…';

@@ -219,4 +219,56 @@ void main() {
       );
     });
   });
+
+  group('a discovered pack', () {
+    // `set_name` values as digimoncard.io lists them.
+    Map<String, dynamic> listedIn(List<String> sets) => {'set_name': sets};
+
+    test('takes the booster name without its product type', () {
+      final preview = discoveredPreview('BT-27', [
+        listedIn(['BT-27: BOOSTER IGNITION OF X']),
+      ], genre: 'Booster Pack');
+
+      expect(preview.id, 'bt-27');
+      expect(preview.name, 'IGNITION OF X [BT-27]');
+      expect(preview.pack, 'BT-27');
+      expect(preview.genre, 'Booster Pack');
+    });
+
+    test('drops "EXTRA BOOSTER" from an EX set', () {
+      expect(
+        discoveredPreview('EX-14', [
+          listedIn(['EX-14: EXTRA BOOSTER MALEVOLENT VII']),
+        ]).name,
+        'MALEVOLENT VII [EX-14]',
+      );
+    });
+
+    test('keeps "LIMITED CARD PACK", as the primary API does', () {
+      expect(
+        discoveredPreview('LM-09', [
+          listedIn(['LM-09: LIMITED CARD PACK DISTANCIA CERO']),
+        ]).name,
+        'LIMITED CARD PACK DISTANCIA CERO [LM-09]',
+      );
+    });
+
+    test('reads the name off the pack, not a reprint or an event', () {
+      expect(
+        discoveredPreview('BT-26', [
+          listedIn(['BT-10: BOOSTER XROS ENCOUNTER']),
+          listedIn(['TIMELESS BONDS BT-26 Release Event']),
+          listedIn([
+            'BT-10: BOOSTER XROS ENCOUNTER',
+            'BT-26: BOOSTER TIMELESS BONDS',
+          ]),
+        ]).name,
+        'TIMELESS BONDS [BT-26]',
+      );
+    });
+
+    test('falls back to the bare code when no row names the pack', () {
+      expect(discoveredPreview('BT-28', [_row({})]).name, 'BT-28 [BT-28]');
+    });
+  });
 }

@@ -75,6 +75,9 @@ void main() {
   late AppDatabase db;
   late CardSyncService service;
 
+  /// What the secondary source answers for packs other than EX-13.
+  late Map<String, List<Object>> otherPacks;
+
   // BT-26 is on the preview list, but the primary API now publishes it. EX-13
   // is on the list too and still is not published, so it stays a preview.
   setUp(() async {
@@ -85,6 +88,7 @@ void main() {
           (call) async => tmp.path,
         );
 
+    otherPacks = {};
     db = AppDatabase.forTesting(NativeDatabase.memory());
     await db.customStatement('PRAGMA foreign_keys = ON');
 
@@ -135,17 +139,18 @@ void main() {
 
     final secondary = Dio()
       ..httpClientAdapter = _RoutedAdapter(
-        (options) => options.uri.queryParameters['pack'] == 'EX-13'
-            ? [
-                {
-                  'id': 'EX13-001',
-                  'name': 'Gigimon',
-                  'type': 'Digi-Egg',
-                  'color': 'Red',
-                  'level': '2',
-                },
-              ]
-            : <Object>[],
+        (options) => switch (options.uri.queryParameters['pack']) {
+          'EX-13' => [
+            {
+              'id': 'EX13-001',
+              'name': 'Gigimon',
+              'type': 'Digi-Egg',
+              'color': 'Red',
+              'level': '2',
+            },
+          ],
+          final pack => otherPacks[pack] ?? <Object>[],
+        },
       );
 
     service = CardSyncService(
@@ -188,4 +193,26 @@ void main() {
 
     expect(stored['ex-13']?['data_source'], secondarySourceName);
   });
+
+  test(
+    'a set found after the newest known one is stored as a preview',
+    () async {
+      otherPacks['EX-14'] = [
+        {
+          'id': 'EX14-054',
+          'name': 'Barbamon',
+          'type': 'Digimon',
+          'color': 'Purple',
+          'level': 6,
+          'set_name': ['EX-14: EXTRA BOOSTER MALEVOLENT VII'],
+        },
+      ];
+
+      await service.sync(force: true).drain<void>();
+      final stored = await releases();
+
+      expect(stored['ex-14']?['data_source'], secondarySourceName);
+      expect(await db.cardDao.cardById('EX14-054'), isNotNull);
+    },
+  );
 }

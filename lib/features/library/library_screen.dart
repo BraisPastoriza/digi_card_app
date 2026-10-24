@@ -91,6 +91,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                 child: _SearchBarButton(),
               ),
             ),
+            if (ref.watch(cardUpdateAvailableProvider))
+              const SliverToBoxAdapter(child: _CardUpdateBanner()),
             ...sections.when(
               loading: () => const [
                 SliverFillRemaining(
@@ -165,6 +167,82 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     showModalBottomSheet<void>(
       context: context,
       builder: (context) => const _DatabaseInfoSheet(),
+    );
+  }
+}
+
+/// Offers the newer card dump the primary API has published.
+///
+/// Offered rather than downloaded: it is 25 MB, and the user may be on mobile
+/// data. It is the same update "Check for updates" runs, so a preview set the
+/// dump now publishes turns into an ordinary one the same way.
+class _CardUpdateBanner extends ConsumerWidget {
+  const _CardUpdateBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppSurfaces.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.system_update_alt, size: 18, color: scheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.cardUpdateTitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.cardUpdateMessage,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.45,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () =>
+                    ref.read(previewRefreshProvider.notifier).dismissUpdate(),
+                child: Text(context.l10n.cardUpdateDismiss),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Same route as "Check for updates" in the database sheet.
+                  ref.read(resyncRequestedProvider.notifier).state = true;
+                  ref.read(libraryReadyProvider.notifier).requireSync();
+                },
+                child: Text(context.l10n.cardUpdateAction),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -353,7 +353,7 @@ abstract class AppLocalizations {
   /// No description provided for @databaseSources.
   ///
   /// In en, this message translates to:
-  /// **'Card data comes from the Heroicc API, plus {source} for sets Heroicc has not published yet. Refreshing re-downloads the full card list, which is how new sets show up.'**
+  /// **'Card data comes from the Heroicc API, plus {source} for sets Heroicc has not published yet. Sets still being revealed show up on their own; checking for updates downloads the full card list again once Heroicc publishes a new one.'**
   String databaseSources(String source);
 
   /// No description provided for @databaseCredits.
@@ -367,6 +367,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check for updates'**
   String get databaseCheckUpdates;
+
+  /// No description provided for @cardUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New card data available'**
+  String get cardUpdateTitle;
+
+  /// No description provided for @cardUpdateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.'**
+  String get cardUpdateMessage;
+
+  /// No description provided for @cardUpdateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get cardUpdateAction;
+
+  /// No description provided for @cardUpdateDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get cardUpdateDismiss;
 
   /// No description provided for @searchHint.
   ///
