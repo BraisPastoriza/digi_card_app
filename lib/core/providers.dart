@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/api/digimoncard_io_api.dart';
+import '../data/api/github_api.dart';
 import '../data/api/heroi_api.dart';
 import '../data/backup/backup_service.dart';
 import '../data/db/app_database.dart';
@@ -25,6 +26,9 @@ final heroiApiProvider = Provider<HeroiApi>((ref) => HeroiApi());
 final digimonCardIoApiProvider = Provider<DigimonCardIoApi>(
   (ref) => DigimonCardIoApi(),
 );
+
+/// The app's own releases, for offering a newer version.
+final gitHubApiProvider = Provider<GitHubApi>((ref) => GitHubApi());
 
 /// Card reads. Rebuilt whenever a sync finishes, like [releaseDaoProvider]: a
 /// sync replaces every card, so everything read through it before then is

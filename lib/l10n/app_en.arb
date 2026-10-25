@@ -160,6 +160,32 @@
   "cardUpdateMessage": "Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.",
   "cardUpdateAction": "Update",
   "cardUpdateDismiss": "Not now",
+  "appUpdateTitle": "DigiCard App {version} is available",
+  "@appUpdateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateInstallHint": "The first time, Android will ask you to allow installs from DigiCard App.",
+  "appUpdateWhereToGet": "Download it from GitHub:",
+  "appUpdateNotes": "What's new",
+  "appUpdateDismiss": "Not now",
+  "appUpdateInstall": "Install",
+  "appUpdateRetry": "Try again",
+  "appUpdateDownloading": "Downloading… {percent}%",
+  "@appUpdateDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "appUpdateFailedDownload": "The download did not finish. Check your connection and try again.",
+  "appUpdateFailedCorrupt": "The download arrived damaged and was thrown away. Try again.",
+  "appUpdateFailedNoApk": "This release has no APK for this device.",
+  "appUpdateFailedInstaller": "Android's installer could not be opened.",
   "backupMenu": "Backup",
   "backupExport": "Save a backup",
   "backupRestore": "Restore a backup",

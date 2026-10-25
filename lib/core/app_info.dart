@@ -1,3 +1,5 @@
+import 'package:package_info_plus/package_info_plus.dart';
+
 /// Who the app says it is when it talks to somebody else's server.
 ///
 /// Both card APIs are public, unauthenticated and run as a courtesy to the
@@ -8,15 +10,26 @@
 abstract final class AppInfo {
   static const name = 'DigiCardApp';
 
-  /// Kept in step with `version` in pubspec.yaml by hand. It is one line in
-  /// the release checklist, and it buys a server operator the ability to say
-  /// "the 1.3.0 client is the one hammering me".
-  static const version = '1.3.0';
-
   static const repositoryUrl =
       'https://github.com/BraisPastoriza/digi_card_app';
 
+  /// The installed version, e.g. `1.3.0`, as the build stamped it from
+  /// `version` in pubspec.yaml.
+  ///
+  /// Read once at startup by [load] rather than written here by hand: a
+  /// forgotten bump used to be the one way the User-Agent could lie, and the
+  /// update check compares against this, so a stale number would offer users
+  /// the version they already have.
+  static String get version => _version;
+  static String _version = '0.0.0';
+
+  /// Reads [version] from the installed package. Called before the first
+  /// frame, so nothing that talks to a server runs without it.
+  static Future<void> load() async {
+    _version = (await PackageInfo.fromPlatform()).version;
+  }
+
   /// `Product/Version (+url)` — the shape crawlers have used for decades, and
   /// the one an operator's log tooling already knows how to read.
-  static const userAgent = '$name/$version (+$repositoryUrl)';
+  static String get userAgent => '$name/$version (+$repositoryUrl)';
 }

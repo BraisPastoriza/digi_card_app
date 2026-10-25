@@ -66,7 +66,7 @@ class HeroiApi {
               baseUrl: baseUrl,
               connectTimeout: const Duration(seconds: 20),
               receiveTimeout: const Duration(seconds: 60),
-              headers: const {
+              headers: {
                 'Accept': 'application/vnd.api+json',
                 'User-Agent': userAgent,
               },
@@ -80,7 +80,7 @@ class HeroiApi {
     'HEROI_API_URL',
     defaultValue: 'https://api.heroi.cc',
   );
-  static const userAgent = AppInfo.userAgent;
+  static String get userAgent => AppInfo.userAgent;
 
   /// The app ships English cards only; the API also serves ja, ko and zh-Hans.
   static const language = 'en';
@@ -194,7 +194,7 @@ class HeroiApi {
       savePath,
       // The dump is served from a different host than the API, so it needs
       // the identifying header spelled out rather than inherited.
-      options: Options(headers: const {'User-Agent': userAgent}),
+      options: Options(headers: {'User-Agent': userAgent}),
       onReceiveProgress: (received, total) {
         // `total` is -1 when the server omits Content-Length; fall back to the
         // size the index reported so the progress bar still moves.

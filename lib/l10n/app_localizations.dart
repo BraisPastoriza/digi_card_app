@@ -392,6 +392,78 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get cardUpdateDismiss;
 
+  /// No description provided for @appUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'DigiCard App {version} is available'**
+  String appUpdateTitle(String version);
+
+  /// No description provided for @appUpdateInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The first time, Android will ask you to allow installs from DigiCard App.'**
+  String get appUpdateInstallHint;
+
+  /// No description provided for @appUpdateWhereToGet.
+  ///
+  /// In en, this message translates to:
+  /// **'Download it from GitHub:'**
+  String get appUpdateWhereToGet;
+
+  /// No description provided for @appUpdateNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get appUpdateNotes;
+
+  /// No description provided for @appUpdateDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get appUpdateDismiss;
+
+  /// No description provided for @appUpdateInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get appUpdateInstall;
+
+  /// No description provided for @appUpdateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get appUpdateRetry;
+
+  /// No description provided for @appUpdateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent}%'**
+  String appUpdateDownloading(int percent);
+
+  /// No description provided for @appUpdateFailedDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'The download did not finish. Check your connection and try again.'**
+  String get appUpdateFailedDownload;
+
+  /// No description provided for @appUpdateFailedCorrupt.
+  ///
+  /// In en, this message translates to:
+  /// **'The download arrived damaged and was thrown away. Try again.'**
+  String get appUpdateFailedCorrupt;
+
+  /// No description provided for @appUpdateFailedNoApk.
+  ///
+  /// In en, this message translates to:
+  /// **'This release has no APK for this device.'**
+  String get appUpdateFailedNoApk;
+
+  /// No description provided for @appUpdateFailedInstaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Android\'s installer could not be opened.'**
+  String get appUpdateFailedInstaller;
+
   /// No description provided for @backupMenu.
   ///
   /// In en, this message translates to:

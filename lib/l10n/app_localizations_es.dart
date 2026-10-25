@@ -181,6 +181,51 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cardUpdateDismiss => 'Ahora no';
 
   @override
+  String appUpdateTitle(String version) {
+    return 'DigiCard App $version disponible';
+  }
+
+  @override
+  String get appUpdateInstallHint =>
+      'La primera vez, Android te pedirá que permitas instalar apps desde DigiCard App.';
+
+  @override
+  String get appUpdateWhereToGet => 'Descárgala desde GitHub:';
+
+  @override
+  String get appUpdateNotes => 'Novedades';
+
+  @override
+  String get appUpdateDismiss => 'Ahora no';
+
+  @override
+  String get appUpdateInstall => 'Instalar';
+
+  @override
+  String get appUpdateRetry => 'Reintentar';
+
+  @override
+  String appUpdateDownloading(int percent) {
+    return 'Descargando… $percent %';
+  }
+
+  @override
+  String get appUpdateFailedDownload =>
+      'La descarga no ha terminado. Comprueba la conexión y vuelve a intentarlo.';
+
+  @override
+  String get appUpdateFailedCorrupt =>
+      'La descarga ha llegado dañada y se ha descartado. Vuelve a intentarlo.';
+
+  @override
+  String get appUpdateFailedNoApk =>
+      'Esta versión no trae un APK para este dispositivo.';
+
+  @override
+  String get appUpdateFailedInstaller =>
+      'No se ha podido abrir el instalador de Android.';
+
+  @override
   String get backupMenu => 'Copia de seguridad';
 
   @override

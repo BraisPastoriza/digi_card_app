@@ -25,7 +25,7 @@ class DigimonCardIoApi {
               baseUrl: baseUrl,
               connectTimeout: const Duration(seconds: 20),
               receiveTimeout: const Duration(seconds: 40),
-              headers: const {'User-Agent': userAgent},
+              headers: {'User-Agent': userAgent},
               // A pack with no cards answers 400 with an `error` object rather
               // than an empty list, and that is a normal answer here, not a
               // failure worth throwing over.
@@ -38,7 +38,7 @@ class DigimonCardIoApi {
   /// Both APIs ask callers to identify themselves; the primary one says it may
   /// eventually require it. The header names the app, its version and its
   /// repository, so an operator can see what this traffic is. See [AppInfo].
-  static const userAgent = AppInfo.userAgent;
+  static String get userAgent => AppInfo.userAgent;
 
   final Dio _dio;
 

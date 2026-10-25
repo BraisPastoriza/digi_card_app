@@ -13,6 +13,8 @@ import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
 import '../deckbuilder/restriction_notice.dart';
+import '../update/app_update_banner.dart';
+import '../update/app_update_providers.dart';
 import 'attribution_screen.dart';
 import 'library_providers.dart';
 import 'widgets/language_sheet.dart';
@@ -47,6 +49,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         unawaited(ref.read(previewRefreshProvider.notifier).refreshIfStale());
+        unawaited(ref.read(appUpdateProvider.notifier).checkIfStale());
       }
     });
   }
@@ -97,6 +100,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                 child: _SearchBarButton(),
               ),
             ),
+            const SliverToBoxAdapter(child: AppUpdateBanner()),
             const SliverToBoxAdapter(child: RestrictionChangesTeaser()),
             if (ref.watch(cardUpdateAvailableProvider))
               const SliverToBoxAdapter(child: _CardUpdateBanner()),

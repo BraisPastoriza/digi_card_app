@@ -44,6 +44,12 @@ dependencies:
   collection: ^1.19.0
   intl: ^0.20.2
 
+  # Updating the app from its GitHub releases: the installed version, which APK
+  # fits the device, checking the download, and handing it to the installer
+  package_info_plus: ^10.2.2
+  device_info_plus: ^13.3.0
+  crypto: ^3.0.7
+  open_filex: ^5.0.0
   file_picker: ^13.2.0
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.4.2
