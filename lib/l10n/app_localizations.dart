@@ -392,6 +392,84 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get cardUpdateDismiss;
 
+  /// No description provided for @backupMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupMenu;
+
+  /// No description provided for @backupExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a backup'**
+  String get backupExport;
+
+  /// No description provided for @backupRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get backupRestore;
+
+  /// No description provided for @backupExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved.'**
+  String get backupExported;
+
+  /// No description provided for @backupExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup could not be saved.'**
+  String get backupExportFailed;
+
+  /// No description provided for @backupNotABackup.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a DigiCard App backup.'**
+  String get backupNotABackup;
+
+  /// No description provided for @backupTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'That backup was made by a newer version of the app. Update the app to restore it.'**
+  String get backupTooNew;
+
+  /// No description provided for @backupReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The file could not be read.'**
+  String get backupReadFailed;
+
+  /// No description provided for @backupRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this backup?'**
+  String get backupRestoreTitle;
+
+  /// No description provided for @backupRestoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It has {decks, plural, =1{1 deck} other{{decks} decks}} and {lists, plural, =1{1 staple list} other{{lists} staple lists}}. They are added to what you have: nothing here is deleted, and decks you already have exactly as saved are skipped.'**
+  String backupRestoreBody(int decks, int lists);
+
+  /// No description provided for @backupRestoreAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupRestoreAction;
+
+  /// No description provided for @backupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Decks added: {added} · already here: {skipped} · staple lists updated: {lists}'**
+  String backupRestored(int added, int skipped, int lists);
+
+  /// No description provided for @backupRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup could not be restored. Nothing was changed.'**
+  String get backupRestoreFailed;
+
   /// No description provided for @oddsTitle.
   ///
   /// In en, this message translates to:

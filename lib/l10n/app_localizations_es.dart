@@ -181,6 +181,64 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cardUpdateDismiss => 'Ahora no';
 
   @override
+  String get backupMenu => 'Copia de seguridad';
+
+  @override
+  String get backupExport => 'Guardar copia de seguridad';
+
+  @override
+  String get backupRestore => 'Restaurar copia de seguridad';
+
+  @override
+  String get backupExported => 'Copia de seguridad guardada.';
+
+  @override
+  String get backupExportFailed => 'No se ha podido guardar la copia.';
+
+  @override
+  String get backupNotABackup =>
+      'Ese fichero no es una copia de seguridad de DigiCard App.';
+
+  @override
+  String get backupTooNew =>
+      'Esa copia la hizo una versión más nueva de la app. Actualiza la app para restaurarla.';
+
+  @override
+  String get backupReadFailed => 'No se ha podido leer el fichero.';
+
+  @override
+  String get backupRestoreTitle => '¿Restaurar esta copia?';
+
+  @override
+  String backupRestoreBody(int decks, int lists) {
+    String _temp0 = intl.Intl.pluralLogic(
+      decks,
+      locale: localeName,
+      other: '$decks mazos',
+      one: '1 mazo',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      lists,
+      locale: localeName,
+      other: '$lists listas de staples',
+      one: '1 lista de staples',
+    );
+    return 'Tiene $_temp0 y $_temp1. Se añaden a lo que ya tienes: no se borra nada, y los mazos que ya tengas exactamente iguales se saltan.';
+  }
+
+  @override
+  String get backupRestoreAction => 'Restaurar';
+
+  @override
+  String backupRestored(int added, int skipped, int lists) {
+    return 'Mazos añadidos: $added · ya estaban: $skipped · listas de staples actualizadas: $lists';
+  }
+
+  @override
+  String get backupRestoreFailed =>
+      'No se ha podido restaurar la copia. No se ha cambiado nada.';
+
+  @override
   String get oddsTitle => 'Probabilidades de robo';
 
   @override

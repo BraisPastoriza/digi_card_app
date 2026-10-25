@@ -180,6 +180,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardUpdateDismiss => 'Not now';
 
   @override
+  String get backupMenu => 'Backup';
+
+  @override
+  String get backupExport => 'Save a backup';
+
+  @override
+  String get backupRestore => 'Restore a backup';
+
+  @override
+  String get backupExported => 'Backup saved.';
+
+  @override
+  String get backupExportFailed => 'The backup could not be saved.';
+
+  @override
+  String get backupNotABackup => 'That file is not a DigiCard App backup.';
+
+  @override
+  String get backupTooNew =>
+      'That backup was made by a newer version of the app. Update the app to restore it.';
+
+  @override
+  String get backupReadFailed => 'The file could not be read.';
+
+  @override
+  String get backupRestoreTitle => 'Restore this backup?';
+
+  @override
+  String backupRestoreBody(int decks, int lists) {
+    String _temp0 = intl.Intl.pluralLogic(
+      decks,
+      locale: localeName,
+      other: '$decks decks',
+      one: '1 deck',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      lists,
+      locale: localeName,
+      other: '$lists staple lists',
+      one: '1 staple list',
+    );
+    return 'It has $_temp0 and $_temp1. They are added to what you have: nothing here is deleted, and decks you already have exactly as saved are skipped.';
+  }
+
+  @override
+  String get backupRestoreAction => 'Restore';
+
+  @override
+  String backupRestored(int added, int skipped, int lists) {
+    return 'Decks added: $added · already here: $skipped · staple lists updated: $lists';
+  }
+
+  @override
+  String get backupRestoreFailed =>
+      'The backup could not be restored. Nothing was changed.';
+
+  @override
   String get oddsTitle => 'Draw odds';
 
   @override

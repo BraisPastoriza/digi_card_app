@@ -10,6 +10,7 @@ import '../../domain/models/deck.dart';
 import '../../l10n/l10n.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
+import 'backup_actions.dart';
 import 'deck_providers.dart';
 import 'restriction_notice.dart';
 import 'widgets/deck_name_dialog.dart';
@@ -84,6 +85,28 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
             tooltip: onDecks
                 ? context.l10n.decksImportDeck
                 : context.l10n.decksImportStaples,
+          ),
+          PopupMenuButton<void Function()>(
+            tooltip: context.l10n.backupMenu,
+            onSelected: (action) => action(),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: () => exportBackup(context, ref),
+                child: ListTile(
+                  leading: const Icon(Icons.save_alt),
+                  title: Text(context.l10n.backupExport),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: () => restoreBackup(context, ref),
+                child: ListTile(
+                  leading: const Icon(Icons.settings_backup_restore),
+                  title: Text(context.l10n.backupRestore),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
         bottom: TabBar(

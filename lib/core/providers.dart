@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/api/digimoncard_io_api.dart';
 import '../data/api/heroi_api.dart';
+import '../data/backup/backup_service.dart';
 import '../data/db/app_database.dart';
 import '../data/db/daos/card_dao.dart';
 import '../data/db/daos/deck_dao.dart';
@@ -67,6 +68,11 @@ final releaseDaoProvider = Provider<ReleaseDao>((ref) {
 
 final deckDaoProvider = Provider<DeckDao>(
   (ref) => ref.watch(appDatabaseProvider).deckDao,
+);
+
+/// Saving the user's decks and staple lists to a file, and reading them back.
+final backupServiceProvider = Provider<BackupService>(
+  (ref) => BackupService(ref.watch(appDatabaseProvider)),
 );
 
 final stapleDaoProvider = Provider<StapleDao>(

@@ -160,6 +160,42 @@
   "cardUpdateMessage": "Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.",
   "cardUpdateAction": "Update",
   "cardUpdateDismiss": "Not now",
+  "backupMenu": "Backup",
+  "backupExport": "Save a backup",
+  "backupRestore": "Restore a backup",
+  "backupExported": "Backup saved.",
+  "backupExportFailed": "The backup could not be saved.",
+  "backupNotABackup": "That file is not a DigiCard App backup.",
+  "backupTooNew": "That backup was made by a newer version of the app. Update the app to restore it.",
+  "backupReadFailed": "The file could not be read.",
+  "backupRestoreTitle": "Restore this backup?",
+  "backupRestoreBody": "It has {decks, plural, =1{1 deck} other{{decks} decks}} and {lists, plural, =1{1 staple list} other{{lists} staple lists}}. They are added to what you have: nothing here is deleted, and decks you already have exactly as saved are skipped.",
+  "@backupRestoreBody": {
+    "placeholders": {
+      "decks": {
+        "type": "int"
+      },
+      "lists": {
+        "type": "int"
+      }
+    }
+  },
+  "backupRestoreAction": "Restore",
+  "backupRestored": "Decks added: {added} · already here: {skipped} · staple lists updated: {lists}",
+  "@backupRestored": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "lists": {
+        "type": "int"
+      }
+    }
+  },
+  "backupRestoreFailed": "The backup could not be restored. Nothing was changed.",
   "oddsTitle": "Draw odds",
   "oddsSubtitle": "Chance of at least one copy among the {cards} cards drawn into hand",
   "@oddsSubtitle": {
