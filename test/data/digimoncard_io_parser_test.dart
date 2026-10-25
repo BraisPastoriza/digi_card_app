@@ -267,6 +267,35 @@ void main() {
       );
     });
 
+    test('drops "STARTER DECK" from a starter deck', () {
+      expect(
+        discoveredPreview('ST-23', [
+          listedIn(['ST-23: STARTER DECK DIGIMON BEATBREAK']),
+        ]).name,
+        'DIGIMON BEATBREAK [ST-23]',
+      );
+    });
+
+    test('names a starter deck after the deck, not its Welcome Tamers Pack', () {
+      final preview = discoveredPreview('ST-25', [
+        listedIn(['ST-25: Welcome Tamers Pack']),
+        listedIn(['ST-25 & ST-26: Welcome Tamers Pack']),
+        listedIn(['ST-25: STARTER DECK RAGING FLAMES']),
+      ], genre: 'Starter Deck');
+
+      expect(preview.name, 'RAGING FLAMES [ST-25]');
+      expect(preview.genre, 'Starter Deck');
+    });
+
+    test('files an Advanced Deck under its own genre', () {
+      final preview = discoveredPreview('ST-22', [
+        listedIn(['ST-22: ADVANCED DECK SET AMETHYST MANDALA']),
+      ], genre: 'Starter Deck');
+
+      expect(preview.name, 'AMETHYST MANDALA [ST-22]');
+      expect(preview.genre, 'Advanced Deck');
+    });
+
     test('falls back to the bare code when no row names the pack', () {
       expect(discoveredPreview('BT-28', [_row({})]).name, 'BT-28 [BT-28]');
     });

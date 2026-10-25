@@ -44,9 +44,9 @@ List<ParsedCard> parseDigimonCardIoPack(
 ///
 /// Their rows carry the product as `set_name`, e.g. `BT-27: BOOSTER IGNITION
 /// OF X`; the primary API prints `IGNITION OF X [BT-27]`. The product-type
-/// prefix is dropped for boosters only, matching what the primary API does:
-/// its Limited packs keep `LIMITED CARD PACK` in the name. A pack none of
-/// whose rows names it is still worth showing, under its bare code.
+/// prefix is dropped for boosters and decks, matching what the primary API
+/// does: its Limited packs keep `LIMITED CARD PACK` in the name. A pack none
+/// of whose rows names it is still worth showing, under its bare code.
 PreviewRelease discoveredPreview(
   String pack,
   List<Map<String, dynamic>> rows, {
@@ -54,25 +54,32 @@ PreviewRelease discoveredPreview(
 }) {
   // A reprint lists every product it is in, and an event promo is listed
   // under its own name, so only an entry starting with this pack's code is
-  // the pack's name.
+  // the pack's name. A starter deck's Welcome Tamers Pack is filed under the
+  // deck's code too, but it is a giveaway, not the deck.
   final prefix = '$pack: ';
   final names = [
     for (final row in rows)
       for (final setName in (row['set_name'] as List?) ?? const [])
-        if (setName is String && setName.startsWith(prefix))
-          setName
-              .substring(prefix.length)
-              .replaceFirst(RegExp(r'^(EXTRA )?BOOSTER '), '')
-              .trim(),
+        if (setName is String &&
+            setName.startsWith(prefix) &&
+            !setName.toLowerCase().contains('welcome tamers pack'))
+          setName.substring(prefix.length).trim(),
   ].where((name) => name.isNotEmpty);
   final name = names.isEmpty ? null : names.first;
+  // An Advanced Deck shares the starter decks' numbering; the primary API
+  // tells it apart by genre.
+  final advanced = name?.startsWith('ADVANCED DECK') ?? false;
   return PreviewRelease(
     id: pack.toLowerCase(),
-    name: '${name ?? pack} [$pack]',
+    name: '${name?.replaceFirst(_productType, '') ?? pack} [$pack]',
     pack: pack,
-    genre: genre,
+    genre: advanced ? 'Advanced Deck' : genre,
   );
 }
+
+final _productType = RegExp(
+  r'^((EXTRA )?BOOSTER|STARTER DECK|ADVANCED DECK SET) ',
+);
 
 ParsedCard? _parseRow(Map<String, dynamic> row, PreviewRelease release) {
   final number = (row['id'] as String?)?.trim();

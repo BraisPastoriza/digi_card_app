@@ -173,6 +173,7 @@ const previewSeries = {
   'bt': 'Booster Pack',
   'ex': 'Booster Pack',
   'lm': 'Premium Bandai',
+  'st': 'Starter Deck',
 };
 
 /// Whether [releaseId] is the kind of release a sync may fill in from the
