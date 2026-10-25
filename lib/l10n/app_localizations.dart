@@ -392,6 +392,60 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get cardUpdateDismiss;
 
+  /// No description provided for @oddsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw odds'**
+  String get oddsTitle;
+
+  /// No description provided for @oddsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chance of at least one copy among the {cards} cards drawn into hand'**
+  String oddsSubtitle(int cards);
+
+  /// No description provided for @oddsNeedsFullDeck.
+  ///
+  /// In en, this message translates to:
+  /// **'Odds are worked out on a full {size}-card main deck.'**
+  String oddsNeedsFullDeck(int size);
+
+  /// No description provided for @oddsGoingFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Going first'**
+  String get oddsGoingFirst;
+
+  /// No description provided for @oddsGoingSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Going second'**
+  String get oddsGoingSecond;
+
+  /// No description provided for @oddsOpeningHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening hand'**
+  String get oddsOpeningHand;
+
+  /// No description provided for @oddsTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn {turn}'**
+  String oddsTurn(int turn);
+
+  /// No description provided for @oddsByGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'BY GROUP'**
+  String get oddsByGroup;
+
+  /// No description provided for @oddsByCard.
+  ///
+  /// In en, this message translates to:
+  /// **'BY CARD'**
+  String get oddsByCard;
+
   /// No description provided for @restrictionsTitle.
   ///
   /// In en, this message translates to:

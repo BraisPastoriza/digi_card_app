@@ -160,6 +160,36 @@
   "cardUpdateMessage": "Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.",
   "cardUpdateAction": "Update",
   "cardUpdateDismiss": "Not now",
+  "oddsTitle": "Draw odds",
+  "oddsSubtitle": "Chance of at least one copy among the {cards} cards drawn into hand",
+  "@oddsSubtitle": {
+    "placeholders": {
+      "cards": {
+        "type": "int"
+      }
+    }
+  },
+  "oddsNeedsFullDeck": "Odds are worked out on a full {size}-card main deck.",
+  "@oddsNeedsFullDeck": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "oddsGoingFirst": "Going first",
+  "oddsGoingSecond": "Going second",
+  "oddsOpeningHand": "Opening hand",
+  "oddsTurn": "Turn {turn}",
+  "@oddsTurn": {
+    "placeholders": {
+      "turn": {
+        "type": "int"
+      }
+    }
+  },
+  "oddsByGroup": "BY GROUP",
+  "oddsByCard": "BY CARD",
   "restrictionsTitle": "The restriction list has changed",
   "restrictionsAffects": "It affects {count, plural, =1{1 of your decks} other{{count} of your decks}}.",
   "@restrictionsAffects": {

@@ -181,6 +181,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cardUpdateDismiss => 'Ahora no';
 
   @override
+  String get oddsTitle => 'Probabilidades de robo';
+
+  @override
+  String oddsSubtitle(int cards) {
+    return 'Probabilidad de tener al menos una copia entre las $cards cartas robadas a la mano';
+  }
+
+  @override
+  String oddsNeedsFullDeck(int size) {
+    return 'Las probabilidades se calculan con el mazo principal completo de $size cartas.';
+  }
+
+  @override
+  String get oddsGoingFirst => 'Vas primero';
+
+  @override
+  String get oddsGoingSecond => 'Vas segundo';
+
+  @override
+  String get oddsOpeningHand => 'Mano inicial';
+
+  @override
+  String oddsTurn(int turn) {
+    return 'Turno $turn';
+  }
+
+  @override
+  String get oddsByGroup => 'POR GRUPO';
+
+  @override
+  String get oddsByCard => 'POR CARTA';
+
+  @override
   String get restrictionsTitle => 'La lista de restricciones ha cambiado';
 
   @override

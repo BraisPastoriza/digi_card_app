@@ -180,6 +180,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardUpdateDismiss => 'Not now';
 
   @override
+  String get oddsTitle => 'Draw odds';
+
+  @override
+  String oddsSubtitle(int cards) {
+    return 'Chance of at least one copy among the $cards cards drawn into hand';
+  }
+
+  @override
+  String oddsNeedsFullDeck(int size) {
+    return 'Odds are worked out on a full $size-card main deck.';
+  }
+
+  @override
+  String get oddsGoingFirst => 'Going first';
+
+  @override
+  String get oddsGoingSecond => 'Going second';
+
+  @override
+  String get oddsOpeningHand => 'Opening hand';
+
+  @override
+  String oddsTurn(int turn) {
+    return 'Turn $turn';
+  }
+
+  @override
+  String get oddsByGroup => 'BY GROUP';
+
+  @override
+  String get oddsByCard => 'BY CARD';
+
+  @override
   String get restrictionsTitle => 'The restriction list has changed';
 
   @override

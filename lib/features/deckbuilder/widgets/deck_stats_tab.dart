@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/digimon_colors.dart';
@@ -8,10 +9,12 @@ import '../../../l10n/l10n.dart';
 import '../deck_text.dart';
 import '../../../l10n/labels.dart';
 import '../../../domain/models/deck.dart';
+import '../../../domain/models/draw_odds.dart';
+import '../../../domain/models/test_hand.dart';
 import '../../../shared/widgets/common.dart';
 import '../deck_providers.dart';
 
-/// Deck analysis: legality, curve and colour balance.
+/// Deck analysis: legality, curve, colour balance and draw odds.
 class DeckStatsTab extends ConsumerWidget {
   const DeckStatsTab({super.key, required this.revisionId});
 
@@ -63,6 +66,8 @@ class DeckStatsTab extends ConsumerWidget {
                   subtitle: context.l10n.statsColorSubtitle,
                   child: _ColorBreakdown(spread: deck.colorSpread),
                 ),
+                const SizedBox(height: 16),
+                _DrawOddsCard(deck: deck),
               ],
             ),
     );
@@ -448,6 +453,190 @@ class _ColorBreakdown extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// How likely the deck is to have drawn each card, and each block of cards,
+/// by a turn the user picks.
+///
+/// Only for a full main deck: odds worked out on 38 cards describe a deck the
+/// user is not going to play, and would change with every card added.
+class _DrawOddsCard extends StatefulWidget {
+  const _DrawOddsCard({required this.deck});
+
+  final DeckComposition deck;
+
+  @override
+  State<_DrawOddsCard> createState() => _DrawOddsCardState();
+}
+
+class _DrawOddsCardState extends State<_DrawOddsCard> {
+  var _turn = 0;
+  var _goingFirst = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final deck = widget.deck;
+    final scheme = Theme.of(context).colorScheme;
+
+    if (!TestHand.canDeal(deck)) {
+      return _ChartCard(
+        title: l10n.oddsTitle,
+        subtitle: l10n.oddsNeedsFullDeck(DeckRules.mainDeckSize),
+        child: const SizedBox.shrink(),
+      );
+    }
+
+    double odds(int copies) =>
+        DrawOdds.of(deck, copies: copies, turn: _turn, goingFirst: _goingFirst);
+    final groups = [
+      for (final section in deck.sections)
+        if (section.kind != DeckSectionKind.digiEggs) section,
+    ];
+    // Most copies first: those are the cards the ratios were chosen for.
+    final cards = [...deck.mainDeck]
+      ..sort((a, b) {
+        final byCopies = b.quantity.compareTo(a.quantity);
+        return byCopies != 0 ? byCopies : a.card.name.compareTo(b.card.name);
+      });
+    final percent = NumberFormat.percentPattern(
+      Localizations.localeOf(context).toString(),
+    );
+    final seen = DrawOdds.cardsSeen(turn: _turn, goingFirst: _goingFirst);
+
+    Widget heading(String text) => Padding(
+      padding: const EdgeInsets.only(top: 14, bottom: 6),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+
+    return _ChartCard(
+      title: l10n.oddsTitle,
+      subtitle: l10n.oddsSubtitle(seen),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(value: true, label: Text(l10n.oddsGoingFirst)),
+                ButtonSegment(value: false, label: Text(l10n.oddsGoingSecond)),
+              ],
+              selected: {_goingFirst},
+              showSelectedIcon: false,
+              onSelectionChanged: (value) =>
+                  setState(() => _goingFirst = value.single),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var turn = 0; turn <= DrawOdds.lastTurn; turn++)
+                ChoiceChip(
+                  label: Text(
+                    turn == 0 ? l10n.oddsOpeningHand : l10n.oddsTurn(turn),
+                  ),
+                  selected: _turn == turn,
+                  onSelected: (_) => setState(() => _turn = turn),
+                ),
+            ],
+          ),
+          heading(l10n.oddsByGroup),
+          for (final section in groups)
+            _OddsRow(
+              label: sectionLabel(section, l10n),
+              copies: section.count,
+              odds: odds(section.count),
+              percent: percent,
+            ),
+          heading(l10n.oddsByCard),
+          for (final entry in cards)
+            _OddsRow(
+              label: entry.card.name,
+              copies: entry.quantity,
+              odds: odds(entry.quantity),
+              percent: percent,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OddsRow extends StatelessWidget {
+  const _OddsRow({
+    required this.label,
+    required this.copies,
+    required this.odds,
+    required this.percent,
+  });
+
+  final String label;
+  final int copies;
+  final double odds;
+  final NumberFormat percent;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+          SizedBox(
+            width: 28,
+            child: Text(
+              '×$copies',
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 72,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: odds,
+                minHeight: 6,
+                backgroundColor: AppSurfaces.surfaceHigh,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 48,
+            child: Text(
+              percent.format(odds),
+              textAlign: TextAlign.end,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
