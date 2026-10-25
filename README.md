@@ -19,6 +19,11 @@ if you want to be sure it is the build that was published.
 The first launch downloads the card database, about 25 MB over roughly two
 minutes. After that the app works offline.
 
+From 1.4.0 on, the app checks this repository for a newer release once a day
+and offers it in the library: it downloads the APK built for your phone,
+checks it against the digest GitHub recorded, and hands it to Android's
+installer, which still asks you to confirm.
+
 ## What it does
 
 **Library** — every English card, browsable by expansion (BT, EX, ST, AD, LM,
@@ -30,7 +35,9 @@ how you find the card that is both Dragon and Vaccine. Card pages show the
 full rules text, digivolution requirements, alternate arts, official rulings,
 errata and restriction status, and a card the list limits or bans carries a
 badge wherever its picture appears. A card can be put on a staple list or in a
-deck from its own page.
+deck from its own page. A set's cards can be narrowed with the same filters as
+a search, and the whole restriction list — banned cards, limited cards and
+banned pairs, each with the date it took effect — has a page of its own.
 
 **Deck builder** — decks of 50 main-deck cards plus up to 5 Digi-Eggs, checked
 against the official rules and the current restriction list as you build,
@@ -40,10 +47,16 @@ you can branch a new one from it to try a change without losing the list that
 was working. A finished deck can be dealt as a **test hand** — five cards and
 five security off a shuffled main deck, redealt as often as you like — which
 is the only way to see how often the list actually opens the way it is meant
-to.
+to. The stats tab works the same question out exactly: the chance of holding
+each card, or each group, in the opening hand and on every turn after it.
 
-The interface is in English and Spanish, following the device unless you pick
-one under Library → translate. Card names and card text stay in English, which
+A deck goes from one phone to another as a **QR code**, scanned with the
+camera or read from a saved image, and every deck and staple list can be
+**backed up** to a file and restored. When a card sync brings a new
+restriction list, the decks it reaches say so, card by card.
+
+The interface is in English, Spanish and Galician, following the device unless
+you pick one under Library → translate. Card names and card text stay in English, which
 is the language the cards are printed in.
 
 Everything runs offline. The card database is downloaded once and stored
@@ -71,9 +84,15 @@ Sets Heroicc has not published yet come from a second source, the
 [digimoncard.io public API](https://digimoncard.io/api-documentation), one
 request per set. Those sets are marked PREVIEW throughout the app: their data
 is community-maintained, still changing, and carries no rulings or alternate
-arts. The list of them is hardcoded in `previewReleases`, and each one retires
-itself the day Heroicc starts publishing it — the sync skips any preview whose
-id the primary API already serves, so no code has to be deleted.
+arts. They are found rather than listed: each refresh asks for the set after
+the newest BT, EX, LM and ST the app knows, which comes back empty until the
+first card is revealed (`previewReleases` remains for the few the discovery
+cannot find or name). Promos are not revealed as a pack, so the refresh asks
+for promo numbers past the newest one Heroicc has, ten at a time, and keeps
+them in a Preview Promos release. Each preview retires itself the day Heroicc
+starts publishing it — the sync skips any preview whose id the primary API
+already serves, and counts promos on from Heroicc's newest — so no code has to
+be deleted.
 
 Preview sets are re-read between full syncs. A full sync is skipped whenever
 the Heroicc bulk dump is unchanged, and that dump is republished every few
@@ -163,7 +182,7 @@ than crash.
 Useful when the API changes shape:
 
 ```bash
-curl -H "User-Agent: DigiCardApp/1.3.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
+curl -H "User-Agent: DigiCardApp/1.4.0 (+https://github.com/BraisPastoriza/digi_card_app)"   https://api.heroi.cc/bulk-data
 curl -o en.json <the English download link from that response>
 dart run tool/inspect_bulk.dart en.json
 ```
@@ -220,8 +239,10 @@ card data and artwork belong to the parties above and are not licensed by it.
 
 ## Roadmap
 
-1.3.0 covers the library, the deck builder with revisions, deck import and
-export, the preview sets, staple lists, test hands and a Spanish interface.
+1.4.0 covers the library, the deck builder with revisions, deck import and
+export (as text, image or QR code), the preview sets and promos, staple lists,
+test hands and draw odds, the restriction list, backups, in-app updates, and a
+Spanish and Galician interface.
 
 Planned next:
 
