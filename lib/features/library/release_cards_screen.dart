@@ -7,11 +7,14 @@ import '../../core/router/navigation.dart';
 import '../../l10n/l10n.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/card_enums.dart';
+import '../../domain/models/card_filter.dart';
 import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
 import 'library_providers.dart';
 import 'preview_providers.dart';
+import 'widgets/active_facets_bar.dart';
 import 'widgets/card_grid.dart';
+import 'widgets/filter_sheet.dart';
 
 /// Every card printed in one expansion.
 class ReleaseCardsScreen extends ConsumerStatefulWidget {
@@ -30,6 +33,22 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
   /// promos themselves — Large-Scale Tournaments is 667 cards of which 56 are
   /// promos — so a promo release can be cut down to what it is looked up for.
   bool _promosOnly = false;
+
+  /// Facets narrowing the set. Kept by the page rather than a provider, so
+  /// leaving the set clears them the way leaving a search does.
+  CardFilter _filter = const CardFilter();
+
+  ReleaseCardsRequest get _request => ReleaseCardsRequest(
+    widget.releaseId,
+    includeAlternateArts: _includeAlternateArts,
+    promosOnly: _promosOnly,
+    filter: _filter,
+  );
+
+  Future<void> _openFilters() async {
+    final updated = await showFilterSheet(context, _filter, within: _request);
+    if (updated != null && mounted) setState(() => _filter = updated);
+  }
 
   @override
   void initState() {
@@ -67,15 +86,8 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final release = ref.watch(releaseProvider(widget.releaseId)).valueOrNull;
-    final cards = ref.watch(
-      releaseCardsProvider(
-        ReleaseCardsRequest(
-          widget.releaseId,
-          includeAlternateArts: _includeAlternateArts,
-          promosOnly: _promosOnly,
-        ),
-      ),
-    );
+    final cards = ref.watch(releaseCardsProvider(_request));
+    final facetCount = _filter.activeFacetCount;
 
     final isPreview = release?.isPreview ?? false;
     final body = CustomScrollView(
@@ -91,6 +103,17 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
             release?.displayName ?? context.l10n.releaseFallbackTitle,
             overflow: TextOverflow.ellipsis,
           ),
+          actions: [
+            IconButton(
+              onPressed: _openFilters,
+              tooltip: context.l10n.filtersTitle,
+              icon: Badge(
+                isLabelVisible: facetCount > 0,
+                label: Text('$facetCount'),
+                child: const Icon(Icons.tune),
+              ),
+            ),
+          ],
         ),
         if (isPreview)
           SliverToBoxAdapter(
@@ -154,6 +177,18 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
               ),
             ),
           ),
+        if (facetCount > 0)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ActiveFacetsBar(
+                filter: _filter,
+                onRemoveFacet: (without) => setState(() => _filter = without),
+                onClearFacets: () =>
+                    setState(() => _filter = _filter.clearedFacets()),
+              ),
+            ),
+          ),
         ...cards.when(
           loading: () => const [
             SliverFillRemaining(
@@ -173,14 +208,29 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
           ],
           data: (cards) => cards.isEmpty
               ? [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: EmptyState(
-                      icon: Icons.style_outlined,
-                      title: context.l10n.releaseEmptyTitle,
-                      message: context.l10n.releaseEmptyMessage,
+                  if (facetCount > 0)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyState(
+                        icon: Icons.search_off,
+                        title: context.l10n.searchNoCards,
+                        message: context.l10n.searchNoCardsFiltered,
+                        action: OutlinedButton(
+                          onPressed: () =>
+                              setState(() => _filter = _filter.clearedFacets()),
+                          child: Text(context.l10n.searchClearFilters),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyState(
+                        icon: Icons.style_outlined,
+                        title: context.l10n.releaseEmptyTitle,
+                        message: context.l10n.releaseEmptyMessage,
+                      ),
                     ),
-                  ),
                 ]
               : [
                   SliverCardGrid(

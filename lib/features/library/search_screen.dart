@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/router/navigation.dart';
 import '../../l10n/l10n.dart';
 import '../../l10n/labels.dart';
-import 'facets.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/card_filter.dart';
 import '../../shared/widgets/common.dart';
 import 'library_providers.dart';
+import 'widgets/active_facets_bar.dart';
 import 'widgets/card_grid.dart';
 import 'widgets/filter_sheet.dart';
 
@@ -292,7 +292,6 @@ class _ResultsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final facets = activeFacets(filter, context.l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,51 +351,11 @@ class _ResultsHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (facets.isNotEmpty)
-          SizedBox(
-            height: 38,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              children: [
-                // Tapping a chip — anywhere on it, not only the cross —
-                // takes that facet off, which is where the hand goes when a
-                // search turns out too narrow.
-                for (final facet in facets)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: InputChip(
-                      label: Text(facet.label),
-                      visualDensity: VisualDensity.compact,
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      backgroundColor: scheme.primaryContainer,
-                      side: BorderSide(
-                        color: scheme.primary.withValues(alpha: 0.4),
-                      ),
-                      onPressed: () => onRemoveFacet(facet.removed),
-                      onDeleted: () => onRemoveFacet(facet.removed),
-                      deleteIcon: Icon(
-                        Icons.close,
-                        size: 14,
-                        color: scheme.primary,
-                      ),
-                      tooltip: context.l10n.searchRemoveFacet(facet.label),
-                    ),
-                  ),
-                ActionChip(
-                  label: Text(context.l10n.searchClearAll),
-                  visualDensity: VisualDensity.compact,
-                  labelStyle: const TextStyle(fontSize: 12),
-                  avatar: const Icon(Icons.close, size: 14),
-                  onPressed: onClearFacets,
-                ),
-              ],
-            ),
-          ),
+        ActiveFacetsBar(
+          filter: filter,
+          onRemoveFacet: onRemoveFacet,
+          onClearFacets: onClearFacets,
+        ),
         const SizedBox(height: 8),
       ],
     );

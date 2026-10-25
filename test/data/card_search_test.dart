@@ -187,4 +187,61 @@ void main() {
       ]);
     });
   });
+
+  group('cards in a release', () {
+    setUp(() async {
+      await db.batch((batch) {
+        // An alternate art of BT1-004 that a promo product bundles: not the
+        // card's primary printing, but the one the promo is made of.
+        batch.insert(
+          db.cards,
+          CardsCompanion.insert(
+            id: 'BT1-004_P1',
+            number: 'BT1-004',
+            name: 'BT1-004',
+            category: 'digimon',
+            imageUrl: 'https://example.test/BT1-004_P1.webp',
+            isPrimary: const Value(false),
+          ),
+        );
+        batch.insert(
+          db.cardTraits,
+          CardTraitsCompanion.insert(cardId: 'BT1-004_P1', trait: 'Beast'),
+        );
+        batch.insertAll(db.cardReleaseLinks, [
+          for (final number in ['BT1-001', 'BT1-002', 'BT1-003'])
+            CardReleaseLinksCompanion.insert(cardId: number, releaseId: 'bt-1'),
+          CardReleaseLinksCompanion.insert(
+            cardId: 'BT1-004_P1',
+            releaseId: 'promo',
+          ),
+        ]);
+      });
+    });
+
+    Future<Set<String>> inRelease(String releaseId, CardFilter filter) async {
+      final cards = await db.cardDao.cardsInRelease(releaseId, filter: filter);
+      return cards.map((card) => card.id).toSet();
+    }
+
+    test('narrows the set by the facets', () async {
+      expect(await inRelease('bt-1', const CardFilter(traits: {'Dragon'})), {
+        'BT1-001',
+        'BT1-002',
+      });
+    });
+
+    test('never reaches outside the set', () async {
+      expect(
+        await inRelease('bt-1', const CardFilter(traits: {'Beast'})),
+        isEmpty,
+      );
+    });
+
+    test('keeps a bundled alternate art the set is made of', () async {
+      expect(await inRelease('promo', const CardFilter(traits: {'Beast'})), {
+        'BT1-004_P1',
+      });
+    });
+  });
 }

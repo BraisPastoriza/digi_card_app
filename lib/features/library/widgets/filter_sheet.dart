@@ -25,22 +25,33 @@ abstract final class FilterBounds {
 
 /// Opens the filter sheet and returns the filter the user applied, or null if
 /// they dismissed it.
-Future<CardFilter?> showFilterSheet(BuildContext context, CardFilter current) {
+///
+/// [within] narrows the sheet to one expansion's cards: it counts matches in
+/// that set, and leaves out the expansion picker and the alternate-art switch,
+/// which the set's own page already answers.
+Future<CardFilter?> showFilterSheet(
+  BuildContext context,
+  CardFilter current, {
+  ReleaseCardsRequest? within,
+}) {
   return showModalBottomSheet<CardFilter>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     builder: (context) => FractionallySizedBox(
       heightFactor: 0.92,
-      child: FilterSheet(initial: current),
+      child: FilterSheet(initial: current, within: within),
     ),
   );
 }
 
 class FilterSheet extends ConsumerStatefulWidget {
-  const FilterSheet({super.key, required this.initial});
+  const FilterSheet({super.key, required this.initial, this.within});
 
   final CardFilter initial;
+
+  /// See [showFilterSheet].
+  final ReleaseCardsRequest? within;
 
   @override
   ConsumerState<FilterSheet> createState() => _FilterSheetState();
@@ -344,49 +355,51 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 onMatchModeChanged: (mode) =>
                     _edit((f) => f.copyWith(traitMatchMode: mode)),
               ),
-              _PickerSection(
-                title: context.l10n.filterExpansion,
-                selected: _draft.releaseIds,
-                labelOf: _releaseLabel,
-                onOpen: () async {
-                  final sections = await ref.read(
-                    releaseSectionsProvider.future,
-                  );
-                  if (!context.mounted) return;
-                  final picked = await showMultiSelect(
-                    context,
-                    title: context.l10n.filterExpansions,
-                    options: [
-                      for (final section in sections)
-                        for (final release in section.releases)
-                          MultiSelectOption(
-                            value: release.id,
-                            label: release.displayName,
-                            detail:
-                                release.setCode ??
-                                section.group.name(context.l10n),
-                          ),
-                    ],
-                    selected: _draft.releaseIds,
-                  );
-                  if (picked != null) {
-                    _edit((f) => f.copyWith(releaseIds: picked));
-                  }
-                },
-                onClear: () => _edit((f) => f.copyWith(releaseIds: const {})),
-              ),
-              const Divider(height: 28),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _draft.includeAlternateArts,
-                onChanged: (value) =>
-                    _edit((f) => f.copyWith(includeAlternateArts: value)),
-                title: Text(context.l10n.filterAltArts),
-                subtitle: Text(
-                  context.l10n.filterAltArtsSubtitle,
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+              if (widget.within == null)
+                _PickerSection(
+                  title: context.l10n.filterExpansion,
+                  selected: _draft.releaseIds,
+                  labelOf: _releaseLabel,
+                  onOpen: () async {
+                    final sections = await ref.read(
+                      releaseSectionsProvider.future,
+                    );
+                    if (!context.mounted) return;
+                    final picked = await showMultiSelect(
+                      context,
+                      title: context.l10n.filterExpansions,
+                      options: [
+                        for (final section in sections)
+                          for (final release in section.releases)
+                            MultiSelectOption(
+                              value: release.id,
+                              label: release.displayName,
+                              detail:
+                                  release.setCode ??
+                                  section.group.name(context.l10n),
+                            ),
+                      ],
+                      selected: _draft.releaseIds,
+                    );
+                    if (picked != null) {
+                      _edit((f) => f.copyWith(releaseIds: picked));
+                    }
+                  },
+                  onClear: () => _edit((f) => f.copyWith(releaseIds: const {})),
                 ),
-              ),
+              const Divider(height: 28),
+              if (widget.within == null)
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _draft.includeAlternateArts,
+                  onChanged: (value) =>
+                      _edit((f) => f.copyWith(includeAlternateArts: value)),
+                  title: Text(context.l10n.filterAltArts),
+                  subtitle: Text(
+                    context.l10n.filterAltArtsSubtitle,
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
+                ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 value: _draft.restrictedOnly,
@@ -403,6 +416,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
         ),
         _ApplyBar(
           filter: _previewFilter,
+          within: widget.within,
           onApply: () => Navigator.of(context).pop(_draft),
         ),
       ],
@@ -424,14 +438,24 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
 /// Live result count so the user can tell whether a filter is too narrow
 /// before leaving the sheet.
 class _ApplyBar extends ConsumerWidget {
-  const _ApplyBar({required this.filter, required this.onApply});
+  const _ApplyBar({
+    required this.filter,
+    required this.within,
+    required this.onApply,
+  });
 
   final CardFilter filter;
+  final ReleaseCardsRequest? within;
   final VoidCallback onApply;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(filterPreviewCountProvider(filter));
+    final within = this.within;
+    final count = within == null
+        ? ref.watch(filterPreviewCountProvider(filter))
+        : ref
+              .watch(releaseCardsProvider(within.withFilter(filter)))
+              .whenData((cards) => cards.length);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       decoration: const BoxDecoration(

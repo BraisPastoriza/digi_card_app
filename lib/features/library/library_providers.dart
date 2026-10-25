@@ -47,7 +47,10 @@ final releaseCardsProvider = FutureProvider.autoDispose
             request.releaseId,
             includeAlternateArts: request.includeAlternateArts,
             promosOnly: request.promosOnly,
+            filter: request.filter,
           );
+      // Any other order is one the user asked for, and keeps reprints mixed in.
+      if (request.filter.sort != CardSort.number) return cards;
       // The reprints a product bundles are sorted to the end, so opening a set
       // starts at its own first card rather than at somebody else's.
       return withOwnCardsFirst(
@@ -61,6 +64,7 @@ class ReleaseCardsRequest {
     this.releaseId, {
     this.includeAlternateArts = false,
     this.promosOnly = false,
+    this.filter = const CardFilter(),
   });
 
   final String releaseId;
@@ -70,15 +74,29 @@ class ReleaseCardsRequest {
   /// reduced to the promos it is looked up for.
   final bool promosOnly;
 
+  /// Facets narrowing the set. Its expansion and alternate-art settings are
+  /// not used: the set is the expansion, and alternate arts follow
+  /// [includeAlternateArts].
+  final CardFilter filter;
+
+  ReleaseCardsRequest withFilter(CardFilter filter) => ReleaseCardsRequest(
+    releaseId,
+    includeAlternateArts: includeAlternateArts,
+    promosOnly: promosOnly,
+    filter: filter,
+  );
+
   @override
   bool operator ==(Object other) =>
       other is ReleaseCardsRequest &&
       other.releaseId == releaseId &&
       other.includeAlternateArts == includeAlternateArts &&
-      other.promosOnly == promosOnly;
+      other.promosOnly == promosOnly &&
+      other.filter == filter;
 
   @override
-  int get hashCode => Object.hash(releaseId, includeAlternateArts, promosOnly);
+  int get hashCode =>
+      Object.hash(releaseId, includeAlternateArts, promosOnly, filter);
 }
 
 /// Every printing of one card number, base art first.

@@ -163,17 +163,20 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
   static int _showiness(CardRow card) =>
       (card.level ?? 0) * 1000000 + (card.dp ?? 0) + (card.cost ?? 0);
 
-  /// Cards belonging to a release, in card-number order.
+  /// Cards belonging to a release that match [filter], ordered by its sort.
   ///
   /// Collapsing alternate arts uses the per-release flag rather than the
   /// card's global primary printing: promo and accessory products are made
   /// almost entirely of alternate arts whose base printing belongs to some
-  /// other set, so a global collapse leaves them empty.
+  /// other set, so a global collapse leaves them empty. For the same reason
+  /// the filter's own alternate-art switch is ignored here.
   Future<List<DigimonCard>> cardsInRelease(
     String releaseId, {
     bool includeAlternateArts = false,
     bool promosOnly = false,
+    CardFilter filter = const CardFilter(),
   }) async {
+    final facets = _predicate(filter.copyWith(includeAlternateArts: true));
     final link = selectOnly(cardReleaseLinks)
       ..addColumns([cardReleaseLinks.cardId])
       ..where(
@@ -188,10 +191,10 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
             // Promo products bundle alternate arts of ordinary set cards
             // alongside the promos proper, and only the promos carry a `P-`
             // number.
-            ? c.id.isInQuery(link) & c.number.like('P-%')
-            : c.id.isInQuery(link),
+            ? c.id.isInQuery(link) & c.number.like('P-%') & facets
+            : c.id.isInQuery(link) & facets,
       )
-      ..orderBy([(c) => OrderingTerm.asc(c.numberSort)]);
+      ..orderBy(_ordering(filter.sort));
     final rows = await query.get();
     return rows.map((row) => row.toDigimonCard()).toList();
   }
