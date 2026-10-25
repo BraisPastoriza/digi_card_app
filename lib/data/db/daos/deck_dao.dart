@@ -41,6 +41,31 @@ class DeckDao extends DatabaseAccessor<AppDatabase> with _$DeckDaoMixin {
     return query.watch().asyncMap(_resolveEntries);
   }
 
+  /// Copies by card number in each deck's active revision, keyed by deck id.
+  ///
+  /// Numbers only, unresolved against the library: enough to tell which decks
+  /// a change to the restriction list reaches, without reading every card of
+  /// every deck to find out.
+  Stream<Map<int, Map<String, int>>> watchActiveQuantities() {
+    final query = select(deckEntries).join([
+      innerJoin(
+        decks,
+        decks.activeRevisionId.equalsExp(deckEntries.revisionId),
+      ),
+    ]);
+    return query.watch().map((rows) {
+      final byDeck = <int, Map<String, int>>{};
+      for (final row in rows) {
+        final entry = row.readTable(deckEntries);
+        byDeck.putIfAbsent(
+          row.readTable(decks).id,
+          () => {},
+        )[entry.cardNumber] = entry.quantity;
+      }
+      return byDeck;
+    });
+  }
+
   Future<List<DeckEntry>> revisionEntries(int revisionId) async {
     final rows = await (select(
       deckEntries,

@@ -392,6 +392,66 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get cardUpdateDismiss;
 
+  /// No description provided for @restrictionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The restriction list has changed'**
+  String get restrictionsTitle;
+
+  /// No description provided for @restrictionsAffects.
+  ///
+  /// In en, this message translates to:
+  /// **'It affects {count, plural, =1{1 of your decks} other{{count} of your decks}}.'**
+  String restrictionsAffects(int count);
+
+  /// No description provided for @restrictionsBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'{card}: now banned (you run {copies})'**
+  String restrictionsBanned(String card, int copies);
+
+  /// No description provided for @restrictionsLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'{card}: now limited to {limit} (you run {copies})'**
+  String restrictionsLimited(String card, int limit, int copies);
+
+  /// No description provided for @restrictionsFreed.
+  ///
+  /// In en, this message translates to:
+  /// **'{card}: no longer limited'**
+  String restrictionsFreed(String card);
+
+  /// No description provided for @restrictionsRaised.
+  ///
+  /// In en, this message translates to:
+  /// **'{card}: now allowed {limit} copies'**
+  String restrictionsRaised(String card, int limit);
+
+  /// No description provided for @restrictionsPairBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'{card} may no longer share a deck with {partner}'**
+  String restrictionsPairBanned(String card, String partner);
+
+  /// No description provided for @restrictionsPairLifted.
+  ///
+  /// In en, this message translates to:
+  /// **'{card} may share a deck with {partner} again'**
+  String restrictionsPairLifted(String card, String partner);
+
+  /// No description provided for @restrictionsDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get restrictionsDismiss;
+
+  /// No description provided for @restrictionsShowDecks.
+  ///
+  /// In en, this message translates to:
+  /// **'See decks'**
+  String get restrictionsShowDecks;
+
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:

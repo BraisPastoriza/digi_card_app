@@ -160,6 +160,83 @@
   "cardUpdateMessage": "Heroicc has published an update to the card database. It may include sets that are still marked PREVIEW here.",
   "cardUpdateAction": "Update",
   "cardUpdateDismiss": "Not now",
+  "restrictionsTitle": "The restriction list has changed",
+  "restrictionsAffects": "It affects {count, plural, =1{1 of your decks} other{{count} of your decks}}.",
+  "@restrictionsAffects": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "restrictionsBanned": "{card}: now banned (you run {copies})",
+  "@restrictionsBanned": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      },
+      "copies": {
+        "type": "int"
+      }
+    }
+  },
+  "restrictionsLimited": "{card}: now limited to {limit} (you run {copies})",
+  "@restrictionsLimited": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      },
+      "copies": {
+        "type": "int"
+      }
+    }
+  },
+  "restrictionsFreed": "{card}: no longer limited",
+  "@restrictionsFreed": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      }
+    }
+  },
+  "restrictionsRaised": "{card}: now allowed {limit} copies",
+  "@restrictionsRaised": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "restrictionsPairBanned": "{card} may no longer share a deck with {partner}",
+  "@restrictionsPairBanned": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      },
+      "partner": {
+        "type": "String"
+      }
+    }
+  },
+  "restrictionsPairLifted": "{card} may share a deck with {partner} again",
+  "@restrictionsPairLifted": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      },
+      "partner": {
+        "type": "String"
+      }
+    }
+  },
+  "restrictionsDismiss": "Got it",
+  "restrictionsShowDecks": "See decks",
   "searchHint": "Name, effect, trait…",
   "searchFailed": "Search failed",
   "searchNoCards": "No cards found",

@@ -5726,6 +5726,592 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   }
 }
 
+class $RestrictionChangesTable extends RestrictionChanges
+    with TableInfo<$RestrictionChangesTable, RestrictionChangeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RestrictionChangesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _cardNumberMeta = const VerificationMeta(
+    'cardNumber',
+  );
+  @override
+  late final GeneratedColumn<String> cardNumber = GeneratedColumn<String>(
+    'card_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cardNameMeta = const VerificationMeta(
+    'cardName',
+  );
+  @override
+  late final GeneratedColumn<String> cardName = GeneratedColumn<String>(
+    'card_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partnerNumberMeta = const VerificationMeta(
+    'partnerNumber',
+  );
+  @override
+  late final GeneratedColumn<String> partnerNumber = GeneratedColumn<String>(
+    'partner_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partnerNameMeta = const VerificationMeta(
+    'partnerName',
+  );
+  @override
+  late final GeneratedColumn<String> partnerName = GeneratedColumn<String>(
+    'partner_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _oldLimitMeta = const VerificationMeta(
+    'oldLimit',
+  );
+  @override
+  late final GeneratedColumn<int> oldLimit = GeneratedColumn<int>(
+    'old_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _newLimitMeta = const VerificationMeta(
+    'newLimit',
+  );
+  @override
+  late final GeneratedColumn<int> newLimit = GeneratedColumn<int>(
+    'new_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pairBannedMeta = const VerificationMeta(
+    'pairBanned',
+  );
+  @override
+  late final GeneratedColumn<bool> pairBanned = GeneratedColumn<bool>(
+    'pair_banned',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pair_banned" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _detectedAtMeta = const VerificationMeta(
+    'detectedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> detectedAt = GeneratedColumn<DateTime>(
+    'detected_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    cardNumber,
+    cardName,
+    partnerNumber,
+    partnerName,
+    oldLimit,
+    newLimit,
+    pairBanned,
+    detectedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'restriction_changes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RestrictionChangeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('card_number')) {
+      context.handle(
+        _cardNumberMeta,
+        cardNumber.isAcceptableOrUnknown(data['card_number']!, _cardNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cardNumberMeta);
+    }
+    if (data.containsKey('card_name')) {
+      context.handle(
+        _cardNameMeta,
+        cardName.isAcceptableOrUnknown(data['card_name']!, _cardNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cardNameMeta);
+    }
+    if (data.containsKey('partner_number')) {
+      context.handle(
+        _partnerNumberMeta,
+        partnerNumber.isAcceptableOrUnknown(
+          data['partner_number']!,
+          _partnerNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('partner_name')) {
+      context.handle(
+        _partnerNameMeta,
+        partnerName.isAcceptableOrUnknown(
+          data['partner_name']!,
+          _partnerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('old_limit')) {
+      context.handle(
+        _oldLimitMeta,
+        oldLimit.isAcceptableOrUnknown(data['old_limit']!, _oldLimitMeta),
+      );
+    }
+    if (data.containsKey('new_limit')) {
+      context.handle(
+        _newLimitMeta,
+        newLimit.isAcceptableOrUnknown(data['new_limit']!, _newLimitMeta),
+      );
+    }
+    if (data.containsKey('pair_banned')) {
+      context.handle(
+        _pairBannedMeta,
+        pairBanned.isAcceptableOrUnknown(data['pair_banned']!, _pairBannedMeta),
+      );
+    }
+    if (data.containsKey('detected_at')) {
+      context.handle(
+        _detectedAtMeta,
+        detectedAt.isAcceptableOrUnknown(data['detected_at']!, _detectedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_detectedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RestrictionChangeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RestrictionChangeRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      cardNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}card_number'],
+      )!,
+      cardName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}card_name'],
+      )!,
+      partnerNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}partner_number'],
+      ),
+      partnerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}partner_name'],
+      ),
+      oldLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}old_limit'],
+      ),
+      newLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}new_limit'],
+      ),
+      pairBanned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pair_banned'],
+      ),
+      detectedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}detected_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RestrictionChangesTable createAlias(String alias) {
+    return $RestrictionChangesTable(attachedDatabase, alias);
+  }
+}
+
+class RestrictionChangeRow extends DataClass
+    implements Insertable<RestrictionChangeRow> {
+  final int id;
+
+  /// The card the change is about.
+  final String cardNumber;
+  final String cardName;
+
+  /// For a banned pair, the card it may or may no longer share a deck with.
+  final String? partnerNumber;
+  final String? partnerName;
+
+  /// Copies allowed before and after, for a change to the card's own limit.
+  final int? oldLimit;
+  final int? newLimit;
+
+  /// For a banned pair: true when the pairing was banned, false when lifted.
+  final bool? pairBanned;
+  final DateTime detectedAt;
+  const RestrictionChangeRow({
+    required this.id,
+    required this.cardNumber,
+    required this.cardName,
+    this.partnerNumber,
+    this.partnerName,
+    this.oldLimit,
+    this.newLimit,
+    this.pairBanned,
+    required this.detectedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['card_number'] = Variable<String>(cardNumber);
+    map['card_name'] = Variable<String>(cardName);
+    if (!nullToAbsent || partnerNumber != null) {
+      map['partner_number'] = Variable<String>(partnerNumber);
+    }
+    if (!nullToAbsent || partnerName != null) {
+      map['partner_name'] = Variable<String>(partnerName);
+    }
+    if (!nullToAbsent || oldLimit != null) {
+      map['old_limit'] = Variable<int>(oldLimit);
+    }
+    if (!nullToAbsent || newLimit != null) {
+      map['new_limit'] = Variable<int>(newLimit);
+    }
+    if (!nullToAbsent || pairBanned != null) {
+      map['pair_banned'] = Variable<bool>(pairBanned);
+    }
+    map['detected_at'] = Variable<DateTime>(detectedAt);
+    return map;
+  }
+
+  RestrictionChangesCompanion toCompanion(bool nullToAbsent) {
+    return RestrictionChangesCompanion(
+      id: Value(id),
+      cardNumber: Value(cardNumber),
+      cardName: Value(cardName),
+      partnerNumber: partnerNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partnerNumber),
+      partnerName: partnerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partnerName),
+      oldLimit: oldLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oldLimit),
+      newLimit: newLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newLimit),
+      pairBanned: pairBanned == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pairBanned),
+      detectedAt: Value(detectedAt),
+    );
+  }
+
+  factory RestrictionChangeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RestrictionChangeRow(
+      id: serializer.fromJson<int>(json['id']),
+      cardNumber: serializer.fromJson<String>(json['cardNumber']),
+      cardName: serializer.fromJson<String>(json['cardName']),
+      partnerNumber: serializer.fromJson<String?>(json['partnerNumber']),
+      partnerName: serializer.fromJson<String?>(json['partnerName']),
+      oldLimit: serializer.fromJson<int?>(json['oldLimit']),
+      newLimit: serializer.fromJson<int?>(json['newLimit']),
+      pairBanned: serializer.fromJson<bool?>(json['pairBanned']),
+      detectedAt: serializer.fromJson<DateTime>(json['detectedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'cardNumber': serializer.toJson<String>(cardNumber),
+      'cardName': serializer.toJson<String>(cardName),
+      'partnerNumber': serializer.toJson<String?>(partnerNumber),
+      'partnerName': serializer.toJson<String?>(partnerName),
+      'oldLimit': serializer.toJson<int?>(oldLimit),
+      'newLimit': serializer.toJson<int?>(newLimit),
+      'pairBanned': serializer.toJson<bool?>(pairBanned),
+      'detectedAt': serializer.toJson<DateTime>(detectedAt),
+    };
+  }
+
+  RestrictionChangeRow copyWith({
+    int? id,
+    String? cardNumber,
+    String? cardName,
+    Value<String?> partnerNumber = const Value.absent(),
+    Value<String?> partnerName = const Value.absent(),
+    Value<int?> oldLimit = const Value.absent(),
+    Value<int?> newLimit = const Value.absent(),
+    Value<bool?> pairBanned = const Value.absent(),
+    DateTime? detectedAt,
+  }) => RestrictionChangeRow(
+    id: id ?? this.id,
+    cardNumber: cardNumber ?? this.cardNumber,
+    cardName: cardName ?? this.cardName,
+    partnerNumber: partnerNumber.present
+        ? partnerNumber.value
+        : this.partnerNumber,
+    partnerName: partnerName.present ? partnerName.value : this.partnerName,
+    oldLimit: oldLimit.present ? oldLimit.value : this.oldLimit,
+    newLimit: newLimit.present ? newLimit.value : this.newLimit,
+    pairBanned: pairBanned.present ? pairBanned.value : this.pairBanned,
+    detectedAt: detectedAt ?? this.detectedAt,
+  );
+  RestrictionChangeRow copyWithCompanion(RestrictionChangesCompanion data) {
+    return RestrictionChangeRow(
+      id: data.id.present ? data.id.value : this.id,
+      cardNumber: data.cardNumber.present
+          ? data.cardNumber.value
+          : this.cardNumber,
+      cardName: data.cardName.present ? data.cardName.value : this.cardName,
+      partnerNumber: data.partnerNumber.present
+          ? data.partnerNumber.value
+          : this.partnerNumber,
+      partnerName: data.partnerName.present
+          ? data.partnerName.value
+          : this.partnerName,
+      oldLimit: data.oldLimit.present ? data.oldLimit.value : this.oldLimit,
+      newLimit: data.newLimit.present ? data.newLimit.value : this.newLimit,
+      pairBanned: data.pairBanned.present
+          ? data.pairBanned.value
+          : this.pairBanned,
+      detectedAt: data.detectedAt.present
+          ? data.detectedAt.value
+          : this.detectedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RestrictionChangeRow(')
+          ..write('id: $id, ')
+          ..write('cardNumber: $cardNumber, ')
+          ..write('cardName: $cardName, ')
+          ..write('partnerNumber: $partnerNumber, ')
+          ..write('partnerName: $partnerName, ')
+          ..write('oldLimit: $oldLimit, ')
+          ..write('newLimit: $newLimit, ')
+          ..write('pairBanned: $pairBanned, ')
+          ..write('detectedAt: $detectedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    cardNumber,
+    cardName,
+    partnerNumber,
+    partnerName,
+    oldLimit,
+    newLimit,
+    pairBanned,
+    detectedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RestrictionChangeRow &&
+          other.id == this.id &&
+          other.cardNumber == this.cardNumber &&
+          other.cardName == this.cardName &&
+          other.partnerNumber == this.partnerNumber &&
+          other.partnerName == this.partnerName &&
+          other.oldLimit == this.oldLimit &&
+          other.newLimit == this.newLimit &&
+          other.pairBanned == this.pairBanned &&
+          other.detectedAt == this.detectedAt);
+}
+
+class RestrictionChangesCompanion
+    extends UpdateCompanion<RestrictionChangeRow> {
+  final Value<int> id;
+  final Value<String> cardNumber;
+  final Value<String> cardName;
+  final Value<String?> partnerNumber;
+  final Value<String?> partnerName;
+  final Value<int?> oldLimit;
+  final Value<int?> newLimit;
+  final Value<bool?> pairBanned;
+  final Value<DateTime> detectedAt;
+  const RestrictionChangesCompanion({
+    this.id = const Value.absent(),
+    this.cardNumber = const Value.absent(),
+    this.cardName = const Value.absent(),
+    this.partnerNumber = const Value.absent(),
+    this.partnerName = const Value.absent(),
+    this.oldLimit = const Value.absent(),
+    this.newLimit = const Value.absent(),
+    this.pairBanned = const Value.absent(),
+    this.detectedAt = const Value.absent(),
+  });
+  RestrictionChangesCompanion.insert({
+    this.id = const Value.absent(),
+    required String cardNumber,
+    required String cardName,
+    this.partnerNumber = const Value.absent(),
+    this.partnerName = const Value.absent(),
+    this.oldLimit = const Value.absent(),
+    this.newLimit = const Value.absent(),
+    this.pairBanned = const Value.absent(),
+    required DateTime detectedAt,
+  }) : cardNumber = Value(cardNumber),
+       cardName = Value(cardName),
+       detectedAt = Value(detectedAt);
+  static Insertable<RestrictionChangeRow> custom({
+    Expression<int>? id,
+    Expression<String>? cardNumber,
+    Expression<String>? cardName,
+    Expression<String>? partnerNumber,
+    Expression<String>? partnerName,
+    Expression<int>? oldLimit,
+    Expression<int>? newLimit,
+    Expression<bool>? pairBanned,
+    Expression<DateTime>? detectedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (cardNumber != null) 'card_number': cardNumber,
+      if (cardName != null) 'card_name': cardName,
+      if (partnerNumber != null) 'partner_number': partnerNumber,
+      if (partnerName != null) 'partner_name': partnerName,
+      if (oldLimit != null) 'old_limit': oldLimit,
+      if (newLimit != null) 'new_limit': newLimit,
+      if (pairBanned != null) 'pair_banned': pairBanned,
+      if (detectedAt != null) 'detected_at': detectedAt,
+    });
+  }
+
+  RestrictionChangesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? cardNumber,
+    Value<String>? cardName,
+    Value<String?>? partnerNumber,
+    Value<String?>? partnerName,
+    Value<int?>? oldLimit,
+    Value<int?>? newLimit,
+    Value<bool?>? pairBanned,
+    Value<DateTime>? detectedAt,
+  }) {
+    return RestrictionChangesCompanion(
+      id: id ?? this.id,
+      cardNumber: cardNumber ?? this.cardNumber,
+      cardName: cardName ?? this.cardName,
+      partnerNumber: partnerNumber ?? this.partnerNumber,
+      partnerName: partnerName ?? this.partnerName,
+      oldLimit: oldLimit ?? this.oldLimit,
+      newLimit: newLimit ?? this.newLimit,
+      pairBanned: pairBanned ?? this.pairBanned,
+      detectedAt: detectedAt ?? this.detectedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (cardNumber.present) {
+      map['card_number'] = Variable<String>(cardNumber.value);
+    }
+    if (cardName.present) {
+      map['card_name'] = Variable<String>(cardName.value);
+    }
+    if (partnerNumber.present) {
+      map['partner_number'] = Variable<String>(partnerNumber.value);
+    }
+    if (partnerName.present) {
+      map['partner_name'] = Variable<String>(partnerName.value);
+    }
+    if (oldLimit.present) {
+      map['old_limit'] = Variable<int>(oldLimit.value);
+    }
+    if (newLimit.present) {
+      map['new_limit'] = Variable<int>(newLimit.value);
+    }
+    if (pairBanned.present) {
+      map['pair_banned'] = Variable<bool>(pairBanned.value);
+    }
+    if (detectedAt.present) {
+      map['detected_at'] = Variable<DateTime>(detectedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RestrictionChangesCompanion(')
+          ..write('id: $id, ')
+          ..write('cardNumber: $cardNumber, ')
+          ..write('cardName: $cardName, ')
+          ..write('partnerNumber: $partnerNumber, ')
+          ..write('partnerName: $partnerName, ')
+          ..write('oldLimit: $oldLimit, ')
+          ..write('newLimit: $newLimit, ')
+          ..write('pairBanned: $pairBanned, ')
+          ..write('detectedAt: $detectedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5742,6 +6328,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StapleListsTable stapleLists = $StapleListsTable(this);
   late final $StapleEntriesTable stapleEntries = $StapleEntriesTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
+  late final $RestrictionChangesTable restrictionChanges =
+      $RestrictionChangesTable(this);
   late final CardDao cardDao = CardDao(this as AppDatabase);
   late final ReleaseDao releaseDao = ReleaseDao(this as AppDatabase);
   late final DeckDao deckDao = DeckDao(this as AppDatabase);
@@ -5762,6 +6350,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stapleLists,
     stapleEntries,
     syncState,
+    restrictionChanges,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -9988,6 +10577,299 @@ typedef $$SyncStateTableProcessedTableManager =
       SyncStateRow,
       PrefetchHooks Function()
     >;
+typedef $$RestrictionChangesTableCreateCompanionBuilder =
+    RestrictionChangesCompanion Function({
+      Value<int> id,
+      required String cardNumber,
+      required String cardName,
+      Value<String?> partnerNumber,
+      Value<String?> partnerName,
+      Value<int?> oldLimit,
+      Value<int?> newLimit,
+      Value<bool?> pairBanned,
+      required DateTime detectedAt,
+    });
+typedef $$RestrictionChangesTableUpdateCompanionBuilder =
+    RestrictionChangesCompanion Function({
+      Value<int> id,
+      Value<String> cardNumber,
+      Value<String> cardName,
+      Value<String?> partnerNumber,
+      Value<String?> partnerName,
+      Value<int?> oldLimit,
+      Value<int?> newLimit,
+      Value<bool?> pairBanned,
+      Value<DateTime> detectedAt,
+    });
+
+class $$RestrictionChangesTableFilterComposer
+    extends Composer<_$AppDatabase, $RestrictionChangesTable> {
+  $$RestrictionChangesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cardNumber => $composableBuilder(
+    column: $table.cardNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cardName => $composableBuilder(
+    column: $table.cardName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partnerNumber => $composableBuilder(
+    column: $table.partnerNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partnerName => $composableBuilder(
+    column: $table.partnerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get oldLimit => $composableBuilder(
+    column: $table.oldLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get newLimit => $composableBuilder(
+    column: $table.newLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pairBanned => $composableBuilder(
+    column: $table.pairBanned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get detectedAt => $composableBuilder(
+    column: $table.detectedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RestrictionChangesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RestrictionChangesTable> {
+  $$RestrictionChangesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cardNumber => $composableBuilder(
+    column: $table.cardNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cardName => $composableBuilder(
+    column: $table.cardName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partnerNumber => $composableBuilder(
+    column: $table.partnerNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partnerName => $composableBuilder(
+    column: $table.partnerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get oldLimit => $composableBuilder(
+    column: $table.oldLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get newLimit => $composableBuilder(
+    column: $table.newLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get pairBanned => $composableBuilder(
+    column: $table.pairBanned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get detectedAt => $composableBuilder(
+    column: $table.detectedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RestrictionChangesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RestrictionChangesTable> {
+  $$RestrictionChangesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get cardNumber => $composableBuilder(
+    column: $table.cardNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cardName =>
+      $composableBuilder(column: $table.cardName, builder: (column) => column);
+
+  GeneratedColumn<String> get partnerNumber => $composableBuilder(
+    column: $table.partnerNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partnerName => $composableBuilder(
+    column: $table.partnerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get oldLimit =>
+      $composableBuilder(column: $table.oldLimit, builder: (column) => column);
+
+  GeneratedColumn<int> get newLimit =>
+      $composableBuilder(column: $table.newLimit, builder: (column) => column);
+
+  GeneratedColumn<bool> get pairBanned => $composableBuilder(
+    column: $table.pairBanned,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get detectedAt => $composableBuilder(
+    column: $table.detectedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$RestrictionChangesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RestrictionChangesTable,
+          RestrictionChangeRow,
+          $$RestrictionChangesTableFilterComposer,
+          $$RestrictionChangesTableOrderingComposer,
+          $$RestrictionChangesTableAnnotationComposer,
+          $$RestrictionChangesTableCreateCompanionBuilder,
+          $$RestrictionChangesTableUpdateCompanionBuilder,
+          (
+            RestrictionChangeRow,
+            BaseReferences<
+              _$AppDatabase,
+              $RestrictionChangesTable,
+              RestrictionChangeRow
+            >,
+          ),
+          RestrictionChangeRow,
+          PrefetchHooks Function()
+        > {
+  $$RestrictionChangesTableTableManager(
+    _$AppDatabase db,
+    $RestrictionChangesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RestrictionChangesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RestrictionChangesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RestrictionChangesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> cardNumber = const Value.absent(),
+                Value<String> cardName = const Value.absent(),
+                Value<String?> partnerNumber = const Value.absent(),
+                Value<String?> partnerName = const Value.absent(),
+                Value<int?> oldLimit = const Value.absent(),
+                Value<int?> newLimit = const Value.absent(),
+                Value<bool?> pairBanned = const Value.absent(),
+                Value<DateTime> detectedAt = const Value.absent(),
+              }) => RestrictionChangesCompanion(
+                id: id,
+                cardNumber: cardNumber,
+                cardName: cardName,
+                partnerNumber: partnerNumber,
+                partnerName: partnerName,
+                oldLimit: oldLimit,
+                newLimit: newLimit,
+                pairBanned: pairBanned,
+                detectedAt: detectedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String cardNumber,
+                required String cardName,
+                Value<String?> partnerNumber = const Value.absent(),
+                Value<String?> partnerName = const Value.absent(),
+                Value<int?> oldLimit = const Value.absent(),
+                Value<int?> newLimit = const Value.absent(),
+                Value<bool?> pairBanned = const Value.absent(),
+                required DateTime detectedAt,
+              }) => RestrictionChangesCompanion.insert(
+                id: id,
+                cardNumber: cardNumber,
+                cardName: cardName,
+                partnerNumber: partnerNumber,
+                partnerName: partnerName,
+                oldLimit: oldLimit,
+                newLimit: newLimit,
+                pairBanned: pairBanned,
+                detectedAt: detectedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RestrictionChangesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RestrictionChangesTable,
+      RestrictionChangeRow,
+      $$RestrictionChangesTableFilterComposer,
+      $$RestrictionChangesTableOrderingComposer,
+      $$RestrictionChangesTableAnnotationComposer,
+      $$RestrictionChangesTableCreateCompanionBuilder,
+      $$RestrictionChangesTableUpdateCompanionBuilder,
+      (
+        RestrictionChangeRow,
+        BaseReferences<
+          _$AppDatabase,
+          $RestrictionChangesTable,
+          RestrictionChangeRow
+        >,
+      ),
+      RestrictionChangeRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10014,4 +10896,6 @@ class $AppDatabaseManager {
       $$StapleEntriesTableTableManager(_db, _db.stapleEntries);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
+  $$RestrictionChangesTableTableManager get restrictionChanges =>
+      $$RestrictionChangesTableTableManager(_db, _db.restrictionChanges);
 }

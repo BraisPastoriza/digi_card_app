@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -10,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../../domain/models/digimon_card.dart';
+import '../../domain/models/restriction_change.dart';
 import '../api/digimoncard_io_api.dart';
 import '../api/heroi_api.dart';
 import '../db/app_database.dart';
@@ -190,11 +192,17 @@ class CardSyncService {
       cards.addAll(previews.cards);
 
       controller.add(const SyncProgress(SyncStage.storing));
+      // Read before the store replaces every card it could be read from.
+      final restrictionsBefore = await _restrictionSnapshot();
       await _store(
         cards,
         [...details, ...previews.details],
         ids,
         previewIds: {for (final detail in previews.details) detail.id},
+      );
+      await _recordRestrictionChanges(
+        restrictionsBefore,
+        await _restrictionSnapshot(),
       );
 
       controller.add(const SyncProgress(SyncStage.indexing));
@@ -435,6 +443,78 @@ class CardSyncService {
       }
     }
     return changed;
+  }
+
+  /// The restriction list as the stored cards have it.
+  Future<RestrictionSnapshot> _restrictionSnapshot() async {
+    final rows = await (_db.select(
+      _db.cards,
+    )..where((c) => c.isPrimary.equals(true))).get();
+    final limits = <String, int>{};
+    final names = <String, String>{};
+    final pairs = <(String, String)>{};
+    for (final row in rows) {
+      limits[row.number] = row.copyLimit;
+      names[row.number] = row.name;
+      // Only a handful of cards carry anything; the rest are `[]`.
+      if (!row.limitations.contains(LimitationType.bannedPair.apiValue)) {
+        continue;
+      }
+      final decoded = jsonDecode(row.limitations);
+      if (decoded is! List) continue;
+      for (final entry in decoded.whereType<Map<String, dynamic>>()) {
+        final limitation = CardLimitation.fromJson(entry);
+        if (limitation.type != LimitationType.bannedPair) continue;
+        for (final partner in limitation.pairedCardNumbers) {
+          pairs.add(RestrictionSnapshot.pair(row.number, partner));
+        }
+      }
+    }
+    return RestrictionSnapshot(limits: limits, pairs: pairs, names: names);
+  }
+
+  /// Keeps what a sync changed on the restriction list until the user has
+  /// seen it.
+  ///
+  /// Nothing is recorded for the first sync: with no list before it, every
+  /// restricted card would look newly restricted. Changes from an earlier sync
+  /// the user has not looked at yet are kept alongside the new ones.
+  Future<void> _recordRestrictionChanges(
+    RestrictionSnapshot before,
+    RestrictionSnapshot after,
+  ) async {
+    if (before.isEmpty) return;
+    final changes = before.changesTo(after);
+    if (changes.isEmpty) return;
+    final now = DateTime.now();
+    await _db.batch((batch) {
+      batch.insertAll(_db.restrictionChanges, [
+        for (final change in changes)
+          switch (change) {
+            LimitChange(:final oldLimit, :final newLimit) =>
+              RestrictionChangesCompanion.insert(
+                cardNumber: change.cardNumber,
+                cardName: change.cardName,
+                oldLimit: Value(oldLimit),
+                newLimit: Value(newLimit),
+                detectedAt: now,
+              ),
+            PairChange(
+              :final partnerNumber,
+              :final partnerName,
+              :final banned,
+            ) =>
+              RestrictionChangesCompanion.insert(
+                cardNumber: change.cardNumber,
+                cardName: change.cardName,
+                partnerNumber: Value(partnerNumber),
+                partnerName: Value(partnerName),
+                pairBanned: Value(banned),
+                detectedAt: now,
+              ),
+          },
+      ]);
+    });
   }
 
   /// Id of the card dump the primary API publishes now, or null when it

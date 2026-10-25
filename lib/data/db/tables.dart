@@ -269,3 +269,31 @@ class SyncState extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// A change the last card sync made to the restriction list, kept until the
+/// user has seen what it does to their decks.
+///
+/// Recorded once per sync rather than worked out on demand, because working it
+/// out needs the list as it was before the sync, and the sync replaces every
+/// card it could be read from.
+@DataClassName('RestrictionChangeRow')
+class RestrictionChanges extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// The card the change is about.
+  TextColumn get cardNumber => text()();
+  TextColumn get cardName => text()();
+
+  /// For a banned pair, the card it may or may no longer share a deck with.
+  TextColumn get partnerNumber => text().nullable()();
+  TextColumn get partnerName => text().nullable()();
+
+  /// Copies allowed before and after, for a change to the card's own limit.
+  IntColumn get oldLimit => integer().nullable()();
+  IntColumn get newLimit => integer().nullable()();
+
+  /// For a banned pair: true when the pairing was banned, false when lifted.
+  BoolColumn get pairBanned => boolean().nullable()();
+
+  DateTimeColumn get detectedAt => dateTime()();
+}

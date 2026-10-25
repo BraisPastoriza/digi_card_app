@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../../shared/widgets/card_thumbnail.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
+import 'restriction_notice.dart';
 import 'widgets/deck_name_dialog.dart';
 import 'widgets/staples_tab.dart';
 
@@ -137,6 +138,7 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
         }
 
         final visible = _matching(decks);
+        final hasNotice = ref.watch(deckRestrictionImpactsProvider).isNotEmpty;
         return Column(
           children: [
             if (decks.length >= _searchFrom)
@@ -177,10 +179,16 @@ class _DecksScreenState extends ConsumerState<DecksScreen>
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                      itemCount: visible.length,
+                      itemCount: visible.length + (hasNotice ? 1 : 0),
                       separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) =>
-                          _DeckCard(deck: visible[index]),
+                      // The notice scrolls with the decks rather than sitting
+                      // above them: it can run to a dozen lines, and pinned it
+                      // would leave a small phone no room for the list.
+                      itemBuilder: (context, index) => hasNotice && index == 0
+                          ? const RestrictionChangesBanner()
+                          : _DeckCard(
+                              deck: visible[index - (hasNotice ? 1 : 0)],
+                            ),
                     ),
             ),
           ],

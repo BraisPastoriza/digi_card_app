@@ -150,6 +150,92 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+/// An offer at the top of a list — something newer is available — with the
+/// buttons that act on it along the bottom.
+class NoticeBanner extends StatelessWidget {
+  const NoticeBanner({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.body = const [],
+    this.actions = const [],
+    this.margin = const EdgeInsets.fromLTRB(16, 8, 16, 8),
+  });
+
+  final IconData icon;
+  final String title;
+
+  /// Under the title, beside the icon: usually one [NoticeBanner.text].
+  final List<Widget> body;
+
+  final List<Widget> actions;
+
+  /// Space around the banner: the default suits a banner on its own, and a
+  /// list that already pads its items passes less.
+  final EdgeInsetsGeometry margin;
+
+  /// A paragraph in the banner's body style.
+  static Widget text(BuildContext context, String text) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 12.5,
+      height: 1.45,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: margin,
+      padding: EdgeInsets.fromLTRB(12, 12, 12, actions.isEmpty ? 12 : 4),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppSurfaces.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 18, color: scheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    for (final child in body) ...[
+                      const SizedBox(height: 4),
+                      child,
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (actions.isNotEmpty)
+            // Wraps rather than overflows when three buttons in a long
+            // language do not fit on a narrow phone.
+            Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(alignment: WrapAlignment.end, children: actions),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Section heading used above grouped lists.
 class SectionHeader extends StatelessWidget {
   const SectionHeader(this.title, {super.key, this.trailing, this.subtitle});

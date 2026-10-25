@@ -27,7 +27,7 @@ void main() {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
 
-      expect(db.schemaVersion, 12);
+      expect(db.schemaVersion, 13);
       expect(CardDataVersions.invalidatedAt, 9);
       expect(CardDataVersions.derived, 3);
     });
@@ -53,10 +53,11 @@ void main() {
     });
 
     test('the versions added since keep their cards', () {
-      // Staples (11) and the derived-version column (12) do not touch a single
-      // card row, and neither did the keyword fix (10) — that one is a
-      // re-derivation. None of them may cost a download.
-      for (var from = CardDataVersions.invalidatedAt; from <= 12; from++) {
+      // Staples (11), the derived-version column (12) and the record of
+      // restriction list changes (13) do not touch a single card row, and
+      // neither did the keyword fix (10) — that one is a re-derivation. None
+      // of them may cost a download.
+      for (var from = CardDataVersions.invalidatedAt; from <= 13; from++) {
         expect(
           CardDataVersions.needsCardReset(from),
           isFalse,

@@ -31,6 +31,7 @@ const cardSearchTable = 'card_search';
     StapleLists,
     StapleEntries,
     SyncState,
+    RestrictionChanges,
   ],
   daos: [CardDao, ReleaseDao, DeckDao, StapleDao],
 )
@@ -41,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -81,6 +82,7 @@ class AppDatabase extends _$AppDatabase {
         await stapleDao.seed(defaultStapleLists);
       }
       if (from < 12) await m.addColumn(syncState, syncState.derivedVersion);
+      if (from < 13) await m.createTable(restrictionChanges);
       if (CardDataVersions.needsCardReset(from)) await resetCardData(m);
     },
     beforeOpen: (details) async {

@@ -181,6 +181,56 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cardUpdateDismiss => 'Ahora no';
 
   @override
+  String get restrictionsTitle => 'La lista de restricciones ha cambiado';
+
+  @override
+  String restrictionsAffects(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de tus mazos',
+      one: '1 de tus mazos',
+    );
+    return 'Afecta a $_temp0.';
+  }
+
+  @override
+  String restrictionsBanned(String card, int copies) {
+    return '$card: ahora prohibida (llevas $copies)';
+  }
+
+  @override
+  String restrictionsLimited(String card, int limit, int copies) {
+    return '$card: ahora limitada a $limit (llevas $copies)';
+  }
+
+  @override
+  String restrictionsFreed(String card) {
+    return '$card: ya no está limitada';
+  }
+
+  @override
+  String restrictionsRaised(String card, int limit) {
+    return '$card: ahora se permiten $limit copias';
+  }
+
+  @override
+  String restrictionsPairBanned(String card, String partner) {
+    return '$card ya no puede ir en el mismo mazo que $partner';
+  }
+
+  @override
+  String restrictionsPairLifted(String card, String partner) {
+    return '$card vuelve a poder ir en el mismo mazo que $partner';
+  }
+
+  @override
+  String get restrictionsDismiss => 'Entendido';
+
+  @override
+  String get restrictionsShowDecks => 'Ver mazos';
+
+  @override
   String get searchHint => 'Nombre, efecto, rasgo…';
 
   @override

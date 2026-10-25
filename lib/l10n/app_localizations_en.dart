@@ -180,6 +180,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardUpdateDismiss => 'Not now';
 
   @override
+  String get restrictionsTitle => 'The restriction list has changed';
+
+  @override
+  String restrictionsAffects(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count of your decks',
+      one: '1 of your decks',
+    );
+    return 'It affects $_temp0.';
+  }
+
+  @override
+  String restrictionsBanned(String card, int copies) {
+    return '$card: now banned (you run $copies)';
+  }
+
+  @override
+  String restrictionsLimited(String card, int limit, int copies) {
+    return '$card: now limited to $limit (you run $copies)';
+  }
+
+  @override
+  String restrictionsFreed(String card) {
+    return '$card: no longer limited';
+  }
+
+  @override
+  String restrictionsRaised(String card, int limit) {
+    return '$card: now allowed $limit copies';
+  }
+
+  @override
+  String restrictionsPairBanned(String card, String partner) {
+    return '$card may no longer share a deck with $partner';
+  }
+
+  @override
+  String restrictionsPairLifted(String card, String partner) {
+    return '$card may share a deck with $partner again';
+  }
+
+  @override
+  String get restrictionsDismiss => 'Got it';
+
+  @override
+  String get restrictionsShowDecks => 'See decks';
+
+  @override
   String get searchHint => 'Name, effect, trait…';
 
   @override

@@ -12,6 +12,7 @@ import '../../data/db/daos/release_dao.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_release.dart';
 import '../../shared/widgets/common.dart';
+import '../deckbuilder/restriction_notice.dart';
 import 'attribution_screen.dart';
 import 'library_providers.dart';
 import 'widgets/language_sheet.dart';
@@ -96,6 +97,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                 child: _SearchBarButton(),
               ),
             ),
+            const SliverToBoxAdapter(child: RestrictionChangesTeaser()),
             if (ref.watch(cardUpdateAvailableProvider))
               const SliverToBoxAdapter(child: _CardUpdateBanner()),
             ...sections.when(
@@ -186,68 +188,25 @@ class _CardUpdateBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppSurfaces.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.system_update_alt, size: 18, color: scheme.primary),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.cardUpdateTitle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.cardUpdateMessage,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.45,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () =>
-                    ref.read(previewRefreshProvider.notifier).dismissUpdate(),
-                child: Text(context.l10n.cardUpdateDismiss),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Same route as "Check for updates" in the database sheet.
-                  ref.read(resyncRequestedProvider.notifier).state = true;
-                  ref.read(libraryReadyProvider.notifier).requireSync();
-                },
-                child: Text(context.l10n.cardUpdateAction),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return NoticeBanner(
+      icon: Icons.system_update_alt,
+      title: context.l10n.cardUpdateTitle,
+      body: [NoticeBanner.text(context, context.l10n.cardUpdateMessage)],
+      actions: [
+        TextButton(
+          onPressed: () =>
+              ref.read(previewRefreshProvider.notifier).dismissUpdate(),
+          child: Text(context.l10n.cardUpdateDismiss),
+        ),
+        TextButton(
+          onPressed: () {
+            // Same route as "Check for updates" in the database sheet.
+            ref.read(resyncRequestedProvider.notifier).state = true;
+            ref.read(libraryReadyProvider.notifier).requireSync();
+          },
+          child: Text(context.l10n.cardUpdateAction),
+        ),
+      ],
     );
   }
 }
