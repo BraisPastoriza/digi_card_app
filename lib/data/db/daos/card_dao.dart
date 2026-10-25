@@ -98,6 +98,20 @@ class CardDao extends DatabaseAccessor<AppDatabase> with _$CardDaoMixin {
     return rows.map((row) => row.toDigimonCard()).toList();
   }
 
+  /// The cards the restriction list caps below four copies, banned ones
+  /// included.
+  Future<List<DigimonCard>> copyLimitedCards() async {
+    final query = select(cards)
+      ..where(
+        (c) =>
+            c.isPrimary.equals(true) &
+            c.copyLimit.isSmallerThanValue(CopyLimit.standard),
+      )
+      ..orderBy([(c) => OrderingTerm.asc(c.numberSort)]);
+    final rows = await query.get();
+    return rows.map((row) => row.toDigimonCard()).toList();
+  }
+
   /// Primary printings looked up by printed name, case-insensitively, for
   /// importing deck lists that name cards without their number.
   ///

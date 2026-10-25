@@ -410,5 +410,17 @@
   "addToListNewSubtitle": "Empieza una lista con esta carta",
   "addToListAdded": "{name} añadida a {list}",
   "addToListRemoved": "{name} quitada de {list}",
-  "addToListHolds": "En esta lista"
+  "addToListHolds": "En esta lista",
+  "banlistTitle": "Banlist",
+  "banlistBanned": "Prohibidas",
+  "banlistBannedSubtitle": "Ningún mazo puede incluir estas cartas",
+  "banlistLimited": "Limitadas a {count, plural, =1{1 copia} other{{count} copias}}",
+  "banlistPairs": "Parejas prohibidas",
+  "banlistPairsSubtitle": "Cada carta es legal por sí sola, pero un mazo no puede llevar las dos",
+  "banlistPairLine": "{card} no puede ir en el mismo mazo que {partners}.",
+  "banlistSince": "Desde {date}",
+  "banlistLatestChange": "Último cambio: {date}",
+  "banlistEmptyTitle": "Sin restricciones",
+  "banlistEmptyMessage": "La base de datos de cartas no tiene entradas de la lista de restricciones. Actualízala desde la hoja de la base de datos de la biblioteca para traer la lista vigente.",
+  "banlistError": "No se pudo cargar la banlist"
 }

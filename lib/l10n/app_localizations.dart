@@ -2579,6 +2579,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In this list'**
   String get addToListHolds;
+
+  /// No description provided for @banlistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Banlist'**
+  String get banlistTitle;
+
+  /// No description provided for @banlistBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Banned'**
+  String get banlistBanned;
+
+  /// No description provided for @banlistBannedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No deck may include these cards'**
+  String get banlistBannedSubtitle;
+
+  /// No description provided for @banlistLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted to {count, plural, =1{1 copy} other{{count} copies}}'**
+  String banlistLimited(int count);
+
+  /// No description provided for @banlistPairs.
+  ///
+  /// In en, this message translates to:
+  /// **'Banned pairs'**
+  String get banlistPairs;
+
+  /// No description provided for @banlistPairsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Each card is legal on its own, but a deck cannot run both'**
+  String get banlistPairsSubtitle;
+
+  /// No description provided for @banlistPairLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{card} cannot share a deck with {partners}.'**
+  String banlistPairLine(String card, String partners);
+
+  /// No description provided for @banlistSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Since {date}'**
+  String banlistSince(String date);
+
+  /// No description provided for @banlistLatestChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest change: {date}'**
+  String banlistLatestChange(String date);
+
+  /// No description provided for @banlistEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No restrictions'**
+  String get banlistEmptyTitle;
+
+  /// No description provided for @banlistEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The card database has no restriction list entries. Updating it from the library\'s database sheet brings in the current list.'**
+  String get banlistEmptyMessage;
+
+  /// No description provided for @banlistError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the banlist'**
+  String get banlistError;
 }
 
 class _AppLocalizationsDelegate

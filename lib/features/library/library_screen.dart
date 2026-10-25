@@ -76,6 +76,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
               title: Text(context.l10n.libraryTitle),
               actions: [
                 IconButton(
+                  onPressed: () => context.pushOnce('/library/banlist'),
+                  icon: const Icon(Icons.gavel),
+                  tooltip: context.l10n.banlistTitle,
+                ),
+                IconButton(
                   onPressed: () => showLanguageSheet(context),
                   icon: const Icon(Icons.translate),
                   tooltip: context.l10n.languageTitle,

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../data/db/daos/release_dao.dart';
+import '../../domain/models/banlist.dart';
 import '../../domain/models/card_enums.dart';
 import '../../domain/models/card_filter.dart';
 import '../../domain/models/card_release.dart';
@@ -108,6 +109,21 @@ final cardPrintingsProvider = FutureProvider.autoDispose
 final cardProvider = FutureProvider.autoDispose.family<DigimonCard?, String>(
   (ref, id) => ref.watch(cardDaoProvider).cardById(id),
 );
+
+/// The restriction list as the local card data has it.
+final banlistProvider = FutureProvider.autoDispose<Banlist>((ref) async {
+  final dao = ref.watch(cardDaoProvider);
+  final restricted = await dao.copyLimitedCards();
+  final carriers = await dao.pairRestrictedCards();
+  final partners = await dao.cardsByNumbers({
+    for (final card in carriers) ...card.bannedWith,
+  });
+  return Banlist.from(
+    restricted: restricted,
+    pairCarriers: carriers,
+    partners: partners,
+  );
+});
 
 /// Values that actually occur in the card data, used to populate the filter
 /// sheet rather than hard-coding lists that drift out of date with new sets.

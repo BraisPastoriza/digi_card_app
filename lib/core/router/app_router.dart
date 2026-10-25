@@ -12,6 +12,7 @@ import '../../features/deckbuilder/staple_import_screen.dart';
 import '../../features/deckbuilder/staple_list_screen.dart';
 import '../../features/deckbuilder/test_hand_screen.dart';
 import '../../features/library/attribution_screen.dart';
+import '../../features/library/banlist_screen.dart';
 import '../../features/library/card_detail_screen.dart';
 import '../../features/library/library_screen.dart';
 import '../../features/library/release_cards_screen.dart';
@@ -65,6 +66,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'search',
                     builder: (_, _) => const SearchScreen(),
+                  ),
+                  GoRoute(
+                    path: 'banlist',
+                    builder: (_, _) => const BanlistScreen(),
                   ),
                   GoRoute(
                     path: 'credits',

@@ -13,10 +13,14 @@ class SliverCardGrid extends StatelessWidget {
     super.key,
     required this.cards,
     required this.onCardTap,
+    this.showRestriction = true,
   });
 
   final List<DigimonCard> cards;
   final void Function(DigimonCard card) onCardTap;
+
+  /// See [CardThumbnail.showRestriction].
+  final bool showRestriction;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,7 @@ class SliverCardGrid extends StatelessWidget {
           final card = cards[index];
           return GestureDetector(
             onTap: () => onCardTap(card),
-            child: CardThumbnail(card: card),
+            child: CardThumbnail(card: card, showRestriction: showRestriction),
           );
         }, childCount: cards.length),
       ),

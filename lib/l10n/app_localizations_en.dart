@@ -1614,4 +1614,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addToListHolds => 'In this list';
+
+  @override
+  String get banlistTitle => 'Banlist';
+
+  @override
+  String get banlistBanned => 'Banned';
+
+  @override
+  String get banlistBannedSubtitle => 'No deck may include these cards';
+
+  @override
+  String banlistLimited(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count copies',
+      one: '1 copy',
+    );
+    return 'Restricted to $_temp0';
+  }
+
+  @override
+  String get banlistPairs => 'Banned pairs';
+
+  @override
+  String get banlistPairsSubtitle =>
+      'Each card is legal on its own, but a deck cannot run both';
+
+  @override
+  String banlistPairLine(String card, String partners) {
+    return '$card cannot share a deck with $partners.';
+  }
+
+  @override
+  String banlistSince(String date) {
+    return 'Since $date';
+  }
+
+  @override
+  String banlistLatestChange(String date) {
+    return 'Latest change: $date';
+  }
+
+  @override
+  String get banlistEmptyTitle => 'No restrictions';
+
+  @override
+  String get banlistEmptyMessage =>
+      'The card database has no restriction list entries. Updating it from the library\'s database sheet brings in the current list.';
+
+  @override
+  String get banlistError => 'Could not load the banlist';
 }
