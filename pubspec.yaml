@@ -44,6 +44,10 @@ dependencies:
   collection: ^1.19.0
   intl: ^0.20.2
 
+  file_picker: ^13.2.0
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.4.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -8,21 +8,26 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gal/gal.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck.dart';
 import '../../domain/models/deck_list.dart';
+import '../../domain/models/deck_qr.dart';
 import '../../l10n/l10n.dart';
 import '../../l10n/labels.dart';
+import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/common.dart';
 import 'deck_providers.dart';
 import 'widgets/deck_sheet.dart';
 
-/// Exports a revision, as a picture of the deck or as a text list.
+/// Exports a revision, as a picture of the deck, as a text list or as a QR
+/// code.
 ///
-/// Both exist because they are used for different things: the image is what
-/// gets posted and shown to people, the text is what other deck tools read.
+/// Each is used for something different: the image is what gets posted and
+/// shown to people, the text is what other deck tools read, and the code is
+/// how a list crosses from one phone to another across a table.
 class DeckExportScreen extends ConsumerWidget {
   const DeckExportScreen({
     super.key,
@@ -42,7 +47,7 @@ class DeckExportScreen extends ConsumerWidget {
     );
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -54,6 +59,7 @@ class DeckExportScreen extends ConsumerWidget {
             tabs: [
               Tab(text: context.l10n.exportTabImage),
               Tab(text: context.l10n.exportTabText),
+              Tab(text: context.l10n.exportTabQr),
             ],
           ),
         ),
@@ -80,6 +86,12 @@ class DeckExportScreen extends ConsumerWidget {
                   composition: composition,
                 ),
                 _TextExportTab(composition: composition),
+                _QrExportTab(
+                  deckName: deck?.name ?? context.l10n.exportFallbackDeckName,
+                  revisionName: revision?.name ?? '',
+                  composition: composition,
+                  thumbnailCardNumber: deck?.thumbnailCardNumber,
+                ),
               ],
             );
           },
@@ -407,6 +419,310 @@ class _TextExportTabState extends State<_TextExportTab> {
                 icon: const Icon(Icons.copy_all, size: 18),
                 label: Text(context.l10n.exportCopyToClipboard),
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The code as it is shown and saved: framed in the app's gradient, under its
+/// mark, with the deck's thumbnail card and name underneath.
+///
+/// The code itself stays dark on white whatever the app theme: a camera reads
+/// it by its contrast, and a light-on-dark code fails on many. Only the shape
+/// of its modules is styled, which scanners do not mind.
+class _QrCard extends StatelessWidget {
+  const _QrCard({
+    required this.data,
+    required this.deckName,
+    required this.revisionName,
+    required this.cardImageUrl,
+  });
+
+  final String data;
+  final String deckName;
+  final String revisionName;
+
+  /// Art of the deck's thumbnail card; null for a deck with none to show.
+  final String? cardImageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    const onGradient = Colors.white;
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          colors: [AppLogoArt.gradientStart, AppLogoArt.gradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: Row(
+              children: [
+                const AppLogo(size: 26),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.appTitle,
+                  style: const TextStyle(
+                    color: AppLogoArt.ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: QrImageView(
+              data: data,
+              size: 260,
+              padding: EdgeInsets.zero,
+              backgroundColor: Colors.white,
+              errorCorrectionLevel: QrErrorCorrectLevel.M,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.circle,
+                color: AppLogoArt.ink,
+              ),
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.circle,
+                color: AppLogoArt.ink,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              if (cardImageUrl case final url?) ...[
+                // The deck's thumbnail card, as on the deck shelf, so the
+                // code is recognisable before anyone scans it.
+                Container(
+                  width: 58,
+                  height: 81,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x40000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: Image(
+                      image: CachedNetworkImageProvider(url),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) =>
+                          const ColoredBox(color: Color(0x33000000)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: cardImageUrl == null
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      deckName,
+                      textAlign: cardImageUrl == null
+                          ? TextAlign.center
+                          : TextAlign.start,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: onGradient,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    if (revisionName.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          revisionName,
+                          style: TextStyle(
+                            color: onGradient.withValues(alpha: 0.85),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shows the deck as a QR code another phone can scan into its importer, and
+/// saves it to the gallery for sending when the other phone is not at hand.
+class _QrExportTab extends StatefulWidget {
+  const _QrExportTab({
+    required this.deckName,
+    required this.revisionName,
+    required this.composition,
+    required this.thumbnailCardNumber,
+  });
+
+  final String deckName;
+  final String revisionName;
+  final DeckComposition composition;
+
+  /// The card the user pinned as the deck's thumbnail, if any.
+  final String? thumbnailCardNumber;
+
+  @override
+  State<_QrExportTab> createState() => _QrExportTabState();
+}
+
+class _QrExportTabState extends State<_QrExportTab> {
+  final _codeKey = GlobalKey();
+  var _saving = false;
+
+  /// Resolves once the thumbnail card's art is in the image cache, so a save
+  /// made while it is still loading does not capture a blank in its place.
+  Future<void>? _artwork;
+
+  String? get _cardImageUrl => widget.composition
+      .thumbnailFor(widget.thumbnailCardNumber)
+      ?.card
+      .imageUrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _artwork ??= switch (_cardImageUrl) {
+      // Art that will not load must not stop the save; the card draws a
+      // plain placeholder instead.
+      final url? => precacheImage(
+        CachedNetworkImageProvider(url),
+        context,
+      ).catchError((_) {}),
+      null => Future.value(),
+    };
+  }
+
+  Future<void> _saveToGallery() async {
+    final l10n = context.l10n;
+    setState(() => _saving = true);
+    try {
+      await _artwork;
+      // The art may have arrived just now; let it be painted before capture.
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary =
+          _codeKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final image = await boundary?.toImage(pixelRatio: 3);
+      final data = await image?.toByteData(format: ui.ImageByteFormat.png);
+      image?.dispose();
+      if (data == null) {
+        _report(l10n.exportRenderFailed);
+        return;
+      }
+      if (!await Gal.requestAccess()) {
+        _report(l10n.exportNeedsPermission);
+        return;
+      }
+      final safe = '${widget.deckName}-${widget.revisionName}-qr'.replaceAll(
+        RegExp(r'[^A-Za-z0-9._-]+'),
+        '-',
+      );
+      await Gal.putImageBytes(data.buffer.asUint8List(), name: safe);
+      _report(l10n.exportSaved);
+    } on GalException catch (error) {
+      _report(error.type.message);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _report(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final data = writeDeckQr(widget.deckName, widget.composition);
+
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: RepaintBoundary(
+                key: _codeKey,
+                child: _QrCard(
+                  data: data,
+                  deckName: widget.deckName,
+                  revisionName: widget.revisionName,
+                  cardImageUrl: _cardImageUrl,
+                ),
+              ),
+            ),
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Column(
+              children: [
+                Text(
+                  context.l10n.exportQrHint,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _saveToGallery,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download, size: 18),
+                    label: Text(
+                      _saving
+                          ? context.l10n.exportSaving
+                          : context.l10n.exportSaveToGallery,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

@@ -264,6 +264,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restrictionsShowDecks => 'Ver mazos';
 
   @override
+  String get exportTabQr => 'QR';
+
+  @override
+  String get exportQrHint =>
+      'Escanéalo desde DigiCard App en Mazos → Importar → Escanear QR. Guardado en la galería, se puede enviar como imagen y leer con \"QR desde imagen\".';
+
+  @override
+  String get qrScan => 'Escanear QR';
+
+  @override
+  String get qrFromImage => 'QR desde imagen';
+
+  @override
+  String get qrScanTitle => 'Escanear el QR de un mazo';
+
+  @override
+  String get qrScanHint => 'Apunta la cámara al código QR de un mazo.';
+
+  @override
+  String get qrScanNoPermission =>
+      'DigiCard App necesita la cámara para escanear el código. Puedes permitirlo en los ajustes del sistema o leer el código desde una imagen.';
+
+  @override
+  String get qrScanUnavailable => 'No se ha podido abrir la cámara.';
+
+  @override
+  String get qrNoCodeInImage => 'No hay ningún código QR en esa imagen.';
+
+  @override
+  String get qrImageFailed => 'No se ha podido leer la imagen.';
+
+  @override
   String get searchHint => 'Nombre, efecto, rasgo…';
 
   @override

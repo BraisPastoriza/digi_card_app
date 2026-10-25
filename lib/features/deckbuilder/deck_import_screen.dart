@@ -8,8 +8,10 @@ import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/deck.dart';
 import '../../domain/models/deck_list.dart';
+import '../../domain/models/deck_qr.dart';
 import '../../l10n/l10n.dart';
 import 'deck_providers.dart';
+import 'deck_qr_scan.dart';
 
 /// Builds a deck out of a pasted text list — the reverse of the text export.
 ///
@@ -62,6 +64,33 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
       _listController.text = text;
       _matches = null;
     });
+  }
+
+  Future<void> _scanQr() => _takeQr(() => scanDeckQr(context));
+
+  Future<void> _qrFromImage() async {
+    final l10n = context.l10n;
+    try {
+      await _takeQr(readDeckQrFromImage);
+    } on FormatException {
+      _report(l10n.qrNoCodeInImage);
+    } on Object {
+      _report(l10n.qrImageFailed);
+    }
+  }
+
+  /// Puts a scanned list where a pasted one goes, names the deck after the
+  /// code if it carries a name, and reads it straight away: there is nothing
+  /// to correct in a list that came out of a code.
+  Future<void> _takeQr(Future<String?> Function() scan) async {
+    final text = await scan();
+    if (text == null || !mounted) return;
+    setState(() {
+      _listController.text = text;
+      _matches = null;
+      if (deckNameInQr(text) case final name?) _nameController.text = name;
+    });
+    await _read();
   }
 
   /// Parses the pasted text and matches every line against the library.
@@ -203,6 +232,26 @@ class _DeckImportScreenState extends ConsumerState<DeckImportScreen> {
                         ? context.l10n.importReading
                         : context.l10n.importReadList,
                   ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _scanQr,
+                  icon: const Icon(Icons.qr_code_scanner, size: 18),
+                  label: Text(context.l10n.qrScan),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _qrFromImage,
+                  icon: const Icon(Icons.image_search, size: 18),
+                  label: Text(context.l10n.qrFromImage),
                 ),
               ),
             ],

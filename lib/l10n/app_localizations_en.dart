@@ -263,6 +263,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restrictionsShowDecks => 'See decks';
 
   @override
+  String get exportTabQr => 'QR';
+
+  @override
+  String get exportQrHint =>
+      'Scan it from DigiCard App under Decks → Import → Scan QR. Saved to the gallery, it can be sent as a picture and read with \"QR from image\".';
+
+  @override
+  String get qrScan => 'Scan QR';
+
+  @override
+  String get qrFromImage => 'QR from image';
+
+  @override
+  String get qrScanTitle => 'Scan a deck QR';
+
+  @override
+  String get qrScanHint => 'Point the camera at a deck QR code.';
+
+  @override
+  String get qrScanNoPermission =>
+      'DigiCard App needs the camera to scan a code. You can allow it in the system settings, or read the code from a picture instead.';
+
+  @override
+  String get qrScanUnavailable => 'The camera could not be started.';
+
+  @override
+  String get qrNoCodeInImage => 'There is no QR code in that picture.';
+
+  @override
+  String get qrImageFailed => 'The picture could not be read.';
+
+  @override
   String get searchHint => 'Name, effect, trait…';
 
   @override

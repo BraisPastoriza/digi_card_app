@@ -506,6 +506,66 @@ abstract class AppLocalizations {
   /// **'See decks'**
   String get restrictionsShowDecks;
 
+  /// No description provided for @exportTabQr.
+  ///
+  /// In en, this message translates to:
+  /// **'QR'**
+  String get exportTabQr;
+
+  /// No description provided for @exportQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan it from DigiCard App under Decks → Import → Scan QR. Saved to the gallery, it can be sent as a picture and read with \"QR from image\".'**
+  String get exportQrHint;
+
+  /// No description provided for @qrScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR'**
+  String get qrScan;
+
+  /// No description provided for @qrFromImage.
+  ///
+  /// In en, this message translates to:
+  /// **'QR from image'**
+  String get qrFromImage;
+
+  /// No description provided for @qrScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a deck QR'**
+  String get qrScanTitle;
+
+  /// No description provided for @qrScanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a deck QR code.'**
+  String get qrScanHint;
+
+  /// No description provided for @qrScanNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'DigiCard App needs the camera to scan a code. You can allow it in the system settings, or read the code from a picture instead.'**
+  String get qrScanNoPermission;
+
+  /// No description provided for @qrScanUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera could not be started.'**
+  String get qrScanUnavailable;
+
+  /// No description provided for @qrNoCodeInImage.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no QR code in that picture.'**
+  String get qrNoCodeInImage;
+
+  /// No description provided for @qrImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The picture could not be read.'**
+  String get qrImageFailed;
+
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
