@@ -78,6 +78,9 @@ void main() {
   /// What the secondary source answers for packs other than EX-13.
   late Map<String, List<Object>> otherPacks;
 
+  /// What the secondary source answers for a search by card number.
+  late Map<String, List<Object>> numbered;
+
   // BT-26 is on the preview list, but the primary API now publishes it. EX-13
   // is on the list too and still is not published, so it stays a preview.
   setUp(() async {
@@ -89,6 +92,7 @@ void main() {
         );
 
     otherPacks = {};
+    numbered = {};
     db = AppDatabase.forTesting(NativeDatabase.memory());
     await db.customStatement('PRAGMA foreign_keys = ON');
 
@@ -132,6 +136,7 @@ void main() {
           '/bulk-data/en-1.json' => [
             _card('BT25-001', 'Agumon'),
             _card('BT26-001', 'Gabumon'),
+            _card('P-247', 'Patamon'),
           ],
           final path => throw StateError('unexpected request: $path'),
         },
@@ -139,8 +144,9 @@ void main() {
 
     final secondary = Dio()
       ..httpClientAdapter = _RoutedAdapter(
-        (options) => switch (options.uri.queryParameters['pack']) {
-          'EX-13' => [
+        (options) => switch (options.uri.queryParameters) {
+          {'card': final number} => numbered[number] ?? <Object>[],
+          {'pack': 'EX-13'} => [
             {
               'id': 'EX13-001',
               'name': 'Gigimon',
@@ -149,7 +155,7 @@ void main() {
               'level': '2',
             },
           ],
-          final pack => otherPacks[pack] ?? <Object>[],
+          final query => otherPacks[query['pack']] ?? <Object>[],
         },
       );
 
@@ -215,4 +221,38 @@ void main() {
       expect(await db.cardDao.cardById('EX14-054'), isNotNull);
     },
   );
+
+  test(
+    'promos past the newest published one are stored as a preview',
+    () async {
+      Map<String, Object> promo(String number, String name) => {
+        'id': number,
+        'name': name,
+        'type': 'Digimon',
+        'color': 'Blue',
+        'level': 3,
+      };
+      numbered['P-24'] = [promo('P-247', 'Patamon'), promo('P-248', 'Gomamon')];
+
+      await service.sync(force: true).drain<void>();
+      final stored = await releases();
+
+      expect(stored[newPromosReleaseId]?['data_source'], secondarySourceName);
+      final links = await (db.select(
+        db.cardReleaseLinks,
+      )..where((l) => l.releaseId.equals(newPromosReleaseId))).get();
+      expect(links.map((l) => l.cardId), ['P-248']);
+      expect(
+        (await db.cardDao.cardById('P-247'))!.imageUrl,
+        'https://images.heroi.cc/cards/en/P-247.webp',
+        reason: 'the published promo keeps the primary source data',
+      );
+    },
+  );
+
+  test('no new promo means no new promos release', () async {
+    await service.sync(force: true).drain<void>();
+
+    expect((await releases())[newPromosReleaseId], isNull);
+  });
 }

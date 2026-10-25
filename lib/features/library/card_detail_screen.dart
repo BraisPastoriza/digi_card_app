@@ -1068,12 +1068,16 @@ class _PreviewCardNotice extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Looking like a preview is not enough: once the primary API publishes
     // the set, the sync stores it as an ordinary release.
-    final previews = [
+    final previews = {
       for (final id in releaseIds)
-        if (mayBePreview(id))
-          ref.watch(releaseProvider(id)).valueOrNull?.isPreview ?? false,
-    ];
-    if (!previews.contains(true)) return const SizedBox.shrink();
+        if (mayBePreview(id) &&
+            (ref.watch(releaseProvider(id)).valueOrNull?.isPreview ?? false))
+          id,
+    };
+    if (previews.isEmpty) return const SizedBox.shrink();
+    // A new promo is a loose card, not part of a set; a reprint in a preview
+    // set reads as the set's.
+    final promo = previews.every((id) => id == newPromosReleaseId);
 
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -1091,7 +1095,9 @@ class _PreviewCardNotice extends ConsumerWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              context.l10n.cardPreviewNotice,
+              promo
+                  ? context.l10n.cardPromoPreviewNotice
+                  : context.l10n.cardPreviewNotice,
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.45,

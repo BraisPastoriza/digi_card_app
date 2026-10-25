@@ -6,6 +6,7 @@ import 'package:digi_card_app/data/api/heroi_api.dart';
 import 'package:digi_card_app/data/db/app_database.dart';
 import 'package:digi_card_app/data/db/tables.dart';
 import 'package:digi_card_app/data/sync/card_sync_service.dart';
+import 'package:digi_card_app/domain/models/card_enums.dart';
 import 'package:digi_card_app/domain/models/card_release.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
@@ -23,21 +24,33 @@ class _CannedAdapter implements HttpClientAdapter {
   /// nothing, which a refresh skips.
   Map<String, List<Map<String, dynamic>>> otherPacks = {};
 
+  /// What a search by card number answers with, e.g. for `P-25`.
+  Map<String, List<Map<String, dynamic>>> numbered = {};
+
+  /// Every card number searched for, in order.
+  final numberQueries = <String>[];
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
-  ) async => ResponseBody.fromString(
-    jsonEncode(switch (options.uri.queryParameters['pack']) {
-      'EX-13' => rows,
-      final pack => otherPacks[pack] ?? const [],
-    }),
-    200,
-    headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    },
-  );
+  ) async {
+    final query = options.uri.queryParameters;
+    final number = query['card'];
+    if (number != null) numberQueries.add(number);
+    return ResponseBody.fromString(
+      jsonEncode(switch ((query['pack'], number)) {
+        (_, final String number) => numbered[number] ?? const [],
+        ('EX-13', _) => rows,
+        (final pack, _) => otherPacks[pack] ?? const [],
+      }),
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
 
   @override
   void close({bool force = false}) {}
@@ -293,6 +306,116 @@ void main() {
 
       expect(await service.refreshPreviews(onlyReleaseId: 'ex-13'), isEmpty);
       expect(await db.releaseDao.releaseById('ex-14'), isNull);
+    });
+  });
+
+  group('new promos', () {
+    setUp(() async {
+      adapter.rows = [_row('EX13-001', 'Old Name')];
+      // The newest promo the primary source has is P-247.
+      await db.batch((batch) {
+        batch.insert(
+          db.releases,
+          ReleasesCompanion.insert(
+            id: 'p',
+            name: 'PROMOS [P]',
+            groupName: 'promo',
+          ),
+        );
+        batch.insert(
+          db.cards,
+          CardsCompanion.insert(
+            id: 'P-247',
+            number: 'P-247',
+            name: 'Agumon',
+            category: 'digimon',
+            imageUrl: 'https://example.test/P-247.webp',
+            releaseIds: Value(encodeList(const ['p'])),
+          ),
+        );
+        batch.insert(
+          db.cardReleaseLinks,
+          CardReleaseLinksCompanion.insert(cardId: 'P-247', releaseId: 'p'),
+        );
+      });
+    });
+
+    test('adds the promos numbered past the newest one it has', () async {
+      adapter.numbered['P-24'] = [
+        _row('P-246', 'Already Published'),
+        _row('P-247', 'Agumon'),
+        _row('P-248', 'Gabumon'),
+        _row('BP-249', 'Not a promo number'),
+      ];
+      adapter.numbered['P-25'] = [_row('P-250', 'Patamon')];
+
+      expect(await service.refreshPreviews(), [newPromosReleaseId]);
+      expect(await cardIdsIn(newPromosReleaseId), {'P-248', 'P-250'});
+      expect(adapter.numberQueries, ['P-24', 'P-25', 'P-26']);
+
+      final release = await db.releaseDao.releaseById(newPromosReleaseId);
+      expect(release!.isPreview, isTrue);
+      expect(release.group, ReleaseGroup.promo);
+      expect(
+        (await db.cardDao.cardById('P-247'))!.imageUrl,
+        'https://example.test/P-247.webp',
+        reason: 'a published promo is left as the primary source has it',
+      );
+    });
+
+    test('counts on from the published promos, not its own', () async {
+      adapter.numbered['P-24'] = [_row('P-248', 'Gabumon')];
+      await service.refreshPreviews();
+      adapter.numberQueries.clear();
+
+      await service.refreshPreviews();
+
+      expect(adapter.numberQueries.first, 'P-24');
+      expect(await cardIdsIn(newPromosReleaseId), {'P-248'});
+    });
+
+    test('renames a promos release stored under an older name', () async {
+      await db
+          .into(db.releases)
+          .insert(
+            ReleasesCompanion.insert(
+              id: newPromosReleaseId,
+              name: 'NEW PROMOS [P]',
+              groupName: 'promo',
+              dataSource: const Value(secondarySourceName),
+            ),
+          );
+      adapter.numbered['P-24'] = [_row('P-248', 'Gabumon')];
+
+      await service.refreshPreviews();
+
+      final release = await db.releaseDao.releaseById(newPromosReleaseId);
+      expect(release!.name, newPromosPreview.name);
+    });
+
+    test('stores nothing while there is no new promo', () async {
+      adapter.numbered['P-24'] = [_row('P-247', 'Agumon')];
+
+      expect(await service.refreshPreviews(), isEmpty);
+      expect(await db.releaseDao.releaseById(newPromosReleaseId), isNull);
+    });
+
+    test('a pull on the promos refreshes only them', () async {
+      adapter.rows = [_row('EX13-002', 'Newly Revealed')];
+      adapter.numbered['P-24'] = [_row('P-248', 'Gabumon')];
+
+      expect(await service.refreshPreviews(onlyReleaseId: newPromosReleaseId), [
+        newPromosReleaseId,
+      ]);
+      expect(await cardIdsIn('ex-13'), {'EX13-001'});
+    });
+
+    test('a pull on a set does not look for promos', () async {
+      adapter.numbered['P-24'] = [_row('P-248', 'Gabumon')];
+
+      await service.refreshPreviews(onlyReleaseId: 'ex-13');
+
+      expect(adapter.numberQueries, isEmpty);
     });
   });
 

@@ -73,11 +73,16 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
       ..removeCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            changed.isEmpty
-                ? context.l10n.releaseRefreshedNothing(secondarySourceName)
-                : context.l10n.releaseRefreshedUpdated(secondarySourceName),
-          ),
+          content: Text(switch ((changed.isEmpty, widget.releaseId)) {
+            (true, newPromosReleaseId) =>
+              context.l10n.releasePromosRefreshedNothing(secondarySourceName),
+            (true, _) => context.l10n.releaseRefreshedNothing(
+              secondarySourceName,
+            ),
+            (false, _) => context.l10n.releaseRefreshedUpdated(
+              secondarySourceName,
+            ),
+          }),
         ),
       );
   }
@@ -119,6 +124,7 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
           SliverToBoxAdapter(
             child: _PreviewNotice(
               source: release!.dataSource!,
+              promos: release.id == newPromosReleaseId,
               refresh: ref.watch(previewRefreshProvider),
             ),
           ),
@@ -259,9 +265,16 @@ class _ReleaseCardsScreenState extends ConsumerState<ReleaseCardsScreen> {
 /// moving. Shown at the top of the set rather than tucked into a credits
 /// screen, because it changes how much the reader should trust the page.
 class _PreviewNotice extends StatelessWidget {
-  const _PreviewNotice({required this.source, required this.refresh});
+  const _PreviewNotice({
+    required this.source,
+    required this.promos,
+    required this.refresh,
+  });
 
   final String source;
+
+  /// The new promos rather than a set: loose cards, not an expansion.
+  final bool promos;
   final PreviewRefreshState refresh;
 
   @override
@@ -282,7 +295,9 @@ class _PreviewNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              context.l10n.releasePreviewNotice(source),
+              promos
+                  ? context.l10n.releasePromoPreviewNotice(source)
+                  : context.l10n.releasePreviewNotice(source),
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.45,

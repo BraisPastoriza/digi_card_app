@@ -394,8 +394,24 @@
       }
     }
   },
+  "releasePromoPreviewNotice": "Preview promos. These promo cards are not in the main card database yet, so they come from {source} and are still being corrected. They leave this list once the main database has them. Pull down to check for new promos.",
+  "@releasePromoPreviewNotice": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
   "releaseRefreshedNothing": "No new cards — this set is as complete as {source} has it.",
   "@releaseRefreshedNothing": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "releasePromosRefreshedNothing": "No new promos — {source} has none past these.",
+  "@releasePromosRefreshedNothing": {
     "placeholders": {
       "source": {
         "type": "String"
@@ -705,6 +721,7 @@
     }
   },
   "cardPreviewNotice": "Preview card from a set that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.",
+  "cardPromoPreviewNotice": "Preview promo that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.",
   "digivolveLevel": "Lv.{level}",
   "@digivolveLevel": {
     "placeholders": {

@@ -176,10 +176,28 @@ const previewSeries = {
   'st': 'Starter Deck',
 };
 
+/// Id of the preview release that holds the promos the primary API has not
+/// published yet.
+///
+/// Promos are not revealed as a pack: a `P-` number at a time turns up on the
+/// secondary source as an event or product hands it out. So rather than a set
+/// of their own they get this one release, filled by number with whatever lies
+/// past the newest promo the primary source has. It empties itself as the
+/// primary source catches up, and a sync with nothing past that stores none.
+const newPromosReleaseId = 'new-promos';
+
+const newPromosPreview = PreviewRelease(
+  id: newPromosReleaseId,
+  name: 'Preview Promos [P]',
+  pack: 'P',
+  genre: 'Promotion Card',
+);
+
 /// Whether [releaseId] is the kind of release a sync may fill in from the
 /// secondary source. Says nothing about whether it currently is one: that is
 /// [CardRelease.isPreview], which needs the stored release to answer.
 bool mayBePreview(String releaseId) =>
+    releaseId == newPromosReleaseId ||
     previewReleases.any((preview) => preview.id == releaseId) ||
     RegExp('^(${previewSeries.keys.join('|')})-\\d+\$').hasMatch(releaseId);
 
@@ -303,6 +321,7 @@ ReleaseGroup classifyRelease(String id) {
     'store-events',
     'premium-bandai',
     'other-promos',
+    newPromosReleaseId,
   };
   if (promoSlugs.contains(slug)) return ReleaseGroup.promo;
   return ReleaseGroup.other;

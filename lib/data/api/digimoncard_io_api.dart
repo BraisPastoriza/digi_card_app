@@ -60,11 +60,20 @@ class DigimonCardIoApi {
   /// expected outcome, not an error.
   /// Backs off and retries when the API says it is being called too often,
   /// rather than treating a 429 as "this pack is empty" and moving on.
-  Future<List<Map<String, dynamic>>> cardsInPack(String pack) async {
+  Future<List<Map<String, dynamic>>> cardsInPack(String pack) =>
+      _search({'pack': pack});
+
+  /// Every card row whose number contains [number], e.g. `P-25` for `P-250`
+  /// to `P-259`. Promos come out one by one rather than as a pack, so this is
+  /// how a new one is asked for.
+  Future<List<Map<String, dynamic>>> cardsNumbered(String number) =>
+      _search({'card': number});
+
+  Future<List<Map<String, dynamic>>> _search(Map<String, String> query) async {
     for (var attempt = 0; ; attempt++) {
       final response = await _dio.get<dynamic>(
         '/search',
-        queryParameters: {'pack': pack, 'series': 'Digimon Card Game'},
+        queryParameters: {...query, 'series': 'Digimon Card Game'},
       );
       if (response.statusCode == 429 && attempt < _backoff.length) {
         await Future<void>.delayed(_backoff[attempt]);

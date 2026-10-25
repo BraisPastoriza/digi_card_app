@@ -479,8 +479,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String releasePromoPreviewNotice(String source) {
+    return 'Preview promos. These promo cards are not in the main card database yet, so they come from $source and are still being corrected. They leave this list once the main database has them. Pull down to check for new promos.';
+  }
+
+  @override
   String releaseRefreshedNothing(String source) {
     return 'No new cards — this set is as complete as $source has it.';
+  }
+
+  @override
+  String releasePromosRefreshedNothing(String source) {
+    return 'No new promos — $source has none past these.';
   }
 
   @override
@@ -865,6 +875,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cardPreviewNotice =>
       'Preview card from a set that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.';
+
+  @override
+  String get cardPromoPreviewNotice =>
+      'Preview promo that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.';
 
   @override
   String digivolveLevel(int level) {

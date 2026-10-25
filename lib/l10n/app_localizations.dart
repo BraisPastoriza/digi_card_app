@@ -836,11 +836,23 @@ abstract class AppLocalizations {
   /// **'Preview set. This expansion is not in the main card database yet, so its cards come from {source} and are still being corrected. Some may be missing, and rulings and alternate arts are not available. Pull down to check for newly revealed cards.'**
   String releasePreviewNotice(String source);
 
+  /// No description provided for @releasePromoPreviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview promos. These promo cards are not in the main card database yet, so they come from {source} and are still being corrected. They leave this list once the main database has them. Pull down to check for new promos.'**
+  String releasePromoPreviewNotice(String source);
+
   /// No description provided for @releaseRefreshedNothing.
   ///
   /// In en, this message translates to:
   /// **'No new cards — this set is as complete as {source} has it.'**
   String releaseRefreshedNothing(String source);
+
+  /// No description provided for @releasePromosRefreshedNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No new promos — {source} has none past these.'**
+  String releasePromosRefreshedNothing(String source);
 
   /// No description provided for @releaseRefreshedUpdated.
   ///
@@ -1477,6 +1489,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview card from a set that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.'**
   String get cardPreviewNotice;
+
+  /// No description provided for @cardPromoPreviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview promo that is not in the main card database yet. Its text is community-sourced and may change, and it has no rulings or alternate arts here.'**
+  String get cardPromoPreviewNotice;
 
   /// No description provided for @digivolveLevel.
   ///

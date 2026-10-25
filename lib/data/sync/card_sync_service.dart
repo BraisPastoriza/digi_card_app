@@ -305,6 +305,14 @@ class CardSyncService {
     for (final (:preview, :rows) in found) {
       add(preview, rows);
     }
+
+    final newestPromo = _newestPromo(knownNumbers);
+    if (newestPromo != null) {
+      add(
+        newPromosPreview,
+        await _newPromoRows(newestPromo, onRequest: reportFetching),
+      );
+    }
     return (cards: cards, details: details);
   }
 
@@ -312,14 +320,16 @@ class CardSyncService {
   /// whatever an earlier sync discovered, minus every set in [published].
   ///
   /// Where both name a set, the fixed list wins: it is there to correct what
-  /// the discovery would have made of it.
+  /// the discovery would have made of it. The new promos are not a pack to ask
+  /// for, so they are left to [_newPromoRows].
   List<PreviewRelease> _knownPreviews(
     List<CardRelease> stored,
     Set<String> published,
   ) {
     final byId = {
       for (final release in stored)
-        if (release.isPreview) release.id: PreviewRelease.fromRelease(release),
+        if (release.isPreview && release.id != newPromosReleaseId)
+          release.id: PreviewRelease.fromRelease(release),
       for (final preview in previewReleases) preview.id: preview,
     };
     return [
@@ -373,6 +383,66 @@ class CardSyncService {
       }
     }
     return found;
+  }
+
+  static final _promoNumber = RegExp(r'^P-(\d+)$');
+
+  /// The highest `P-` number among [numbers], or null when there is no promo
+  /// to count on from.
+  static int? _newestPromo(Iterable<String> numbers) => numbers
+      .map((number) => _promoNumber.firstMatch(number)?.group(1))
+      .nonNulls
+      .map(int.parse)
+      .maxOrNull;
+
+  /// How many blocks of ten promo numbers a single sync will look through.
+  /// One or two normally; the rest covers an app left unopened for months,
+  /// the same way [_maxDiscoveredPerSeries] does.
+  static const _maxPromoBlocks = 4;
+
+  /// The secondary source's rows for the promos numbered past [newest].
+  ///
+  /// Asked for ten numbers at a time — `P-25` is P-250 to P-259 — starting
+  /// with the block [newest] is in, until a block has nothing at all. As with
+  /// [_discoverPreviews], a failure ends the search with what it has.
+  Future<List<Map<String, dynamic>>> _newPromoRows(
+    int newest, {
+    void Function(String pack)? onRequest,
+  }) async {
+    final rows = <Map<String, dynamic>>[];
+    var block = (newest + 1) ~/ 10;
+    for (var i = 0; i < _maxPromoBlocks; i++, block++) {
+      final query = 'P-${'$block'.padLeft(2, '0')}';
+      onRequest?.call(query);
+      final List<Map<String, dynamic>> answer;
+      try {
+        answer = await _secondaryApi.cardsNumbered(query);
+      } on Object {
+        break;
+      }
+      if (answer.isEmpty) break;
+      // The search matches anywhere in the number, so it is checked here.
+      rows.addAll(
+        answer.where((row) {
+          final match = _promoNumber.firstMatch('${row['id']}'.trim());
+          return match != null && int.parse(match.group(1)!) > newest;
+        }),
+      );
+    }
+    return rows;
+  }
+
+  /// The highest promo number the primary source provided, read from the
+  /// stored cards: those the new promos release holds on its own are left out.
+  Future<int?> _newestPublishedPromo() async {
+    final rows = await (_db.select(
+      _db.cards,
+    )..where((c) => c.number.like('P-%'))).get();
+    return _newestPromo([
+      for (final row in rows)
+        if (!decodeList(row.releaseIds).every((id) => id == newPromosReleaseId))
+          row.number,
+    ]);
   }
 
   /// Re-fetches the preview sets and writes back what changed, without
@@ -440,6 +510,28 @@ class CardSyncService {
         } on Object {
           continue;
         }
+      }
+    }
+
+    if (onlyReleaseId == null || onlyReleaseId == newPromosReleaseId) {
+      try {
+        final newest = await _newestPublishedPromo();
+        if (newest != null) {
+          final parsed = parseDigimonCardIoPack(
+            await _newPromoRows(newest),
+            newPromosPreview,
+          );
+          if (parsed.isNotEmpty &&
+              await _storePreview(
+                newPromosPreview,
+                parsed,
+                sortIndex: sortIndex,
+              )) {
+            changed.add(newPromosReleaseId);
+          }
+        }
+      } on Object {
+        // As for the sets: no answer leaves the promos as they were.
       }
     }
     return changed;
@@ -640,6 +732,8 @@ class CardSyncService {
         batch.update(
           _db.releases,
           ReleasesCompanion(
+            // A rename reaches a set already stored, not only a new one.
+            name: Value(preview.name),
             cardCount: Value(linkTargets.length),
             printingCount: Value(linkTargets.length),
           ),

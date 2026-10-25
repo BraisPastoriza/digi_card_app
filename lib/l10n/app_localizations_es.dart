@@ -482,8 +482,18 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String releasePromoPreviewNotice(String source) {
+    return 'Promos de avance. Estas promos aún no están en la base de datos principal, así que vienen de $source y todavía se están corrigiendo. Saldrán de esta lista cuando la base de datos principal las tenga. Desliza hacia abajo para buscar promos nuevas.';
+  }
+
+  @override
   String releaseRefreshedNothing(String source) {
     return 'No hay cartas nuevas: esta colección está tan completa como la tiene $source.';
+  }
+
+  @override
+  String releasePromosRefreshedNothing(String source) {
+    return 'No hay promos nuevas: $source no tiene ninguna más allá de estas.';
   }
 
   @override
@@ -868,6 +878,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cardPreviewNotice =>
       'Carta de avance de una colección que aún no está en la base de datos principal. Su texto viene de la comunidad y puede cambiar, y aquí no tiene ni rulings ni ilustraciones alternativas.';
+
+  @override
+  String get cardPromoPreviewNotice =>
+      'Promo de avance que aún no está en la base de datos principal. Su texto viene de la comunidad y puede cambiar, y aquí no tiene ni rulings ni ilustraciones alternativas.';
 
   @override
   String digivolveLevel(int level) {
