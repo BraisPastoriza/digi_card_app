@@ -27,10 +27,16 @@ class ReleaseSection {
 class ReleaseDao extends DatabaseAccessor<AppDatabase> with _$ReleaseDaoMixin {
   ReleaseDao(super.db);
 
+  /// Newest first. Preview sets all share one sort index, past every published
+  /// release, so the id breaks the tie: BT-27 above BT-26.
+  static List<OrderClauseGenerator<$ReleasesTable>> get _newestFirst => [
+    (r) => OrderingTerm.desc(r.sortIndex),
+    (r) => OrderingTerm.desc(r.id),
+  ];
+
   /// Every release, newest first within each group.
   Future<List<CardRelease>> allReleases() async {
-    final query = select(releases)
-      ..orderBy([(r) => OrderingTerm.desc(r.sortIndex)]);
+    final query = select(releases)..orderBy(_newestFirst);
     final rows = await query.get();
     return rows.map((row) => row.toCardRelease()).toList();
   }
@@ -54,8 +60,7 @@ class ReleaseDao extends DatabaseAccessor<AppDatabase> with _$ReleaseDaoMixin {
   }
 
   Stream<List<CardRelease>> watchAllReleases() {
-    final query = select(releases)
-      ..orderBy([(r) => OrderingTerm.desc(r.sortIndex)]);
+    final query = select(releases)..orderBy(_newestFirst);
     return query.watch().map(
       (rows) => rows.map((row) => row.toCardRelease()).toList(),
     );
