@@ -89,5 +89,6 @@ void main() {
     // currently set to.
     expect(languageName(const Locale('en')), 'English');
     expect(languageName(const Locale('es')), 'Español');
+    expect(languageName(const Locale('gl')), 'Galego');
   });
 }

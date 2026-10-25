@@ -9,45 +9,53 @@ Map<String, dynamic> _arb(String locale) =>
     jsonDecode(File('lib/l10n/app_$locale.arb').readAsStringSync())
         as Map<String, dynamic>;
 
+/// Every language the app is translated into, besides the English template.
+const _translations = ['es', 'gl'];
+
 Set<String> _keys(Map<String, dynamic> arb) =>
     arb.keys.where((key) => !key.startsWith('@')).toSet();
 
 void main() {
-  test('every string the app asks for exists in both languages', () {
-    // A missing Spanish key does not fail the build — gen_l10n quietly falls
-    // back to English — so it has to fail here instead.
-    expect(_keys(_arb('es')), _keys(_arb('en')));
-  });
+  for (final locale in _translations) {
+    test('every string the app asks for exists in $locale', () {
+      // A missing key does not fail the build — gen_l10n quietly falls back
+      // to English — so it has to fail here instead.
+      expect(_keys(_arb(locale)), _keys(_arb('en')));
+    });
 
-  test('a placeholder left out of a translation would break the line', () {
-    final en = _arb('en');
-    final es = _arb('es');
-    // Only the named values, not the text inside a plural's branches.
-    final placeholder = RegExp(r'\{(\w+)\s*[,}]');
+    test('a placeholder left out of the $locale translation would break the '
+        'line', () {
+      final en = _arb('en');
+      final translated = _arb(locale);
+      // Only the named values, not the text inside a plural's branches.
+      final placeholder = RegExp(r'\{(\w+)\s*[,}]');
 
-    for (final key in _keys(en)) {
-      expect(
-        placeholder
-            .allMatches(es[key] as String)
-            .map((m) => m.group(1))
-            .toSet(),
-        placeholder
-            .allMatches(en[key] as String)
-            .map((m) => m.group(1))
-            .toSet(),
-        reason: '$key does not name the same values in both languages',
-      );
-    }
-  });
+      for (final key in _keys(en)) {
+        expect(
+          placeholder
+              .allMatches(translated[key] as String)
+              .map((m) => m.group(1))
+              .toSet(),
+          placeholder
+              .allMatches(en[key] as String)
+              .map((m) => m.group(1))
+              .toSet(),
+          reason: '$key does not name the same values in $locale',
+        );
+      }
+    });
+  }
 
   testWidgets('the app answers in the language the device is set to', (
     tester,
   ) async {
     final en = await AppLocalizations.delegate.load(const Locale('en'));
     final es = await AppLocalizations.delegate.load(const Locale('es'));
+    final gl = await AppLocalizations.delegate.load(const Locale('gl'));
 
     expect(en.navDecks, 'Decks');
     expect(es.navDecks, 'Mazos');
+    expect(gl.navDecks, 'Barallas');
 
     // Card text is not translated: what the card says is what it says.
     expect(es.categoryDigimon, en.categoryDigimon);

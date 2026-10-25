@@ -43,6 +43,7 @@ void main() {
     expect(find.text('Match my device'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
     expect(find.text('Español'), findsOneWidget);
+    expect(find.text('Galego'), findsOneWidget);
   });
 
   testWidgets('picking one switches the app over and closes the sheet', (

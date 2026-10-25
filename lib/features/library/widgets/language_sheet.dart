@@ -8,6 +8,11 @@ import '../../../l10n/l10n.dart';
 Future<void> showLanguageSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
+    // Each language is another row, and past three of them the sheet's default
+    // half-screen cap cuts the last one off on a short or landscape screen.
+    isScrollControlled: true,
+    // Above the tab bar rather than behind it, which would cover the last row.
+    useRootNavigator: true,
     builder: (context) => const _LanguageSheet(),
   );
 }
@@ -21,7 +26,7 @@ class _LanguageSheet extends ConsumerWidget {
     final selected = ref.watch(languageProvider);
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 12),
         child: RadioGroup<Locale?>(
           groupValue: selected,

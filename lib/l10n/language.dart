@@ -55,5 +55,6 @@ Locale? storedLanguage(SharedPreferences prefs) {
 /// app happens to be in while they look.
 String languageName(Locale locale) => switch (locale.languageCode) {
   'es' => 'Español',
+  'gl' => 'Galego',
   _ => 'English',
 };
